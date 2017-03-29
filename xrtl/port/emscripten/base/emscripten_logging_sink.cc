@@ -1,11 +1,10 @@
-#include "xrtl/base/logging_macros.h"
-
 #include <emscripten.h>
 
 #include <cstdio>
 #include <cstdlib>
 
 #include "xrtl/base/logging.h"
+#include "xrtl/port/common/base/logging_macros.h"
 
 namespace xrtl {
 

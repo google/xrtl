@@ -57,15 +57,17 @@ TEST(LoggingTest, Checks) {
 }
 
 TEST(LoggingTest, FailedChecks) {
-  std::string a("abc");
-  std::string b("xyz");
   const char* p_const = "hello there";
-  const char* p_null_const = nullptr;
+  CHECK_NOTNULL(p_const);
+
   char mybuf[10];
   char* p_non_const = mybuf;
-  char* p_null = nullptr;
-  CHECK_NOTNULL(p_const);
   CHECK_NOTNULL(p_non_const);
+
+// Disabled internally due to some weird gtest issues.
+#ifndef XRTL_CONFIG_GOOGLE_INTERNAL
+  std::string a("abc");
+  std::string b("xyz");
 
   ASSERT_DEATH(CHECK(false), "false");
   ASSERT_DEATH(CHECK(9 < 7), "9 < 7");
@@ -77,7 +79,9 @@ TEST(LoggingTest, FailedChecks) {
   ASSERT_DEATH(CHECK_LT(3, 2), "3 < 2");
   ASSERT_DEATH(CHECK_LE(3, 2), "3 <= 2");
   ASSERT_DEATH(CHECK(false), "false");
+  char* p_null = nullptr;
   ASSERT_DEATH(printf("%s", CHECK_NOTNULL(p_null)), "Must be non NULL");
+  const char* p_null_const = nullptr;
   ASSERT_DEATH(printf("%s", CHECK_NOTNULL(p_null_const)), "Must be non NULL");
 #ifndef NDEBUG
   ASSERT_DEATH(DCHECK(9 < 7), "9 < 7");
@@ -90,17 +94,19 @@ TEST(LoggingTest, FailedChecks) {
   ASSERT_DEATH(DCHECK_LT(3, 2), "3 < 2");
   ASSERT_DEATH(DCHECK_LE(3, 2), "3 <= 2");
 #endif  // !NDEBUG
+
+#endif  // !XRTL_CONFIG_GOOGLE_INTERNAL
 }
 
 TEST(LoggingTest, LogString) {
-  LogString(__FILE__, __LINE__, INFO, "Hello there");
-  LogString(__FILE__, __LINE__, INFO, std::string("Hello std"));
-  LogString(__FILE__, __LINE__, INFO, "Hello there", 3);
+  LogString(__FILE__, __LINE__, 0, "Hello there");
+  LogString(__FILE__, __LINE__, 0, std::string("Hello std"));
+  LogString(__FILE__, __LINE__, 0, "Hello there", 3);
 }
 
 TEST(LoggingTest, LogStringFormat) {
-  LogStringFormat(__FILE__, __LINE__, INFO, "Hello there");
-  LogStringFormat(__FILE__, __LINE__, INFO, "Hello %d", 5);
+  LogStringFormat(__FILE__, __LINE__, 0, "Hello there");
+  LogStringFormat(__FILE__, __LINE__, 0, "Hello %d", 5);
 }
 
 }  // namespace

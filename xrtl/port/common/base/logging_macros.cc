@@ -1,4 +1,4 @@
-#include "xrtl/base/logging_macros.h"
+#include "xrtl/port/common/base/logging_macros.h"
 
 #include <cstdio>
 #include <cstdlib>

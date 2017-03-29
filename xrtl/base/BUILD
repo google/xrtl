@@ -93,41 +93,24 @@ cc_library(
             "//xrtl/port/google/base:logging_forward",
         ],
         "//conditions:default": [
-            ":logging_macros",
+            "//xrtl/port/common/base:logging_macros",
         ],
     }),
 )
 
 cc_library(
     name = "logging_hdrs",
-    hdrs = [
-        "logging.h",
-        "logging_macros.h",
-    ],
+    hdrs = ["logging.h"],
     deps = [
-        ":macros",
-    ],
-)
-
-cc_library(
-    name = "logging_macros",
-    srcs = ["logging_macros.cc"],
-    hdrs = ["logging_macros.h"],
-    deps = [
-        ":logging_hdrs",
         ":macros",
     ] + select({
-        "//xrtl/tools/target_platform:android": [
-            "//xrtl/port/android/base:android_logging_sink",
-        ],
-        "//xrtl/tools/target_platform:emscripten": [
-            "//xrtl/port/emscripten/base:emscripten_logging_sink",
+        "//xrtl/tools/target_config:google_internal": [
+            "//xrtl/port/google/base:logging_forward",
         ],
         "//conditions:default": [
-            "//xrtl/port/common/base:posix_logging_sink",
+            "//xrtl/port/common/base:logging_macros_hdrs",
         ],
     }),
-    visibility = ["//visibility:private"],
 )
 
 cc_test(

@@ -25,9 +25,15 @@ cc_library(
     hdrs = ["gtest.h"],
     deps = [
         ":gtest",
-        ":platform_gtest_main",
         "@gtest//:gtest",
-    ],
+    ] + select({
+        "//xrtl/tools/target_config:google_internal": [
+            "//xrtl/port/google/testing:google_test_main",
+        ],
+        "//conditions:default": [
+            ":platform_gtest_main",
+        ],
+    }),
 )
 
 cc_library(

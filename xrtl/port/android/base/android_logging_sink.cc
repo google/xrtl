@@ -1,5 +1,3 @@
-#include "xrtl/base/logging_macros.h"
-
 #include <android/log.h>
 
 #include <cstdio>
@@ -8,6 +6,7 @@
 #include <sstream>
 
 #include "xrtl/base/logging.h"
+#include "xrtl/port/common/base/logging_macros.h"
 
 namespace xrtl {
 

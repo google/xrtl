@@ -1,11 +1,10 @@
-#include "xrtl/base/logging_macros.h"
-
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 
 #include "xrtl/base/logging.h"
 #include "xrtl/base/system_clock.h"
+#include "xrtl/port/common/base/logging_macros.h"
 
 namespace xrtl {
 

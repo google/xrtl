@@ -10,5 +10,6 @@ cc_library(
     srcs = ["android_logging_sink.cc"],
     deps = [
         "//xrtl/base:logging_hdrs",
+        "//xrtl/port/common/base:logging_macros_hdrs",
     ],
 )

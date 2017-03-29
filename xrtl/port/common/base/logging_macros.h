@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_BASE_LOGGING_MACROS_H_
-#define XRTL_BASE_LOGGING_MACROS_H_
+#ifndef XRTL_PORT_COMMON_BASE_LOGGING_MACROS_H_
+#define XRTL_PORT_COMMON_BASE_LOGGING_MACROS_H_
 
 #include <limits>
 #include <sstream>
@@ -39,6 +39,9 @@ const int WARNING = 1;         // base_logging::WARNING;
 const int ERROR = 2;           // base_logging::ERROR;
 const int FATAL = 3;           // base_logging::FATAL;
 const int NUM_SEVERITIES = 4;  // base_logging::NUM_SEVERITIES;
+
+void LogString(const char* file_name, int line, int severity,
+               const char* message, size_t message_length);
 
 namespace internal {
 
@@ -310,4 +313,4 @@ T&& CheckNotNull(const char* file, int line, const char* exprtext, T&& t) {
 }  // namespace internal
 }  // namespace xrtl
 
-#endif  // XRTL_BASE_LOGGING_MACROS_H_
+#endif  // XRTL_PORT_COMMON_BASE_LOGGING_MACROS_H_

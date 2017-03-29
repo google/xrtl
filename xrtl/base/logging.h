@@ -55,7 +55,7 @@
 #ifdef XRTL_CONFIG_GOOGLE_INTERNAL
 #include "xrtl/port/google/base/logging_forward.h"
 #else
-#include "xrtl/base/logging_macros.h"
+#include "xrtl/port/common/base/logging_macros.h"
 #endif  // XRTL_CONFIG_GOOGLE_INTERNAL
 
 namespace xrtl {
@@ -65,8 +65,6 @@ void FlushLog();
 
 // Emits a message to the log at the specified severity.
 // The message is logged as if from `LOG(severity) << message;`.
-void LogString(const char* file_name, int line, int severity,
-               const char* message, size_t message_length);
 inline void LogString(const char* file_name, int line, int severity,
                       const std::string& message) {
   LogString(file_name, line, severity, message.c_str(), message.size());

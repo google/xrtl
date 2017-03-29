@@ -27,9 +27,7 @@ namespace xrtl {
 namespace flags {
 namespace {
 
-TEST(FlagsTest, Initialization) {
-  SetVersionString("1.2");
-}
+TEST(FlagsTest, Initialization) { SetVersionString("1.2"); }
 
 TEST(FlagsTest, CommandLines) {
   FLAGS_cmd_line_flag = false;
