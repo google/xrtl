@@ -8,3 +8,5 @@
 #  - MacOS Version: 10?
 
 package(default_visibility = ["//xrtl:internal"])
+
+licenses(["notice"])  # Apache 2.0

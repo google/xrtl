@@ -6,3 +6,5 @@
 #  - Emscripten: 1.37.3
 
 package(default_visibility = ["//xrtl:internal"])
+
+licenses(["notice"])  # Apache 2.0

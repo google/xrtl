@@ -3,6 +3,8 @@
 
 package(default_visibility = ["//xrtl:internal"])
 
+licenses(["notice"])  # Apache 2.0
+
 cc_library(
     name = "android_logging_sink",
     srcs = ["android_logging_sink.cc"],

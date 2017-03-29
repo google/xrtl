@@ -3,6 +3,8 @@
 
 package(default_visibility = ["//xrtl:internal"])
 
+licenses(["notice"])  # Apache 2.0
+
 # googletest header shim.
 # This can be linked in to cc_library rules that require access to the gunit
 # headers (such as test utility libraries/etc).

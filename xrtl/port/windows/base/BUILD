@@ -3,6 +3,8 @@
 
 package(default_visibility = ["//xrtl:internal"])
 
+licenses(["notice"])  # Apache 2.0
+
 cc_library(
     name = "win32_system_clock",
     srcs = ["win32_system_clock.cc"],

@@ -22,6 +22,8 @@
 
 package(default_visibility = ["//visibility:public"])
 
+licenses(["notice"])  # Apache 2.0
+
 # Header that defines platform and architecture preprocessor values.
 # These can be used to conditionally enable code paths or dependencies.
 cc_library(

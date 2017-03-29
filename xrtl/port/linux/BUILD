@@ -6,3 +6,5 @@
 #  - Ubuntu
 
 package(default_visibility = ["//xrtl:internal"])
+
+licenses(["notice"])  # Apache 2.0
