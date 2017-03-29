@@ -15,6 +15,7 @@
 #ifndef XRTL_BASE_MACROS_H_
 #define XRTL_BASE_MACROS_H_
 
+#include <cstring>
 #include <memory>
 
 // Pulls in the XRTL_CONFIG_* defines.

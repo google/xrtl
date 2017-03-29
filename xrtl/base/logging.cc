@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <vector>
 
+#include "xrtl/base/macros.h"
+
 namespace xrtl {
 
 void LogStringFormat(const char* file_name, int line, int severity,

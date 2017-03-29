@@ -28,7 +28,6 @@ namespace flags {
 namespace {
 
 TEST(FlagsTest, Initialization) {
-  SetUsageMessage("usage");
   SetVersionString("1.2");
 }
 

@@ -15,6 +15,7 @@
 #ifndef XRTL_BASE_LOGGING_MACROS_H_
 #define XRTL_BASE_LOGGING_MACROS_H_
 
+#include <limits>
 #include <sstream>
 #include <string>
 

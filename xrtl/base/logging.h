@@ -15,6 +15,7 @@
 #ifndef XRTL_BASE_LOGGING_H_
 #define XRTL_BASE_LOGGING_H_
 
+#include <cstring>
 #include <string>
 
 // Logging macros live in their own file so that we can use external versions

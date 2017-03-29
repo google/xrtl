@@ -22,9 +22,11 @@ cc_library(
 cc_library(
     name = "gtest_main",
     testonly = 1,
+    hdrs = ["gtest.h"],
     deps = [
         ":gtest",
         ":platform_gtest_main",
+        "@gtest//:gtest",
     ],
 )
 

@@ -20,14 +20,8 @@ cc_library(
     srcs = ["flags.cc"],
     hdrs = ["flags.h"],
     deps = [
-        ":flags_external",
         ":macros",
-    ],
-)
-
-cc_library(
-    name = "flags_external",
-    deps = select({
+    ] + select({
         "//xrtl/tools/target_platform:emscripten": [
             "//external:gflags_nothreads",
         ],
@@ -35,7 +29,6 @@ cc_library(
             "//external:gflags",
         ],
     }),
-    visibility = ["//visibility:private"],
 )
 
 cc_test(
@@ -93,6 +86,7 @@ cc_library(
     srcs = ["logging.cc"],
     hdrs = ["logging.h"],
     deps = [
+        ":macros",
         "//xrtl/tools/target_config",
     ] + select({
         "//xrtl/tools/target_config:google_internal": [
@@ -109,6 +103,9 @@ cc_library(
     hdrs = [
         "logging.h",
         "logging_macros.h",
+    ],
+    deps = [
+        ":macros",
     ],
 )
 

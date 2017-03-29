@@ -157,7 +157,7 @@ config_setting(
 config_setting(
     name = "linux",
     values = {
-        "crosstool_top": "TODO",
+        "cpu": "k8",
     },
 )
 
@@ -286,7 +286,7 @@ config_setting(
 config_setting(
     name = "linux_x86_64",
     values = {
-        "crosstool_top": "TODO",
+        "cpu": "k8",
     },
 )
 
