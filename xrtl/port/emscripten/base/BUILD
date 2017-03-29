@@ -1,0 +1,12 @@
+# Description:
+#  Emscripten port variants of //xrtl/base/ features.
+
+package(default_visibility = ["//xrtl:internal"])
+
+cc_library(
+    name = "emscripten_logging_sink",
+    srcs = ["emscripten_logging_sink.cc"],
+    deps = [
+        "//xrtl/base:logging_hdrs",
+    ],
+)

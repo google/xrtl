@@ -1,0 +1,282 @@
+# Description:
+#  Base utilities and types used throughout the XRTL library.
+
+package(default_visibility = ["//xrtl:internal"])
+
+# Used by //third_party/gtest/ to use our flags/logging code.
+cc_library(
+    name = "gtest_deps",
+    deps = [
+        ":flags",
+        ":logging",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "flags",
+    srcs = ["flags.cc"],
+    hdrs = ["flags.h"],
+    deps = [
+        ":flags_external",
+        ":macros",
+    ],
+)
+
+cc_library(
+    name = "flags_external",
+    deps = select({
+        "//xrtl/tools/target_platform:emscripten": [
+            "//external:gflags_nothreads",
+        ],
+        "//conditions:default": [
+            "//external:gflags",
+        ],
+    }),
+    visibility = ["//visibility:private"],
+)
+
+cc_test(
+    name = "flags_test",
+    srcs = ["flags_test.cc"],
+    deps = [
+        ":flags",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "intrusive_list",
+    hdrs = ["intrusive_list.h"],
+    deps = [
+        ":logging",
+        ":macros",
+        ":ref_ptr",
+    ],
+)
+
+cc_test(
+    name = "intrusive_list_test",
+    srcs = ["intrusive_list_test.cc"],
+    deps = [
+        ":intrusive_list",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "intrusive_pool",
+    hdrs = ["intrusive_pool.h"],
+    deps = [
+        ":intrusive_list",
+        ":logging",
+        ":macros",
+    ],
+)
+
+cc_test(
+    name = "intrusive_pool_test",
+    srcs = ["intrusive_pool_test.cc"],
+    deps = [
+        ":intrusive_pool",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "logging",
+    srcs = ["logging.cc"],
+    hdrs = ["logging.h"],
+    deps = [
+        "//xrtl/tools/target_config",
+    ] + select({
+        "//xrtl/tools/target_config:google_internal": [
+            "//xrtl/port/google/base:logging_forward",
+        ],
+        "//conditions:default": [
+            ":logging_macros",
+        ],
+    }),
+)
+
+cc_library(
+    name = "logging_hdrs",
+    hdrs = [
+        "logging.h",
+        "logging_macros.h",
+    ],
+)
+
+cc_library(
+    name = "logging_macros",
+    srcs = ["logging_macros.cc"],
+    hdrs = ["logging_macros.h"],
+    deps = [
+        ":logging_hdrs",
+        ":macros",
+    ] + select({
+        "//xrtl/tools/target_platform:android": [
+            "//xrtl/port/android/base:android_logging_sink",
+        ],
+        "//xrtl/tools/target_platform:emscripten": [
+            "//xrtl/port/emscripten/base:emscripten_logging_sink",
+        ],
+        "//conditions:default": [
+            "//xrtl/port/common/base:posix_logging_sink",
+        ],
+    }),
+    visibility = ["//visibility:private"],
+)
+
+cc_test(
+    name = "logging_test",
+    srcs = ["logging_test.cc"],
+    deps = [
+        ":logging",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "macros",
+    hdrs = [
+        "macros.h",
+        "make_unique.h",
+    ],
+    deps = [
+        "//xrtl/tools/target_config",
+        "//xrtl/tools/target_platform",
+    ],
+)
+
+cc_test(
+    name = "macros_test",
+    srcs = ["macros_test.cc"],
+    deps = [
+        ":macros",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "math",
+    hdrs = ["math.h"],
+    deps = [
+        ":macros",
+    ],
+)
+
+cc_test(
+    name = "math_test",
+    srcs = ["math_test.cc"],
+    deps = [
+        ":math",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "ref_ptr",
+    hdrs = ["ref_ptr.h"],
+    deps = [
+        ":logging",
+        ":macros",
+    ],
+)
+
+cc_test(
+    name = "ref_ptr_test",
+    srcs = ["ref_ptr_test.cc"],
+    deps = [
+        ":ref_ptr",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "string_view",
+    srcs = ["string_view.cc"],
+    hdrs = ["string_view.h"],
+    deps = [":logging"],
+)
+
+cc_test(
+    name = "string_view_test",
+    srcs = ["string_view_test.cc"],
+    deps = [
+        ":string_view",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "system_clock",
+    srcs = ["system_clock.cc"],
+    hdrs = ["system_clock.h"],
+    deps = [
+        "//xrtl/tools/target_config",
+    ] + select({
+        "//xrtl/tools/target_platform:ios": [
+            "//xrtl/port/common/base:mach_system_clock",
+        ],
+        "//xrtl/tools/target_platform:macos": [
+            "//xrtl/port/common/base:mach_system_clock",
+        ],
+        "//xrtl/tools/target_platform:windows": [
+            "//xrtl/port/windows/base:win32_system_clock",
+        ],
+        "//conditions:default": [
+            "//xrtl/port/common/base:posix_system_clock",
+        ],
+    }),
+)
+
+cc_library(
+    name = "system_clock_hdrs",
+    hdrs = ["system_clock.h"],
+)
+
+cc_test(
+    name = "system_clock_test",
+    srcs = ["system_clock_test.cc"],
+    deps = [
+        ":system_clock",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "tracing",
+    srcs = ["tracing.cc"],
+    hdrs = ["tracing.h"],
+    deps = [
+        ":logging",
+        # TODO(benvanik): third_party/tracing_framework_bindings_cpp/
+    ],
+)
+
+cc_library(
+    name = "uri",
+    srcs = ["uri.cc"],
+    hdrs = ["uri.h"],
+    deps = [":string_view"],
+)
+
+cc_test(
+    name = "uri_test",
+    srcs = ["uri_test.cc"],
+    deps = [
+        ":uri",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
