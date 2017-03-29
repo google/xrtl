@@ -42,3 +42,24 @@ def check_version(bazel_version):
 def xrtl_workspace():
   # Verify supported bazel version.
   check_version("0.4.5")
+
+  # //third_party/gflags/
+  native.local_repository(
+      name = "com_github_gflags_gflags",
+      path = "third_party/gflags/",
+  )
+  native.bind(
+      name = "gflags",
+      actual = "@com_github_gflags_gflags//:gflags",
+  )
+  native.bind(
+      name = "gflags_nothreads",
+      actual = "@com_github_gflags_gflags//:gflags_nothreads",
+  )
+
+  # //third_party/gtest/
+  native.new_local_repository(
+      name = "gtest",
+      path = "third_party/gtest/",
+      build_file = "third_party/gtest.BUILD",
+  )
