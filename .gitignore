@@ -1,0 +1,52 @@
+# OS detritus
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+.com.apple.*
+Thumbs.db
+Desktop.ini
+.svn
+
+# Emacs
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# VIM
+.*.sw[a-z]
+*.un~
+Session.vim
+
+# TextMate
+*.tmproj
+*.tmproject
+tmtags
+
+# Eclipse
+.project
+.metadata
+
+# WebStorm
+.idea
+
+# VS
+.vs
+*.user
+*.sdf
+*.opensdf
+bin/
+obj/
+
+# Compiler Outputs
+*.py[co]
+*.o
+
+# Bazel
+/bazel-bin
+/bazel-genfiles
+/bazel-out
+/bazel-testlogs
+/bazel-xrtl

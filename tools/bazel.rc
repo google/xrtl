@@ -1,0 +1,98 @@
+# Description:
+#  Bazel configurations matching our //xrtl/tools/target_platform
+#  config_settings. This is loaded by bazel on startup.
+
+#===============================================================================
+# Generic build options
+#===============================================================================
+
+build --copt=-Wno-unused-function
+
+#===============================================================================
+# Android
+#===============================================================================
+
+build:android --dynamic_mode=off
+
+build:android_emulator --config=android
+build:android_emulator --config=android_x86_64
+build:ios_simulator --define=XRTL_PLATFORM_ANDROID_EMULATOR=1
+
+build:android_arm --config=android
+build:android_arm --cpu=armeabi-v7a
+build:android_arm --android_cpu=armeabi-v7a
+
+build:android_arm64 --config=android
+build:android_arm64 --cpu=arm64-v8a
+build:android_arm64 --android_cpu=arm64-v8a
+
+build:android_x86 --config=android
+build:android_x86 --cpu=x86
+build:android_x86 --android_cpu=x86
+
+build:android_x86_64 --config=android
+build:android_x86_64 --cpu=x86_64
+build:android_x86_64 --android_cpu=x86_64
+
+#===============================================================================
+# Emscripten
+#===============================================================================
+
+build:emscripten
+
+build:emscripten_asmjs --config=emscripten
+
+build:emscripten_wasm --config=emscripten
+
+#===============================================================================
+# iOS
+#===============================================================================
+
+build:ios --dynamic_mode=off
+build:ios --experimental_enable_objc_cc_deps
+
+build:ios_simulator --config=ios
+build:ios_simulator --config=ios_x86_64
+build:ios_simulator --define=XRTL_PLATFORM_IOS_SIMULATOR=1
+
+build:ios_arm --config=ios
+build:ios_arm --cpu=ios_armv7
+build:ios_arm --ios_cpu=armv7
+
+build:ios_arm64 --config=ios
+build:ios_arm64 --cpu=ios_arm64
+build:ios_arm64 --ios_cpu=arm64
+
+build:ios_i386 --config=ios
+build:ios_i386 --cpu=ios_i386
+build:ios_i386 --ios_cpu=i386
+
+build:ios_x86_64 --config=ios
+build:ios_x86_64 --cpu=ios_x86_64
+build:ios_x86_64 --ios_cpu=x86_64
+
+#===============================================================================
+# Linux
+#===============================================================================
+
+build:linux
+
+build:linux_x86_64 --config=linux
+
+#===============================================================================
+# MacOS
+#===============================================================================
+
+build:macos --dynamic_mode=off
+
+build:macos_x86_64 --config=macos
+build:macos_x86_64 --cpu=darwin
+
+#===============================================================================
+# Windows
+#===============================================================================
+
+build:windows --dynamic_mode=off
+
+build:windows_x86_64 --config=windows
+build:windows_x86_64 --cpu=x64_windows_msvc

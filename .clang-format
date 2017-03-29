@@ -1,0 +1,22 @@
+# Clang format with similar settings to how clang-format internally works.
+
+BasedOnStyle:  Google
+
+# Keep 80 so we have the same in all files (including .mm).
+ColumnLimit: 80
+
+# If false, a function call’s or function definition’s parameters will either
+# all be on the same line or will have one line each.
+BinPackParameters: true
+
+# Allow putting all parameters of a function declaration onto the next line even
+# if BinPackParameters is false.
+# For example this should be ok:
+# someFunction(foo,
+#              bar,
+#              baz);
+AllowAllParametersOfDeclarationOnNextLine: true
+
+DerivePointerAlignment: false
+PointerAlignment: Left
+SortIncludes: true
