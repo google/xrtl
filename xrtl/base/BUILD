@@ -87,7 +87,6 @@ cc_library(
     hdrs = ["logging.h"],
     deps = [
         ":macros",
-        "//xrtl/tools/target_config",
     ] + select({
         "//xrtl/tools/target_config:google_internal": [
             "//xrtl/port/google/base:logging_forward",
@@ -204,7 +203,7 @@ cc_library(
     srcs = ["system_clock.cc"],
     hdrs = ["system_clock.h"],
     deps = [
-        "//xrtl/tools/target_config",
+        ":macros",
     ] + select({
         "//xrtl/tools/target_platform:ios": [
             "//xrtl/port/common/base:mach_system_clock",

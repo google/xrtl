@@ -26,7 +26,7 @@
 // Temporary make_unique (until C++14 is everywhere).
 #include "xrtl/base/make_unique.h"  // IWYU pragma: export
 
-#if defined(__GNUC__) || defined(__APPLE__)
+#if defined(XRTL_COMPILER_GCC_COMPAT)
 
 #define XRTL_ALWAYS_INLINE __attribute__((always_inline)) inline
 #define XRTL_ATTRIBUTE_NORETURN __attribute__((noreturn))
@@ -53,7 +53,7 @@
 #define XRTL_ATTRIBUTE_COLD
 #define XRTL_ATTRIBUTE_WEAK
 
-#endif  // GNUC / MSVC / etc
+#endif  // XRTL_COMPILER_[GCC_COMPAT/MSVC/etc]
 
 #define XRTL_PREDICT_FALSE(x) (x)
 #define XRTL_PREDICT_TRUE(x) (x)

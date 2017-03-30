@@ -34,94 +34,12 @@ cc_library(
         # NOTE: one platform must be defined.
         # If you are getting bazel select errors here add the platform to
         # the list.
-        "//xrtl/tools/target_platform:android": [
-            "XRTL_COMPILER_CLANG=1",
-            "XRTL_PLATFORM_ANDROID=1",
-        ],
-        "//xrtl/tools/target_platform:emscripten": [
-            "XRTL_COMPILER_CLANG=1",
-            "XRTL_PLATFORM_EMSCRIPTEN=1",
-        ],
-        "//xrtl/tools/target_platform:ios": [
-            "XRTL_COMPILER_CLANG=1",
-            "XRTL_PLATFORM_IOS=1",
-        ],
-        "//xrtl/tools/target_platform:linux": [
-            "XRTL_COMPILER_CLANG=1",
-            "XRTL_PLATFORM_LINUX=1",
-        ],
-        "//xrtl/tools/target_platform:macos": [
-            "XRTL_COMPILER_CLANG=1",
-            "XRTL_PLATFORM_MACOS=1",
-        ],
-        "//xrtl/tools/target_platform:windows": [
-            "XRTL_COMPILER_MSVC=1",
-            "XRTL_PLATFORM_WINDOWS=1",
-        ],
-    }) + select({
-        "//xrtl/tools/target_platform:android_arm": [
-            "XRTL_PLATFORM_ANDROID_ARM=1",
-            "XRTL_ARCH_ARM=1",
-        ],
-        "//xrtl/tools/target_platform:android_arm64": [
-            "XRTL_PLATFORM_ANDROID_ARM64=1",
-            "XRTL_ARCH_ARM64=1",
-        ],
-        "//xrtl/tools/target_platform:android_x86": [
-            "XRTL_PLATFORM_ANDROID_X86=1",
-            "XRTL_ARCH_X86=1",
-        ],
-        "//xrtl/tools/target_platform:android_x86_64": [
-            "XRTL_PLATFORM_ANDROID_X86_64=1",
-            "XRTL_ARCH_X86_64=1",
-        ],
-        "//conditions:default": [],
-    }) + select({
-        "//xrtl/tools/target_platform:emscripten_asmjs": [
-            "XRTL_PLATFORM_EMSCRIPTEN_ASMJS=1",
-            "XRTL_ARCH_ASMJS=1",
-        ],
-        "//xrtl/tools/target_platform:emscripten_wasm": [
-            "XRTL_PLATFORM_EMSCRIPTEN_WASM=1",
-            "XRTL_ARCH_WASM=1",
-        ],
-        "//conditions:default": [],
-    }) + select({
-        "//xrtl/tools/target_platform:ios_arm": [
-            "XRTL_PLATFORM_IOS_ARM=1",
-            "XRTL_ARCH_ARM=1",
-        ],
-        "//xrtl/tools/target_platform:ios_arm64": [
-            "XRTL_PLATFORM_IOS_ARM64=1",
-            "XRTL_ARCH_ARM64=1",
-        ],
-        "//xrtl/tools/target_platform:ios_x86": [
-            "XRTL_PLATFORM_IOS_X86=1",
-            "XRTL_ARCH_X86=1",
-        ],
-        "//xrtl/tools/target_platform:ios_x86_64": [
-            "XRTL_PLATFORM_IOS_X86_64=1",
-            "XRTL_ARCH_X86_64=1",
-        ],
-        "//conditions:default": [],
-    }) + select({
-        "//xrtl/tools/target_platform:linux_x86_64": [
-            "XRTL_PLATFORM_LINUX_X86_64=1",
-            "XRTL_ARCH_X86_64=1",
-        ],
-        "//conditions:default": [],
-    }) + select({
-        "//xrtl/tools/target_platform:macos_x86_64": [
-            "XRTL_PLATFORM_MACOS_X86_64=1",
-            "XRTL_ARCH_X86_64=1",
-        ],
-        "//conditions:default": [],
-    }) + select({
-        "//xrtl/tools/target_platform:windows_x86_64": [
-            "XRTL_PLATFORM_WINDOWS_X86_64=1",
-            "XRTL_ARCH_X86_64=1",
-        ],
-        "//conditions:default": [],
+        "//xrtl/tools/target_platform:android": [],
+        "//xrtl/tools/target_platform:emscripten": [],
+        "//xrtl/tools/target_platform:ios": [],
+        "//xrtl/tools/target_platform:linux": [],
+        "//xrtl/tools/target_platform:macos": [],
+        "//xrtl/tools/target_platform:windows": [],
     }),
 )
 
