@@ -23,14 +23,14 @@ namespace xrtl {
 // Provides time query results.
 // Multiple clocks may exist in a process at a time. UTC times are safe to
 // compare across clock instances, but process-relative times (such as returned
-// by now_millis) are only comparable with times from the smae clock.
+// by now_millis) are only comparable with times from the same clock.
 //
 // Two default clocks are provided:
 // - default_clock: generally useful time with no specific clock is needed.
 // - logging_clock: always matches system time.
 //
 // Applications may define their own clocks as needed and most systems should
-// prefer taking a SystemClock* as a parameters instead of using the global
+// prefer taking a SystemClock* as a parameter instead of using the global
 // values.
 class SystemClock {
  public:

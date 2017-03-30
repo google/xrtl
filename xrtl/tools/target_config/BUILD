@@ -86,7 +86,7 @@ config_setting(
     },
 )
 
-# Compile for as in the internal google3 repository.
+# Compile for as in the internal google repository.
 config_setting(
     name = "google_internal",
     values = {

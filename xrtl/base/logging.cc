@@ -1,5 +1,6 @@
 #include "xrtl/base/logging.h"
 
+#include <cstdarg>
 #include <cstdlib>
 #include <vector>
 
