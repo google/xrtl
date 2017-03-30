@@ -90,8 +90,7 @@ config_setting(
 config_setting(
     name = "google_internal",
     values = {
-        # TODO(benvanik): implicit check.
-        "define": "GOOGLE_INTERNAL=1",
+        "xcode_version_config": "//tools/osx:fom_xcodes",
     },
 )
 

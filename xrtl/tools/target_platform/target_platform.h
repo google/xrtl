@@ -19,7 +19,7 @@
 // one platform+architecture pair for that platform.
 //
 // XRTL_ARCH_ARM_V7A
-// XRTL_ARCH_ARM_V8
+// XRTL_ARCH_ARM_V8A
 // XRTL_ARCH_ASMJS
 // XRTL_ARCH_WASM_32
 // XRTL_ARCH_WASM_64
@@ -53,7 +53,7 @@
     defined(__TARGET_ARCH_ARM) || defined(__TARGET_ARCH_THUMB) || \
     defined(_M_ARM)
 #if defined(__arm64)
-#define XRTL_ARCH_ARM_V8 1
+#define XRTL_ARCH_ARM_V8A 1
 #else
 #define XRTL_ARCH_ARM_V7A 1
 #endif  // __arm64
@@ -75,7 +75,7 @@
 #define XRTL_ARCH_X86_64 1
 #endif  // X86
 
-#if !defined(XRTL_ARCH_ARM_V7A) && !defined(XRTL_ARCH_ARM_V8) && \
+#if !defined(XRTL_ARCH_ARM_V7A) && !defined(XRTL_ARCH_ARM_V8A) && \
     !defined(XRTL_ARCH_ASMJS) && !defined(XRTL_ARCH_WASM_32) &&  \
     !defined(XRTL_ARCH_WASM_64) && !defined(XRTL_ARCH_X86_32) && \
     !defined(XRTL_ARCH_X86_64)

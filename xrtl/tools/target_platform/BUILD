@@ -24,6 +24,30 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache 2.0
 
+load(
+    ":conditions.bzl",
+    "CONDITION_ANDROID",
+    "CONDITION_ANDROID_ARM_V7A",
+    "CONDITION_ANDROID_ARM_V8A",
+    "CONDITION_ANDROID_X86_32",
+    "CONDITION_ANDROID_X86_64",
+    "CONDITION_EMSCRIPTEN",
+    "CONDITION_EMSCRIPTEN_ASMJS",
+    "CONDITION_EMSCRIPTEN_WASM_32",
+    "CONDITION_EMSCRIPTEN_WASM_64",
+    "CONDITION_IOS",
+    "CONDITION_IOS_ARM_V7A",
+    "CONDITION_IOS_ARM_V8A",
+    "CONDITION_IOS_X86_32",
+    "CONDITION_IOS_X86_64",
+    "CONDITION_LINUX",
+    "CONDITION_LINUX_X86_64",
+    "CONDITION_MACOS",
+    "CONDITION_MACOS_X86_64",
+    "CONDITION_WINDOWS",
+    "CONDITION_WINDOWS_X86_64",
+)
+
 # Header that defines platform and architecture preprocessor values.
 # These can be used to conditionally enable code paths or dependencies.
 cc_library(
@@ -40,64 +64,18 @@ cc_library(
         "//xrtl/tools/target_platform:linux": [],
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [],
-    }),
-)
-
-#===============================================================================
-# Operating Systems
-#===============================================================================
-
-# Any Android device (physical or emulator).
-config_setting(
-    name = "android",
-    values = {
-        "crosstool_top": "TODO",
-    },
-)
-
-# Emscripten for asmjs or wasm.
-config_setting(
-    name = "emscripten",
-    values = {
-        "crosstool_top": "TODO",
-    },
-)
-
-# Any iOS device (physical or simulator).
-config_setting(
-    name = "ios",
-    values = {
-        "crosstool_top": "TODO",
-    },
-)
-
-# Linux, which is usually expressed as //conditions:default in selects.
-config_setting(
-    name = "linux",
-    values = {
-        "cpu": "k8",
-    },
-)
-
-# MacOS.
-config_setting(
-    name = "macos",
-    values = {
-        "cpu": "darwin",
-    },
-)
-
-# Windows (desktop).
-config_setting(
-    name = "windows",
-    values = {
-        "crosstool_top": "TODO",
-    },
+    }, no_match_error = "Unrecognized platform"),
 )
 
 #===============================================================================
 # Android
 #===============================================================================
+
+# Any Android device (physical or emulator).
+config_setting(
+    name = "android",
+    values = CONDITION_ANDROID,
+)
 
 config_setting(
     name = "android_emulator",
@@ -107,40 +85,34 @@ config_setting(
 )
 
 config_setting(
-    name = "android_arm",
-    values = {
-        "crosstool_top": "TODO",
-        "cpu": "armeabi-v7a",
-    },
+    name = "android_arm_v7a",
+    values = CONDITION_ANDROID_ARM_V7A,
 )
 
 config_setting(
-    name = "android_arm64",
-    values = {
-        "crosstool_top": "TODO",
-        "cpu": "arm64-v8a",
-    },
+    name = "android_arm_v8a",
+    values = CONDITION_ANDROID_ARM_V8A,
 )
 
 config_setting(
-    name = "android_x86",
-    values = {
-        "crosstool_top": "TODO",
-        "cpu": "x86",
-    },
+    name = "android_x86_32",
+    values = CONDITION_ANDROID_X86_32,
 )
 
 config_setting(
     name = "android_x86_64",
-    values = {
-        "crosstool_top": "TODO",
-        "cpu": "x86_64",
-    },
+    values = CONDITION_ANDROID_X86_64,
 )
 
 #===============================================================================
 # Emscripten
 #===============================================================================
+
+# Emscripten for asmjs or wasm.
+config_setting(
+    name = "emscripten",
+    values = CONDITION_EMSCRIPTEN,
+)
 
 config_setting(
     name = "emscripten_asmjs",
@@ -151,16 +123,24 @@ config_setting(
 )
 
 config_setting(
-    name = "emscripten_wasm",
-    values = {
-        "crosstool_top": "TODO",
-        "cpu": "asmjs",
-    },
+    name = "emscripten_wasm_32",
+    values = CONDITION_EMSCRIPTEN_WASM_32,
+)
+
+config_setting(
+    name = "emscripten_wasm_64",
+    values = CONDITION_EMSCRIPTEN_WASM_64,
 )
 
 #===============================================================================
 # iOS
 #===============================================================================
+
+# Any iOS device (physical or simulator).
+config_setting(
+    name = "ios",
+    values = CONDITION_IOS,
+)
 
 config_setting(
     name = "ios_simulator",
@@ -170,62 +150,66 @@ config_setting(
 )
 
 config_setting(
-    name = "ios_arm",
-    values = {
-        "ios_cpu": "armv7",
-    },
+    name = "ios_arm_v7a",
+    values = CONDITION_IOS_ARM_V7A,
 )
 
 config_setting(
-    name = "ios_arm64",
-    values = {
-        "ios_cpu": "arm64",
-    },
+    name = "ios_arm_v8a",
+    values = CONDITION_IOS_ARM_V8A,
 )
 
 config_setting(
-    name = "ios_x86",
-    values = {
-        "ios_cpu": "i386",
-    },
+    name = "ios_x86_32",
+    values = CONDITION_IOS_X86_32,
 )
 
 config_setting(
     name = "ios_x86_64",
-    values = {
-        "ios_cpu": "x86_64",
-    },
+    values = CONDITION_IOS_X86_64,
 )
 
 #===============================================================================
 # Linux
 #===============================================================================
 
+# Linux, which is usually expressed as //conditions:default in selects.
+config_setting(
+    name = "linux",
+    values = CONDITION_LINUX,
+)
+
 config_setting(
     name = "linux_x86_64",
-    values = {
-        "cpu": "k8",
-    },
+    values = CONDITION_LINUX_X86_64,
 )
 
 #===============================================================================
 # MacOS
 #===============================================================================
 
+# MacOS.
+config_setting(
+    name = "macos",
+    values = CONDITION_MACOS,
+)
+
 config_setting(
     name = "macos_x86_64",
-    values = {
-        "cpu": "darwin",
-    },
+    values = CONDITION_MACOS_X86_64,
 )
 
 #===============================================================================
 # Windows
 #===============================================================================
 
+# Windows (desktop).
+config_setting(
+    name = "windows",
+    values = CONDITION_WINDOWS,
+)
+
 config_setting(
     name = "windows_x86_64",
-    values = {
-        "cpu": "x64_windows_msvc",
-    },
+    values = CONDITION_WINDOWS_X86_64,
 )
