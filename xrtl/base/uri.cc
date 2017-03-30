@@ -130,7 +130,7 @@ std::string JoinParts(StringView left, StringView right) {
   } else if (IsPathAbsolute(right)) {
     // ... + /...
     return std::string(GetOrigin(left)) + std::string(right);
-  } else if (left.size() && left[left.size() - 1] == '/') {
+  } else if (!left.empty() && left[left.size() - 1] == '/') {
     // .../ + ...
     return std::string(left) + std::string(right);
   } else {

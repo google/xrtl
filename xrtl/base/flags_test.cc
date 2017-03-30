@@ -47,7 +47,7 @@ TEST(FlagsTest, CommandLines) {
 TEST(FlagsTest, GetAllFlagNames) {
   auto flag_names = GetAllFlagNames();
   bool has_this_test_flags = false;
-  for (auto flag_name : flag_names) {
+  for (const auto& flag_name : flag_names) {
     if (flag_name == "cmd_line_flag") {
       has_this_test_flags = true;
       break;

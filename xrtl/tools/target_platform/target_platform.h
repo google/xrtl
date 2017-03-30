@@ -67,23 +67,17 @@
 #define XRTL_ARCH_ASMJS 1
 #endif  // wasm/asmjs
 
-#if defined(__i386__) || \
-    defined(__i486__) || defined(__i586__) || \
-    defined(__i686__) || defined(__i386) || \
-    defined(_M_IX86) || defined(_X86_)
+#if defined(__i386__) || defined(__i486__) || defined(__i586__) || \
+    defined(__i686__) || defined(__i386) || defined(_M_IX86) || defined(_X86_)
 #define XRTL_ARCH_X86_32 1
-#elif defined(__x86_64) || defined(__x86_64__) || \
-    defined(__amd64__) || defined(__amd64) || \
-    defined(_M_X64)
+#elif defined(__x86_64) || defined(__x86_64__) || defined(__amd64__) || \
+    defined(__amd64) || defined(_M_X64)
 #define XRTL_ARCH_X86_64 1
 #endif  // X86
 
-#if !defined(XRTL_ARCH_ARM_V7A) && \
-    !defined(XRTL_ARCH_ARM_V8) && \
-    !defined(XRTL_ARCH_ASMJS) && \
-    !defined(XRTL_ARCH_WASM_32) && \
-    !defined(XRTL_ARCH_WASM_64) && \
-    !defined(XRTL_ARCH_X86_32) && \
+#if !defined(XRTL_ARCH_ARM_V7A) && !defined(XRTL_ARCH_ARM_V8) && \
+    !defined(XRTL_ARCH_ASMJS) && !defined(XRTL_ARCH_WASM_32) &&  \
+    !defined(XRTL_ARCH_WASM_64) && !defined(XRTL_ARCH_X86_32) && \
     !defined(XRTL_ARCH_X86_64)
 #error Unknown architecture.
 #endif  // all archs
@@ -152,12 +146,9 @@
 #define XRTL_PLATFORM_WINDOWS 1
 #endif  // _WIN32 || _WIN64
 
-#if !defined(XRTL_PLATFORM_ANDROID) && \
-    !defined(XRTL_PLATFORM_EMSCRIPTEN) && \
-    !defined(XRTL_PLATFORM_IOS) && \
-    !defined(XRTL_PLATFORM_LINUX) && \
-    !defined(XRTL_PLATFORM_MACOS) && \
-    !defined(XRTL_PLATFORM_WINDOWS)
+#if !defined(XRTL_PLATFORM_ANDROID) && !defined(XRTL_PLATFORM_EMSCRIPTEN) && \
+    !defined(XRTL_PLATFORM_IOS) && !defined(XRTL_PLATFORM_LINUX) &&          \
+    !defined(XRTL_PLATFORM_MACOS) && !defined(XRTL_PLATFORM_WINDOWS)
 #error Unknown platform.
 #endif  // all archs
 
