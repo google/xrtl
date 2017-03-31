@@ -12,7 +12,7 @@ compiler:
 
 cache:
   directories:
-  - $HOME/.cache/bazel
+  - $HOME/.cache/bazel_root
 
 before_install:
   - ./tools/ci/travis/before_install.sh

@@ -1,6 +1,6 @@
 # Default bazel configuration when running under Travis.
 
-startup --output_base=$HOME/.cache/bazel
+startup --output_base=$HOME/.cache/bazel_root
 startup --batch
 startup --host_jvm_args=-Xmx500m
 startup --host_jvm_args=-Xmx500m
