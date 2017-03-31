@@ -1,0 +1,21 @@
+dist: trusty
+sudo: false
+
+os:
+  - linux
+  - osx
+osx_image: xcode8.3
+
+language: cpp
+compiler:
+  - clang
+
+cache:
+  directories:
+  - $HOME/.cache/bazel
+
+before_install:
+  - ./tools/ci/travis/before_install.sh
+
+script:
+  - ./tools/ci/travis/run_script.sh
