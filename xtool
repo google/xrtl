@@ -1,0 +1,678 @@
+#!/usr/bin/env python
+
+# Copyright 2017 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Build script for XRTL.
+This provides build, test, linting, and other utilities based on bazel.
+All commands can be executed manually but are easier through this (in most
+cases).
+"""
+
+
+import argparse
+import difflib
+import os
+import re
+import shutil
+import string
+import subprocess
+import sys
+
+
+self_path = os.path.dirname(os.path.abspath(__file__))
+
+
+def main():
+  # Add self to the root search path.
+  sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+  # Check python version.
+  if not sys.version_info[:2] == (2, 7):
+    print('ERROR: Python 2.7 must be installed and on PATH')
+    sys.exit(1)
+    return
+
+  # Check git exists.
+  if not has_bin('git'):
+    print('ERROR: git must be installed and on PATH.')
+    sys.exit(1)
+    return
+
+  # Grab Visual Studio version and execute shell to set up environment.
+  if sys.platform == 'win32':
+    vs_version = import_vs_environment()
+    # TODO(benvanik): support 2017 as well.
+    if vs_version != 2015:
+      print('ERROR: Visual Studio 2015 not found!')
+      print('Ensure you have the VS140COMNTOOLS environment variable!')
+      sys.exit(1)
+      return
+
+  # Setup main argument parser and common arguments.
+  parser = argparse.ArgumentParser(prog='xtool')
+
+  # Grab all commands and populate the argument parser for each.
+  subparsers = parser.add_subparsers(title='subcommands',
+                                     dest='subcommand')
+  commands = discover_commands(subparsers)
+
+  # If the user passed no args, die nicely.
+  if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
+    return
+
+  # Gather any arguments that we want to pass to child processes.
+  command_args = sys.argv[1:]
+  pass_args = []
+  try:
+    pass_index = command_args.index('--')
+    pass_args = command_args[pass_index + 1:]
+    command_args = command_args[:pass_index]
+  except:
+    pass
+
+  # Parse command name and dispatch.
+  args = vars(parser.parse_args(command_args))
+  command_name = args['subcommand']
+  try:
+    command = commands[command_name]
+    return_code = command.execute(args, pass_args, os.getcwd())
+  except Exception as e:
+    raise
+    return_code = 1
+  sys.exit(return_code)
+
+
+def import_vs_environment():
+  """Finds the installed Visual Studio version and imports
+  interesting environment variables into os.environ.
+
+  Returns:
+    A version such as 2015 or None if no VS is found.
+  """
+  version = 0
+  tools_path = ''
+  if 'VS140COMNTOOLS' in os.environ:
+    version = 2015
+    tools_path = os.environ['VS140COMNTOOLS']
+  if version == 0:
+    return None
+  tools_path = os.path.join(tools_path, '..\\..\\vc\\vcvarsall.bat')
+
+  args = [tools_path, '&&', 'set']
+  popen = subprocess.Popen(
+      args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  variables, _ = popen.communicate()
+  envvars_to_save = (
+      'devenvdir',
+      'include',
+      'lib',
+      'libpath',
+      'path',
+      'pathext',
+      'systemroot',
+      'temp',
+      'tmp',
+      'windowssdkdir',
+      )
+  for line in variables.splitlines():
+    for envvar in envvars_to_save:
+      if re.match(envvar + '=', line.lower()):
+        var, setting = line.split('=', 1)
+        if envvar == 'path':
+          setting = os.path.dirname(sys.executable) + os.pathsep + setting
+        os.environ[var.upper()] = setting
+        break
+
+  os.environ['VSVERSION'] = str(version)
+  return version
+
+
+def has_bin(bin):
+  """Checks whether the given binary is present.
+
+  Args:
+    bin: binary name (without .exe, etc).
+  Returns:
+    True if the binary exists.
+  """
+  bin_path = get_bin(bin)
+  if not bin_path:
+    return False
+  return True
+
+
+def get_bin(bin):
+  """Checks whether the given binary is present and returns the path.
+
+  Args:
+    bin: binary name (without .exe, etc).
+  Returns:
+    Full path to the binary or None if not found.
+  """
+  for path in os.environ['PATH'].split(os.pathsep):
+    path = path.strip('"')
+    exe_file = os.path.join(path, bin)
+    if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
+      return exe_file
+    exe_file = exe_file + '.exe'
+    if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
+      return exe_file
+  return None
+
+
+def shell_call(command, throw_on_error=True, stdout_path=None):
+  """Executes a shell command.
+
+  Args:
+    command: Command to execute, as a list of parameters.
+    throw_on_error: Whether to throw an error or return the status code.
+    stdout_path: File path to write stdout output to.
+  Returns:
+    If throw_on_error is False the status code of the call will be returned.
+  """
+  stdout_file = None
+  if stdout_path:
+    stdout_file = open(stdout_path, 'w')
+  result = 0
+  try:
+    if throw_on_error:
+      result = 1
+      subprocess.check_call(command, shell=False, stdout=stdout_file)
+      result = 0
+    else:
+      result = subprocess.call(command, shell=False, stdout=stdout_file)
+  finally:
+    if stdout_file:
+      stdout_file.close()
+  return result
+
+
+def get_git_head_info():
+  """Queries the current branch and commit checksum from git.
+
+  Returns:
+    (branch_name, commit, commit_short)
+    If the user is not on any branch the name will be 'detached'.
+  """
+  p = subprocess.Popen([
+      'git',
+      'symbolic-ref',
+      '--short',
+      '-q',
+      'HEAD',
+      ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  (stdout, stderr) = p.communicate()
+  branch_name = stdout.strip() or 'detached'
+  p = subprocess.Popen([
+      'git',
+      'rev-parse',
+      'HEAD',
+      ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  (stdout, stderr) = p.communicate()
+  commit = stdout.strip() or 'unknown'
+  p = subprocess.Popen([
+      'git',
+      'rev-parse',
+      '--short',
+      'HEAD',
+      ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  (stdout, stderr) = p.communicate()
+  commit_short = stdout.strip() or 'unknown'
+  return (branch_name, commit, commit_short)
+
+
+def git_submodule_update():
+  """Runs a full recursive git submodule init and update.
+  """
+  shell_call([
+      'git',
+      'submodule',
+      'update',
+      '--init',
+      '--recursive',
+      ])
+
+
+def get_clang_format_binary():
+  """Finds a clang-format binary. Aborts if none is found.
+
+  Returns:
+    A path to the clang-format executable.
+  """
+  attempts = [
+      'C:\\Program Files\\LLVM\\bin\\clang-format.exe',
+      'C:\\Program Files (x86)\\LLVM\\bin\\clang-format.exe',
+      'clang-format-4.0',
+      'clang-format-3.9',
+      'clang-format-3.8',
+      'clang-format',
+      ]
+  for binary in attempts:
+    if has_bin(binary):
+      return binary
+  print 'ERROR: clang-format is not on PATH'
+  print 'LLVM is available from http://llvm.org/releases/download.html'
+  print 'At least version 3.8 is required.'
+  sys.exit(1)
+
+
+def discover_commands(subparsers):
+  """Looks for all commands and returns a dictionary of them.
+  In the future commands could be discovered on disk.
+
+  Args:
+    subparsers: Argument subparsers parent used to add command parsers.
+  Returns:
+    A dictionary containing name-to-Command mappings.
+  """
+  commands = {
+      'setup': SetupCommand(subparsers),
+      'pull': PullCommand(subparsers),
+      'build': BuildCommand(subparsers),
+      'test': TestCommand(subparsers),
+      'lint': LintCommand(subparsers),
+      'fix': FixCommand(subparsers),
+      'tidy': TidyCommand(subparsers),
+      }
+  return commands
+
+
+class Command(object):
+  """Base type for commands.
+  """
+
+  def __init__(self, subparsers, name, help_short=None, help_long=None,
+               *args, **kwargs):
+    """Initializes a command.
+
+    Args:
+      subparsers: Argument subparsers parent used to add command parsers.
+      name: The name of the command exposed to the management script.
+      help_short: Help text printed alongside the command when queried.
+      help_long: Extended help text when viewing command help.
+    """
+    self.name = name
+    self.help_short = help_short
+    self.help_long = help_long
+
+    self.parser = subparsers.add_parser(name,
+                                        help=help_short,
+                                        description=help_long)
+    self.parser.set_defaults(command_handler=self)
+
+  def execute(self, args, pass_args, cwd):
+    """Executes the command.
+
+    Args:
+      args: Arguments hash for the command.
+      pass_args: Arguments list to pass to child commands.
+      cwd: Current working directory.
+    Returns:
+      Return code of the command.
+    """
+    return 1
+
+
+class SetupCommand(Command):
+  """'setup' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(SetupCommand, self).__init__(
+        subparsers,
+        name='setup',
+        help_short='Setup the build environment.',
+        *args, **kwargs)
+
+  def execute(self, args, pass_args, cwd):
+    print('Setting up the build environment...')
+    print('')
+
+    # Setup submodules.
+    print('- git submodule init / update...')
+    git_submodule_update()
+    print('')
+
+    return 0
+
+
+class PullCommand(Command):
+  """'pull' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(PullCommand, self).__init__(
+        subparsers,
+        name='pull',
+        help_short='Pulls the repo and all dependencies and rebases changes.',
+        *args, **kwargs)
+    self.parser.add_argument('--merge', action='store_true',
+                             help='Merges on master instead of rebasing.')
+
+  def execute(self, args, pass_args, cwd):
+    print('Pulling...')
+    print('')
+
+    print('- switching to master...')
+    shell_call([
+        'git',
+        'checkout',
+        'master',
+        ])
+    print('')
+
+    print('- pulling self...')
+    if args['merge']:
+      shell_call([
+          'git',
+          'pull',
+          ])
+    else:
+      shell_call([
+          'git',
+          'pull',
+          '--rebase',
+          ])
+    print('')
+
+    print('- pulling dependencies...')
+    git_submodule_update()
+    print('')
+
+    # TODO(benvanik): run tulsi/etc.
+
+    return 0
+
+
+class BazelCommand(Command):
+  """Base for commands that invoke bazel."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(BazelCommand, self).__init__(
+        subparsers,
+        *args, **kwargs)
+
+  def execute(self, args, pass_args, cwd):
+    result = subprocess.call([
+        'bazel',
+        ] + pass_args, shell=False)
+    print('')
+    if result != 0:
+      print('ERROR: build failed with one or more errors.')
+      return result
+    return 0
+
+
+class BuildCommand(BazelCommand):
+  """'build' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(BuildCommand, self).__init__(
+        subparsers,
+        name='build',
+        help_short='Builds several platforms at once.',
+        *args, **kwargs)
+
+  def execute(self, args, pass_args, cwd):
+    # TODO(benvanik): build script.
+    result = super(BuildCommand, self).execute(args, pass_args, cwd)
+    if not result:
+      print('Success!')
+    return result
+
+
+class TestCommand(BazelCommand):
+  """'test' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(TestCommand, self).__init__(
+        subparsers,
+        name='test',
+        help_short='Runs tests for several platforms at once.',
+        help_long='''
+        To pass arguments to the test executables separate them with `--`.
+          $ xtool test -- --some_test_arg
+        ''',
+        *args, **kwargs)
+    # TODO(benvanik): configs for platforms to run tests on.
+
+  def execute(self, args, pass_args, cwd):
+    # TODO(benvanik): test script.
+    result = super(TestCommand, self).execute(args, pass_args, cwd)
+    if not result:
+      print('Success!')
+    return result
+
+
+def find_xrtl_source_files():
+  """Gets all XRTL source files in the project.
+
+  Returns:
+    A list of file paths.
+  """
+  return [os.path.join(root, name)
+      for root, dirs, files in os.walk('xrtl')
+      for name in files
+      if name.endswith((
+          '.cc',
+          '.c',
+          '.h',
+          '.inl',
+          '.mm',
+          '.m',
+          '.java',
+          '.py',
+          ))]
+
+
+def find_all_source_files():
+  """Gets all interesting source files in the project.
+
+  Returns:
+    A list of file paths.
+  """
+  return find_xrtl_source_files()
+
+
+class LintCommand(Command):
+  """'lint' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(LintCommand, self).__init__(
+        subparsers,
+        name='lint',
+        help_short='Checks for lint and style errors with clang-format.',
+        *args, **kwargs)
+    self.parser.add_argument(
+        '--all', action='store_true',
+        help='Lint all files, not just those changed.')
+    self.parser.add_argument(
+        '--origin', action='store_true',
+        help='Lints all files changed relative to origin/master.')
+
+  def execute(self, args, pass_args, cwd):
+    clang_format_binary = get_clang_format_binary()
+
+    difftemp = '.difftemp.txt'
+
+    # TODO(benvanik): multithreading.
+    if args['all']:
+      all_files = find_all_source_files()
+      print('- linting %d files' % (len(all_files)))
+      any_errors = False
+      for file_path in all_files:
+        if os.path.exists(difftemp): os.remove(difftemp)
+        ret = shell_call([
+            clang_format_binary,
+            '-output-replacements-xml',
+            '-style=file',
+            file_path,
+            ], throw_on_error=False, stdout_path=difftemp)
+        with open(difftemp) as f:
+          had_errors = '<replacement ' in f.read()
+        if os.path.exists(difftemp): os.remove(difftemp)
+        if had_errors:
+          any_errors = True
+          print('')
+          print(file_path)
+          shell_call([
+              clang_format_binary,
+              '-style=file',
+              file_path,
+              ], throw_on_error=False, stdout_path=difftemp)
+          diff = difflib.unified_diff(
+              open(file_path).readlines(),
+              open(difftemp).readlines())
+          with open(difftemp, 'w') as f:
+            f.write(''.join(diff))
+          shell_call([
+              'type' if sys.platform=='win32' else 'cat',
+              difftemp,
+              ])
+          if os.path.exists(difftemp): os.remove(difftemp)
+          print('')
+      print('')
+      if any_errors:
+        print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
+        return 1
+      else:
+        print('Linting completed successfully.')
+    else:
+      print('- git-clang-format --diff')
+      if os.path.exists(difftemp): os.remove(difftemp)
+      ret = shell_call([
+          'python',
+          'third_party/clang_format/git-clang-format',
+          '--binary=%s' % (clang_format_binary),
+          '--commit=%s' % ('origin/master' if args['origin'] else 'HEAD'),
+          '--diff',
+          ], throw_on_error=False, stdout_path=difftemp)
+      with open(difftemp) as f:
+        contents = f.read()
+        not_modified = 'no modified files' in contents
+        not_modified = not_modified or 'did not modify' in contents
+        f.close()
+      if os.path.exists(difftemp): os.remove(difftemp)
+      if not not_modified:
+        any_errors = True
+        print('')
+        shell_call([
+            'python',
+            'third_party/clang_format/git-clang-format',
+            '--binary=%s' % (clang_format_binary),
+            '--commit=%s' % ('origin/master' if args['origin'] else 'HEAD'),
+            '--diff',
+            ])
+        print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
+        return 1
+      else:
+        print('Linting completed successfully.')
+
+    # Style guide check.
+    # TODO(benvanik): eat the 'Done processing' lines when there are no errors.
+    style_files = [file_path for file_path in find_all_source_files()
+                   if not file_path.endswith('_test.cc')]
+    print('- cpplint [%d files]' % (len(style_files)))
+    ret = shell_call([
+        'python',
+        'third_party/google_styleguide/cpplint/cpplint.py',
+        '--output=vs7',
+        '--linelength=80',
+        '--filter=-build/c++11,+build/include_alpha',
+        '--root=xrtl/',
+        ] + style_files, throw_on_error=False)
+    print('')
+    if ret:
+      print('ERROR: 1+ cpplint calls failed.')
+      return 1
+    else:
+      print('Style checking completed successfully.')
+
+    return 0
+
+
+class FixCommand(Command):
+  """'fix' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(FixCommand, self).__init__(
+        subparsers,
+        name='fix',
+        help_short='Reformats staged code with clang-format.',
+        *args, **kwargs)
+    self.parser.add_argument(
+        '--all', action='store_true',
+        help='Format all files, not just those changed.')
+    self.parser.add_argument(
+        '--origin', action='store_true',
+        help='Formats all files changed relative to origin/master.')
+
+  def execute(self, args, pass_args, cwd):
+    clang_format_binary = get_clang_format_binary()
+
+    if args['all']:
+      all_files = find_all_source_files()
+      print('- clang-format [%d files]' % (len(all_files)))
+      any_errors = False
+      for file_path in all_files:
+        ret = shell_call([
+            clang_format_binary,
+            '-i',
+            '-style=file',
+            file_path,
+            ], throw_on_error=False)
+        if ret:
+          any_errors = True
+      print('')
+      if any_errors:
+        print('ERROR: 1+ clang-format calls failed.')
+        print('Ensure all files are staged.')
+        return 1
+      else:
+        print('Formatting completed successfully.')
+        return 0
+    else:
+      print('- git-clang-format')
+      shell_call([
+          'python',
+          'third_party/clang_format/git-clang-format',
+          '--binary=%s' % (clang_format_binary),
+          '--commit=%s' % ('origin/master' if args['origin'] else 'HEAD'),
+          ])
+      print('')
+
+    return 0
+
+
+class TidyCommand(Command):
+  """'tidy' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(TidyCommand, self).__init__(
+        subparsers,
+        name='tidy',
+        help_short='Runs the clang-tidy checker on all code.',
+        *args, **kwargs)
+    self.parser.add_argument(
+        '--fix', action='store_true',
+        help='Applies suggested fixes, where possible.')
+
+  def execute(self, args, pass_args, cwd):
+    # TODO(benvanik): implement this. Needs bazel aspect support.
+    return 1
+
+
+if __name__ == '__main__':
+  main()
