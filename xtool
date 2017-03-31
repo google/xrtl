@@ -41,14 +41,12 @@ def main():
   # Check python version.
   if not sys.version_info[:2] == (2, 7):
     print('ERROR: Python 2.7 must be installed and on PATH')
-    sys.exit(1)
-    return
+    return 1
 
   # Check git exists.
   if not has_bin('git'):
     print('ERROR: git must be installed and on PATH.')
-    sys.exit(1)
-    return
+    return 1
 
   # Grab Visual Studio version and execute shell to set up environment.
   if sys.platform == 'win32':
@@ -57,8 +55,7 @@ def main():
     if vs_version != 2015:
       print('ERROR: Visual Studio 2015 not found!')
       print('Ensure you have the VS140COMNTOOLS environment variable!')
-      sys.exit(1)
-      return
+      return 1
 
   # Setup main argument parser and common arguments.
   parser = argparse.ArgumentParser(prog='xtool')
@@ -71,8 +68,7 @@ def main():
   # If the user passed no args, die nicely.
   if len(sys.argv) == 1:
     parser.print_help()
-    sys.exit(1)
-    return
+    return 1
 
   # Gather any arguments that we want to pass to child processes.
   command_args = sys.argv[1:]
@@ -93,7 +89,7 @@ def main():
   except Exception as e:
     raise
     return_code = 1
-  sys.exit(return_code)
+  return return_code
 
 
 def import_vs_environment():
@@ -270,6 +266,46 @@ def get_clang_format_binary():
   sys.exit(1)
 
 
+def get_git_clang_format_py():
+  """Finds the git-clang-format python file. Aborts if none is found.
+
+  Returns:
+    A path to the git-clang-format executable.
+  """
+  attempts = [
+      'C:\\Program Files\\LLVM\\bin\\git-clang-format',
+      'C:\\Program Files (x86)\\LLVM\\bin\\git-clang-format',
+      'git-clang-format',
+      ]
+  for py_path in attempts:
+    if has_bin(py_path):
+      return get_bin(py_path)
+  print 'ERROR: git-clang-format is not on PATH'
+  print 'LLVM is available from http://llvm.org/releases/download.html'
+  print 'At least version 3.8 is required.'
+  sys.exit(1)
+
+
+def get_clang_tidy_binary():
+  """Finds a clang-tidy binary.
+
+  Returns:
+    A path to the clang-tidy executable or empty string if not found.
+  """
+  attempts = [
+      'C:\\Program Files\\LLVM\\bin\\clang-tidy.exe',
+      'C:\\Program Files (x86)\\LLVM\\bin\\clang-tidy.exe',
+      'clang-tidy',
+      ]
+  for binary in attempts:
+    if has_bin(binary):
+      return binary
+  print 'ERROR: clang-tidy is not on PATH'
+  print 'LLVM is available from http://llvm.org/releases/download.html'
+  print 'At least version 3.8 is required.'
+  sys.exit(1)
+
+
 def discover_commands(subparsers):
   """Looks for all commands and returns a dictionary of them.
   In the future commands could be discovered on disk.
@@ -287,6 +323,7 @@ def discover_commands(subparsers):
       'lint': LintCommand(subparsers),
       'fix': FixCommand(subparsers),
       'tidy': TidyCommand(subparsers),
+      'presubmit': PresubmitCommand(subparsers),
       }
   return commands
 
@@ -309,10 +346,13 @@ class Command(object):
     self.help_short = help_short
     self.help_long = help_long
 
-    self.parser = subparsers.add_parser(name,
-                                        help=help_short,
-                                        description=help_long)
-    self.parser.set_defaults(command_handler=self)
+    if subparsers:
+      self.parser = subparsers.add_parser(name,
+                                          help=help_short,
+                                          description=help_long)
+      self.parser.set_defaults(command_handler=self)
+    else:
+      self.parser = None
 
   def execute(self, args, pass_args, cwd):
     """Executes the command.
@@ -486,6 +526,190 @@ def find_all_source_files():
   return find_xrtl_source_files()
 
 
+def find_changed_source_files():
+  """Gets all changed source files from the origin.
+
+  Returns:
+    A list of file paths.
+  """
+  # TODO(benvanik): limit list.
+  return find_xrtl_source_files()
+
+
+def lint_check_files(check_all_files = False, diff_origin = False):
+  """
+  Args:
+    check_all_files: True to run on all files, not just the git changes.
+    diff_origin: git diff against origin/master, not HEAD.
+
+  Returns:
+    0 if linting completed without errors.
+  """
+  clang_format_binary = get_clang_format_binary()
+  git_clang_format_py = get_git_clang_format_py()
+
+  difftemp = '.difftemp.txt'
+  return_code = 0
+
+  # TODO(benvanik): multithreading.
+  if check_all_files:
+    all_files = find_all_source_files()
+    print('- linting %d files' % (len(all_files)))
+    any_errors = False
+    for file_path in all_files:
+      if os.path.exists(difftemp): os.remove(difftemp)
+      ret = shell_call([
+          clang_format_binary,
+          '-output-replacements-xml',
+          '-style=file',
+          file_path,
+          ], throw_on_error=False, stdout_path=difftemp)
+      with open(difftemp) as f:
+        had_errors = '<replacement ' in f.read()
+      if os.path.exists(difftemp): os.remove(difftemp)
+      if had_errors:
+        any_errors = True
+        print('')
+        print(file_path)
+        shell_call([
+            clang_format_binary,
+            '-style=file',
+            file_path,
+            ], throw_on_error=False, stdout_path=difftemp)
+        diff = difflib.unified_diff(
+            open(file_path).readlines(),
+            open(difftemp).readlines())
+        with open(difftemp, 'w') as f:
+          f.write(''.join(diff))
+        shell_call([
+            'type' if sys.platform=='win32' else 'cat',
+            difftemp,
+            ])
+        if os.path.exists(difftemp): os.remove(difftemp)
+        print('')
+    print('')
+    if any_errors:
+      print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
+      return_code = 1
+    else:
+      print('Linting completed successfully.')
+  else:
+    print('- git-clang-format --diff')
+    if os.path.exists(difftemp): os.remove(difftemp)
+    ret = shell_call([
+        'python',
+        git_clang_format_py,
+        '--binary=%s' % (clang_format_binary),
+        '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
+        '--diff',
+        ], throw_on_error=False, stdout_path=difftemp)
+    with open(difftemp) as f:
+      contents = f.read()
+      not_modified = 'no modified files' in contents
+      not_modified = not_modified or 'did not modify' in contents
+      f.close()
+    if os.path.exists(difftemp): os.remove(difftemp)
+    if not not_modified:
+      any_errors = True
+      print('')
+      shell_call([
+          'python',
+          git_clang_format_py,
+          '--binary=%s' % (clang_format_binary),
+          '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
+          '--diff',
+          ])
+      print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
+      return_code = 1
+    else:
+      print('Linting completed successfully.')
+
+  return return_code
+
+
+def lint_fix_files(check_all_files = False, diff_origin = False):
+  """
+  Args:
+    check_all_files: True to run on all files, not just the git changes.
+    diff_origin: git diff against origin/master, not HEAD.
+
+  Returns:
+    0 if linting completed without errors.
+  """
+  clang_format_binary = get_clang_format_binary()
+  git_clang_format_py = get_git_clang_format_py()
+
+  if check_all_files:
+    all_files = find_all_source_files()
+    print('- clang-format [%d files]' % (len(all_files)))
+    any_errors = False
+    for file_path in all_files:
+      ret = shell_call([
+          clang_format_binary,
+          '-i',
+          '-style=file',
+          file_path,
+          ], throw_on_error=False)
+      if ret:
+        any_errors = True
+    print('')
+    if any_errors:
+      print('ERROR: 1+ clang-format calls failed.')
+      print('Ensure all files are staged.')
+      return 1
+    else:
+      print('Formatting completed successfully.')
+      return 0
+  else:
+    print('- git-clang-format')
+    shell_call([
+        'python',
+        git_clang_format_py,
+        '--binary=%s' % (clang_format_binary),
+        '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
+        ])
+    print('')
+  return 0
+
+
+def style_check_files(check_all_files = False):
+  """
+  Args:
+    check_all_files: True to run on all files, not just the git changes.
+
+  Returns:
+    0 if style check completed without errors.
+  """
+  # Select source files for style checking.
+  source_files = []
+  if check_all_files:
+    source_files = find_all_source_files()
+  else:
+    source_files = find_changed_source_files()
+
+  # Remove _test.cc files.
+  source_files = [source_file for source_file in source_files
+                  if not source_file.endswith('_test.cc')]
+
+  # Style guide check.
+  # TODO(benvanik): eat the 'Done processing' lines when there are no errors.
+  print('- cpplint [%d files]' % (len(source_files)))
+  return_code = shell_call([
+      'python',
+      'third_party/google_styleguide/cpplint/cpplint.py',
+      '--output=vs7',
+      '--linelength=80',
+      '--filter=-build/c++11,+build/include_alpha',
+      '--root=xrtl/',
+      ] + source_files, throw_on_error=False)
+  print('')
+  if return_code:
+    print('ERROR: 1+ cpplint calls failed.')
+  else:
+    print('Style checking completed successfully.')
+  return return_code
+
+
 class LintCommand(Command):
   """'lint' command."""
 
@@ -495,6 +719,7 @@ class LintCommand(Command):
         name='lint',
         help_short='Checks for lint and style errors with clang-format.',
         *args, **kwargs)
+    if not self.parser: return
     self.parser.add_argument(
         '--all', action='store_true',
         help='Lint all files, not just those changed.')
@@ -503,104 +728,20 @@ class LintCommand(Command):
         help='Lints all files changed relative to origin/master.')
 
   def execute(self, args, pass_args, cwd):
-    clang_format_binary = get_clang_format_binary()
+    # lint.
+    return_code = lint_check_files(
+        check_all_files = args['all'],
+        diff_origin = args['origin'])
+    if return_code:
+      return return_code
 
-    difftemp = '.difftemp.txt'
+    # style check.
+    return_code = style_check_files(
+        check_all_files = args['all'])
+    if return_code:
+      return return_code
 
-    # TODO(benvanik): multithreading.
-    if args['all']:
-      all_files = find_all_source_files()
-      print('- linting %d files' % (len(all_files)))
-      any_errors = False
-      for file_path in all_files:
-        if os.path.exists(difftemp): os.remove(difftemp)
-        ret = shell_call([
-            clang_format_binary,
-            '-output-replacements-xml',
-            '-style=file',
-            file_path,
-            ], throw_on_error=False, stdout_path=difftemp)
-        with open(difftemp) as f:
-          had_errors = '<replacement ' in f.read()
-        if os.path.exists(difftemp): os.remove(difftemp)
-        if had_errors:
-          any_errors = True
-          print('')
-          print(file_path)
-          shell_call([
-              clang_format_binary,
-              '-style=file',
-              file_path,
-              ], throw_on_error=False, stdout_path=difftemp)
-          diff = difflib.unified_diff(
-              open(file_path).readlines(),
-              open(difftemp).readlines())
-          with open(difftemp, 'w') as f:
-            f.write(''.join(diff))
-          shell_call([
-              'type' if sys.platform=='win32' else 'cat',
-              difftemp,
-              ])
-          if os.path.exists(difftemp): os.remove(difftemp)
-          print('')
-      print('')
-      if any_errors:
-        print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
-        return 1
-      else:
-        print('Linting completed successfully.')
-    else:
-      print('- git-clang-format --diff')
-      if os.path.exists(difftemp): os.remove(difftemp)
-      ret = shell_call([
-          'python',
-          'third_party/clang_format/git-clang-format',
-          '--binary=%s' % (clang_format_binary),
-          '--commit=%s' % ('origin/master' if args['origin'] else 'HEAD'),
-          '--diff',
-          ], throw_on_error=False, stdout_path=difftemp)
-      with open(difftemp) as f:
-        contents = f.read()
-        not_modified = 'no modified files' in contents
-        not_modified = not_modified or 'did not modify' in contents
-        f.close()
-      if os.path.exists(difftemp): os.remove(difftemp)
-      if not not_modified:
-        any_errors = True
-        print('')
-        shell_call([
-            'python',
-            'third_party/clang_format/git-clang-format',
-            '--binary=%s' % (clang_format_binary),
-            '--commit=%s' % ('origin/master' if args['origin'] else 'HEAD'),
-            '--diff',
-            ])
-        print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
-        return 1
-      else:
-        print('Linting completed successfully.')
-
-    # Style guide check.
-    # TODO(benvanik): eat the 'Done processing' lines when there are no errors.
-    style_files = [file_path for file_path in find_all_source_files()
-                   if not file_path.endswith('_test.cc')]
-    print('- cpplint [%d files]' % (len(style_files)))
-    ret = shell_call([
-        'python',
-        'third_party/google_styleguide/cpplint/cpplint.py',
-        '--output=vs7',
-        '--linelength=80',
-        '--filter=-build/c++11,+build/include_alpha',
-        '--root=xrtl/',
-        ] + style_files, throw_on_error=False)
-    print('')
-    if ret:
-      print('ERROR: 1+ cpplint calls failed.')
-      return 1
-    else:
-      print('Style checking completed successfully.')
-
-    return 0
+    return return_code
 
 
 class FixCommand(Command):
@@ -612,6 +753,7 @@ class FixCommand(Command):
         name='fix',
         help_short='Reformats staged code with clang-format.',
         *args, **kwargs)
+    if not self.parser: return
     self.parser.add_argument(
         '--all', action='store_true',
         help='Format all files, not just those changed.')
@@ -620,40 +762,90 @@ class FixCommand(Command):
         help='Formats all files changed relative to origin/master.')
 
   def execute(self, args, pass_args, cwd):
-    clang_format_binary = get_clang_format_binary()
+    # fix.
+    return_code = lint_fix_files(
+        check_all_files = args['all'],
+        diff_origin = args['origin'])
+    return return_code
 
-    if args['all']:
-      all_files = find_all_source_files()
-      print('- clang-format [%d files]' % (len(all_files)))
-      any_errors = False
-      for file_path in all_files:
-        ret = shell_call([
-            clang_format_binary,
-            '-i',
-            '-style=file',
-            file_path,
-            ], throw_on_error=False)
-        if ret:
-          any_errors = True
-      print('')
-      if any_errors:
-        print('ERROR: 1+ clang-format calls failed.')
-        print('Ensure all files are staged.')
-        return 1
-      else:
-        print('Formatting completed successfully.')
-        return 0
-    else:
-      print('- git-clang-format')
-      shell_call([
-          'python',
-          'third_party/clang_format/git-clang-format',
-          '--binary=%s' % (clang_format_binary),
-          '--commit=%s' % ('origin/master' if args['origin'] else 'HEAD'),
-          ])
-      print('')
 
-    return 0
+def generate_compile_commands_database():
+  # Invoke blaze with the action listener and our build commands.
+  # TODO(benvanik): multiple platforms, many roots, etc.
+  # bazel build --experimental_action_listener tools/actions:generate_compile_commands_listener --experimental_extra_action_filter=-"external.*" //xrtl/base/...
+  result = subprocess.call([
+      'bazel',
+      'build',
+      '--experimental_action_listener',
+      'tools/actions:generate_compile_commands_listener',
+      '//xrtl/base/...',
+      '//xrtl/tools/...',
+      ], shell=False)
+  if result:
+    print('Error performing build with extra action')
+    return result
+
+  # Combine all files into a single database.
+  result = shell_call([
+      'python',
+      'tools/actions/generate_compile_commands_json.py',
+      '--output_file=%s' % (os.path.join('bazel-out', 'compile_commands.json')),
+      ])
+  if result:
+    print('Error building compile command database')
+    return result
+
+  return 0
+
+
+def clang_tidy_files(check_all_files = False, apply_fixes = False):
+  """
+  Args:
+    check_all_files: True to run on all files, not just the git changes.
+    apply_fixes: automatically apply fixes suggested by clang-tidy.
+
+  Returns:
+    0 if tidy check completed without errors.
+  """
+  clang_tidy_binary = get_clang_tidy_binary()
+
+  # Build a command database.
+  result = generate_compile_commands_database()
+  if result:
+    print('Error generating compile commands database')
+    return result
+
+  # Select source files.
+  source_files = []
+  if check_all_files:
+    source_files = find_all_source_files()
+  else:
+    source_files = find_changed_source_files()
+
+  # Remove _test.cc files.
+  source_files = [source_file for source_file in source_files
+                  if not source_file.endswith('_test.cc')]
+
+  # Remove .h files. We could enable them independently with
+  # INCLUDE_ALL_HEADERS in generate_compile_command.py.
+  source_files = [source_file for source_file in source_files
+                  if not source_file.endswith('.h')]
+
+  # Run clang-tidy.
+  result = shell_call([
+      clang_tidy_binary,
+      '-p', 'bazel-out',
+      '-style=file',
+      '-checks=-*,google-*,clang-analyzer-*,misc-*,performance-*,-misc-unused-parameters',
+      '-export-fixes=%s' % ('bazel-out/tidy_fixes.yaml'),
+      ] + (['-fix'] if apply_fixes else []) + [
+      ] + source_files)
+  print('')
+  if result:
+    print('ERROR: 1+ clang-tidy errors. Use --fix to auto apply fixes.')
+  else:
+    print('clang-tidy checking completed successfully.')
+  return result
 
 
 class TidyCommand(Command):
@@ -665,14 +857,80 @@ class TidyCommand(Command):
         name='tidy',
         help_short='Runs the clang-tidy checker on all code.',
         *args, **kwargs)
+    if not self.parser: return
+    self.parser.add_argument(
+        '--all', action='store_true',
+        help='Format all files, not just those changed.')
     self.parser.add_argument(
         '--fix', action='store_true',
         help='Applies suggested fixes, where possible.')
 
   def execute(self, args, pass_args, cwd):
-    # TODO(benvanik): implement this. Needs bazel aspect support.
-    return 1
+    # Tidy.
+    return_code = clang_tidy_files(
+        check_all_files = args['all'],
+        apply_fixes = args['fix'])
+    return return_code
+
+
+class PresubmitCommand(Command):
+  """'presubmit' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(PresubmitCommand, self).__init__(
+        subparsers,
+        name='presubmit',
+        help_short='Runs presubmit checks (lint/etc).',
+        *args, **kwargs)
+    if not self.parser: return
+    self.parser.add_argument(
+        '--fix', action='store_true',
+        help='Applies suggested fixes, where possible.')
+    self.parser.add_argument(
+        '--keep_going', action='store_true',
+        help='Prevents aborting on the first error.')
+
+  def execute(self, args, pass_args, cwd):
+    return_code = 0
+
+    # Run fix first, as it will make lint pass if the issues were trivial.
+    if args['fix']:
+      return_code = lint_fix_files()
+      if return_code and not args['keep_going']:
+        print('Error running lint fix')
+        return return_code
+      return_code = clang_tidy_files(apply_fixes = True)
+      if return_code and not args['keep_going']:
+        print('Error running clang-tidy fix')
+        return return_code
+
+    # Run linter, which will error on anything fix could not fix or the style
+    # checker finds.
+    return_code = lint_check_files()
+    if return_code and not args['keep_going']:
+      print('Error running linter')
+      return return_code
+    return_code = style_check_files()
+    if return_code and not args['keep_going']:
+      print('Error running style checker')
+      return return_code
+
+    # Run clang-tidy.
+    return_code = clang_tidy_files(apply_fixes = False)
+    if return_code and not args['keep_going']:
+      print('Error running clang-tidy')
+      return return_code
+
+    # TODO(benvanik): run tests.
+
+    print('')
+    if not return_code:
+      print('Presubmit checks finished successfully')
+    else:
+      print('Presubmit checks failed! Do not commit!')
+
+    return return_code
 
 
 if __name__ == '__main__':
-  main()
+  sys.exit(main())

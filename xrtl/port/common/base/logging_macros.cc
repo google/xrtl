@@ -87,7 +87,7 @@ void MakeCheckOpValueString(std::ostream* os, const char& v) {
   if (v >= 32 && v <= 126) {
     (*os) << "'" << v << "'";
   } else {
-    (*os) << "char value " << (int16_t)v;
+    (*os) << "char value " << static_cast<int16_t>(v);
   }
 }
 
@@ -96,7 +96,7 @@ void MakeCheckOpValueString(std::ostream* os, const int8_t& v) {
   if (v >= 32 && v <= 126) {
     (*os) << "'" << v << "'";
   } else {
-    (*os) << "signed char value " << (int16_t)v;
+    (*os) << "signed char value " << static_cast<int16_t>(v);
   }
 }
 
@@ -105,7 +105,7 @@ void MakeCheckOpValueString(std::ostream* os, const uint8_t& v) {
   if (v >= 32 && v <= 126) {
     (*os) << "'" << v << "'";
   } else {
-    (*os) << "unsigned char value " << (uint16_t)v;
+    (*os) << "unsigned char value " << static_cast<uint16_t>(v);
   }
 }
 
