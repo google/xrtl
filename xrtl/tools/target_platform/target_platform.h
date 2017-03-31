@@ -76,8 +76,8 @@
 #endif  // X86
 
 #if !defined(XRTL_ARCH_ARM_V7A) && !defined(XRTL_ARCH_ARM_V8A) && \
-    !defined(XRTL_ARCH_ASMJS) && !defined(XRTL_ARCH_WASM_32) &&  \
-    !defined(XRTL_ARCH_WASM_64) && !defined(XRTL_ARCH_X86_32) && \
+    !defined(XRTL_ARCH_ASMJS) && !defined(XRTL_ARCH_WASM_32) &&   \
+    !defined(XRTL_ARCH_WASM_64) && !defined(XRTL_ARCH_X86_32) &&  \
     !defined(XRTL_ARCH_X86_64)
 #error Unknown architecture.
 #endif  // all archs

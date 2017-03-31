@@ -18,6 +18,7 @@
 #include <gflags/gflags.h>
 
 #include <string>
+#include <vector>
 
 #include "xrtl/base/macros.h"
 

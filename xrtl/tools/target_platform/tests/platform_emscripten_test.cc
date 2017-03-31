@@ -19,9 +19,7 @@
 namespace xrtl {
 namespace {
 
-TEST(PlatformEmscriptenTest, True) {
-  EXPECT_TRUE(XRTL_PLATFORM_EMSCRIPTEN);
-}
+TEST(PlatformEmscriptenTest, True) { EXPECT_TRUE(XRTL_PLATFORM_EMSCRIPTEN); }
 
 }  // namespace
 }  // namespace xrtl

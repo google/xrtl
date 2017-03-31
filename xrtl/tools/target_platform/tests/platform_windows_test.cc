@@ -19,9 +19,7 @@
 namespace xrtl {
 namespace {
 
-TEST(PlatformWindowsTest, True) {
-  EXPECT_TRUE(XRTL_PLATFORM_WINDOWS);
-}
+TEST(PlatformWindowsTest, True) { EXPECT_TRUE(XRTL_PLATFORM_WINDOWS); }
 
 }  // namespace
 }  // namespace xrtl

@@ -15,6 +15,8 @@
 #ifndef XRTL_PORT_COMMON_BASE_MACH_SYSTEM_CLOCK_H_
 #define XRTL_PORT_COMMON_BASE_MACH_SYSTEM_CLOCK_H_
 
+#include <memory>
+
 #include "xrtl/base/system_clock.h"
 
 namespace xrtl {

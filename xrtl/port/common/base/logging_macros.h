@@ -18,6 +18,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "xrtl/base/macros.h"
 
@@ -118,18 +119,14 @@ inline const T& GetReferenceableValue(const T& t) {
   return t;
 }
 inline char GetReferenceableValue(char t) { return t; }
-inline unsigned char GetReferenceableValue(unsigned char t) { return t; }
-inline signed char GetReferenceableValue(signed char t) { return t; }
-inline short GetReferenceableValue(short t) { return t; }
-inline unsigned short GetReferenceableValue(unsigned short t) { return t; }
-inline int GetReferenceableValue(int t) { return t; }
-inline unsigned int GetReferenceableValue(unsigned int t) { return t; }
-inline long GetReferenceableValue(long t) { return t; }
-inline unsigned long GetReferenceableValue(unsigned long t) { return t; }
-inline long long GetReferenceableValue(long long t) { return t; }
-inline unsigned long long GetReferenceableValue(unsigned long long t) {
-  return t;
-}
+inline int8_t GetReferenceableValue(int8_t t) { return t; }
+inline uint8_t GetReferenceableValue(uint8_t t) { return t; }
+inline int16_t GetReferenceableValue(int16_t t) { return t; }
+inline uint16_t GetReferenceableValue(uint16_t t) { return t; }
+inline int32_t GetReferenceableValue(int32_t t) { return t; }
+inline uint32_t GetReferenceableValue(uint32_t t) { return t; }
+inline int64_t GetReferenceableValue(int64_t t) { return t; }
+inline uint64_t GetReferenceableValue(uint64_t t) { return t; }
 
 // This formats a value for a failing CHECK_XX statement.  Ordinarily,
 // it uses the definition for operator<<, with a few special cases below.
@@ -143,9 +140,9 @@ inline void MakeCheckOpValueString(std::ostream* os, const T& v) {
 template <>
 void MakeCheckOpValueString(std::ostream* os, const char& v);
 template <>
-void MakeCheckOpValueString(std::ostream* os, const signed char& v);
+void MakeCheckOpValueString(std::ostream* os, const int8_t& v);
 template <>
-void MakeCheckOpValueString(std::ostream* os, const unsigned char& v);
+void MakeCheckOpValueString(std::ostream* os, const uint8_t& v);
 
 #if LANG_CXX11
 // We need an explicit specialization for std::nullptr_t.
@@ -156,7 +153,7 @@ void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& p);
 // A container for a string pointer which can be evaluated to a bool -
 // true iff the pointer is non-NULL.
 struct CheckOpString {
-  CheckOpString(std::string* str) : str_(str) {}
+  CheckOpString(std::string* str) : str_(str) {}  // NOLINT
   // No destructor: if str_ is non-NULL, we're about to LOG(FATAL),
   // so there's no point in cleaning up str_.
   operator bool() const { return XRTL_PREDICT_FALSE(str_ != NULL); }

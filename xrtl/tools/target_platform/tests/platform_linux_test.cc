@@ -19,9 +19,7 @@
 namespace xrtl {
 namespace {
 
-TEST(PlatformLinuxTest, True) {
-  EXPECT_TRUE(XRTL_PLATFORM_LINUX);
-}
+TEST(PlatformLinuxTest, True) { EXPECT_TRUE(XRTL_PLATFORM_LINUX); }
 
 }  // namespace
 }  // namespace xrtl

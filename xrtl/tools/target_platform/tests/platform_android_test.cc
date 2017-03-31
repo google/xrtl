@@ -19,9 +19,7 @@
 namespace xrtl {
 namespace {
 
-TEST(PlatformAndroidTest, True) {
-  EXPECT_TRUE(XRTL_PLATFORM_ANDROID);
-}
+TEST(PlatformAndroidTest, True) { EXPECT_TRUE(XRTL_PLATFORM_ANDROID); }
 
 }  // namespace
 }  // namespace xrtl

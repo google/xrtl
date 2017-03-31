@@ -19,9 +19,7 @@
 namespace xrtl {
 namespace {
 
-TEST(PlatformMacOSTest, True) {
-  EXPECT_TRUE(XRTL_PLATFORM_MACOS);
-}
+TEST(PlatformMacOSTest, True) { EXPECT_TRUE(XRTL_PLATFORM_MACOS); }
 
 }  // namespace
 }  // namespace xrtl

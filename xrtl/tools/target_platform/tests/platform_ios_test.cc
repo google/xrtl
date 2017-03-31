@@ -19,9 +19,7 @@
 namespace xrtl {
 namespace {
 
-TEST(PlatformIosTest, True) {
-  EXPECT_TRUE(XRTL_PLATFORM_IOS);
-}
+TEST(PlatformIosTest, True) { EXPECT_TRUE(XRTL_PLATFORM_IOS); }
 
 }  // namespace
 }  // namespace xrtl

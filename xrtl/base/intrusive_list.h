@@ -15,6 +15,7 @@
 #ifndef XRTL_BASE_INTRUSIVE_LIST_H_
 #define XRTL_BASE_INTRUSIVE_LIST_H_
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>

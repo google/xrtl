@@ -1,3 +1,17 @@
+// Copyright 2017 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -17,9 +31,9 @@ void LogMessage::EmitLogMessage() {
   uint64_t now_micros = clock->now_utc_micros();
   time_t now_seconds = static_cast<time_t>(now_micros / 1000000);
   int32_t micros_remainder = static_cast<int32_t>(now_micros % 1000000);
-  constexpr size_t time_buffer_size = 30;
-  char time_buffer[time_buffer_size];
-  strftime(time_buffer, time_buffer_size, "%Y-%m-%d %H:%M:%S",
+  constexpr size_t kTimeBufferSize = 30;
+  char time_buffer[kTimeBufferSize];
+  strftime(time_buffer, kTimeBufferSize, "%Y-%m-%d %H:%M:%S",
            localtime(&now_seconds));
 
   std::fprintf(stderr, "%s.%06d: %c %s:%d] %s\n", time_buffer, micros_remainder,

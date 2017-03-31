@@ -16,6 +16,7 @@
 #define XRTL_BASE_MAKE_UNIQUE_H_
 
 #include <memory>
+#include <utility>
 
 // C++14 make_unique.
 // http://herbsutter.com/2013/05/29/gotw-89-solution-smart-pointers/
