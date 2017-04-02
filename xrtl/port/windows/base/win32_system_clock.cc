@@ -14,6 +14,10 @@
 
 #include "xrtl/port/windows/base/win32_system_clock.h"
 
+#include <windows.h>
+
+#include <chrono>
+
 #include "xrtl/base/macros.h"
 
 namespace xrtl {
@@ -21,18 +25,63 @@ namespace xrtl {
 class Win32SystemClock : public SystemClock {
  public:
   Win32SystemClock() {
-    // TODO(benvanik): win32 clock.
+    // GetSystemTimePreciseAsFileTime function is only available in the latest
+    // versions of Windows. For that reason, we try to look it up in
+    // kernel32.dll at runtime and use an alternative option if the function
+    // is not available.
+    HMODULE module = ::GetModuleHandle("kernel32.dll");
+    if (module) {
+      GetSystemTimePreciseAsFileTime_ =
+          reinterpret_cast<FnGetSystemTimePreciseAsFileTime>(
+              ::GetProcAddress(module, "GetSystemTimePreciseAsFileTime"));
+    }
+
+    // Set timebase used for relative timing and get QPC frequency.
+    // The frequency should not change for the life of the process.
+    ::QueryPerformanceFrequency(&qpc_frequency_);
+    ::QueryPerformanceCounter(&qpc_timebase_);
   }
 
   uint64_t now_utc_micros() override {
-    // TODO(benvanik): win32 clock.
-    return 0;
+    // If GetSystemTimePreciseAsFileTime is not available we fall back to the
+    // (likely) millisecond-resolution chrono implementation.
+    if (!GetSystemTimePreciseAsFileTime_) {
+      return std::chrono::duration_cast<std::chrono::microseconds>(
+                 std::chrono::system_clock::now().time_since_epoch())
+          .count();
+    }
+
+    FILETIME system_time;
+    GetSystemTimePreciseAsFileTime_(&system_time);
+
+    constexpr int64_t kUnixEpochStartTicks = 116444736000000000i64;
+    constexpr int64_t kFtToMicroSec = 10;
+    LARGE_INTEGER li;
+    li.LowPart = system_time.dwLowDateTime;
+    li.HighPart = system_time.dwHighDateTime;
+    // Subtract unix epoch start
+    li.QuadPart -= kUnixEpochStartTicks;
+    // Convert to microsecs
+    li.QuadPart /= kFtToMicroSec;
+    return li.QuadPart;
   }
 
   uint64_t now_micros() override {
-    // TODO(benvanik): win32 clock.
-    return 0;
+    LARGE_INTEGER counter;
+    ::QueryPerformanceCounter(&counter);
+    uint64_t elapsed_ticks = counter.QuadPart - qpc_timebase_.QuadPart;
+    uint64_t elapsed_micros = elapsed_ticks * 100000;
+    return elapsed_micros / qpc_frequency_.QuadPart;
   }
+
+ private:
+  typedef VOID(WINAPI* FnGetSystemTimePreciseAsFileTime)(LPFILETIME);
+  FnGetSystemTimePreciseAsFileTime GetSystemTimePreciseAsFileTime_ = nullptr;
+
+  // Absolute time used as a timebase for the relative now_* calls, set on
+  // clock creation.
+  LARGE_INTEGER qpc_frequency_;
+  LARGE_INTEGER qpc_timebase_;
 };
 
 std::unique_ptr<SystemClock> CreateWin32SystemClock() {
