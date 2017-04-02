@@ -815,6 +815,12 @@ def clang_tidy_files(check_all_files = False, apply_fixes = False):
   """
   clang_tidy_binary = get_clang_tidy_binary()
 
+  # TODO(benvanik): clang CROSSTOOL so we can generate the command database.
+  if sys.platform == 'win32':
+    print('ERROR: clang-tidy not supported on Windows!')
+    print('https://github.com/google/xrtl/issues/2')
+    return 0
+
   # Build a command database.
   result = generate_compile_commands_database()
   if result:
