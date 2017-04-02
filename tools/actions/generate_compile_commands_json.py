@@ -58,7 +58,7 @@ def _get_compile_commands(path, command_directory):
   Args:
     path: A directory path to look for *_compile_command files under.
     command_directory: The directory commands are run from.
-  
+
   Returns:
     A list of strings to append to compile_commands.json.
   """
@@ -69,13 +69,6 @@ def _get_compile_commands(path, command_directory):
         commands = _get_commands_from_file(file_path, command_directory)
         if commands:
           all_commands.extend(commands)
-  # for file_path in path.iterdir():
-  #   if os.path.isdir(file_path):
-  #     all_commands.extend(_get_compile_commands(file_path, command_directory))
-  #   elif f.name.endswith('_compile_command'):
-  #     commands = _get_commands_from_file(file_path, command_directory)
-  #     if commands:
-  #       all_commands.extend(commands)
   return all_commands
 
 
