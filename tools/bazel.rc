@@ -99,6 +99,8 @@ build:macos_x86_64 --cpu=darwin
 
 build:windows --config=msvc
 build:windows --dynamic_mode=off
+# https://github.com/bazelbuild/bazel/issues/1590
+build:windows --test_env TMP=/tmp
 
 build:windows_x86_64 --config=windows
 build:windows_x86_64 --cpu=x64_windows_msvc
