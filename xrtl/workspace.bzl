@@ -44,9 +44,10 @@ def xrtl_workspace():
   check_version("0.4.5")
 
   # //third_party/gflags/
-  native.local_repository(
+  native.new_local_repository(
       name = "com_github_gflags_gflags",
       path = "third_party/gflags/",
+      build_file = "third_party/gflags.BUILD",
   )
   native.bind(
       name = "gflags",

@@ -87,7 +87,7 @@ CONDITION_MACOS_X86_64 = {
 }
 
 CONDITION_WINDOWS = {
-    "crosstool_top": "TODO",
+    "cpu": "x64_windows_msvc",
 }
 
 CONDITION_WINDOWS_X86_64 = {

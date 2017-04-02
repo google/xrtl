@@ -13,6 +13,8 @@ cc_library(
     testonly = 1,
     hdrs = ["gtest.h"],
     deps = [
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
         "@gtest//:gtest",
     ],
 )
@@ -43,7 +45,10 @@ cc_library(
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
         "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:windows": [],
+        "//xrtl/tools/target_platform:windows": [
+            # TODO(benvanik): win32-specific test with better console output.
+            "//xrtl/port/common/testing:posix_test_main",
+        ],
         "//conditions:default": [
             "//xrtl/port/common/testing:posix_test_main",
         ],

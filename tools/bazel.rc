@@ -6,12 +6,15 @@
 # Generic build options
 #===============================================================================
 
-build --copt=-Wno-unused-function
+build:clang --copt=-Wno-unused-function
+
+build:msvc
 
 #===============================================================================
 # Android
 #===============================================================================
 
+build:android --config=clang
 build:android --dynamic_mode=off
 
 build:android_emulator --config=android
@@ -38,7 +41,7 @@ build:android_x86_64 --android_cpu=x86_64
 # Emscripten
 #===============================================================================
 
-build:emscripten
+build:emscripten --config=clang
 
 build:emscripten_asmjs --config=emscripten
 
@@ -48,6 +51,7 @@ build:emscripten_wasm --config=emscripten
 # iOS
 #===============================================================================
 
+build:ios --config=clang
 build:ios --dynamic_mode=off
 build:ios --experimental_enable_objc_cc_deps
 
@@ -75,7 +79,7 @@ build:ios_x86_64 --ios_cpu=x86_64
 # Linux
 #===============================================================================
 
-build:linux
+build:linux --config=clang
 
 build:linux_x86_64 --config=linux
 
@@ -83,6 +87,7 @@ build:linux_x86_64 --config=linux
 # MacOS
 #===============================================================================
 
+build:macos --config=clang
 build:macos --dynamic_mode=off
 
 build:macos_x86_64 --config=macos
@@ -92,6 +97,7 @@ build:macos_x86_64 --cpu=darwin
 # Windows
 #===============================================================================
 
+build:windows --config=msvc
 build:windows --dynamic_mode=off
 
 build:windows_x86_64 --config=windows
