@@ -34,6 +34,16 @@ import sys
 self_path = os.path.dirname(os.path.abspath(__file__))
 
 
+# Default config for the current host OS.
+if (sys.platform == 'cygwin' or
+    sys.platform == 'win32'):
+  default_config = 'windows_x86_64'
+elif sys.platform == 'darwin':
+  default_config = 'macos_x86_64'
+else:
+  default_config = ''
+
+
 def main():
   # Add self to the root search path.
   sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -588,7 +598,7 @@ def lint_check_files(check_all_files = False, diff_origin = False):
         with open(difftemp, 'w') as f:
           f.write(''.join(diff))
         shell_call([
-            'type' if sys.platform=='win32' else 'cat',
+            'type' if sys.platform == 'win32' else 'cat',
             difftemp,
             ])
         if os.path.exists(difftemp): os.remove(difftemp)
@@ -775,13 +785,31 @@ class FixCommand(Command):
     return return_code
 
 
-def generate_compile_commands_database():
+def generate_compile_commands_database(config = default_config):
+  """
+  Args:
+    config: bazel --config= value used to generate the database.
+            If none is provided the default for the host platform will be used.
+
+  Returns:
+    0 if the database was created successfully. The database will be placed into
+    `bazel-out/compile_commands.json`.
+  """
+  # Get bazel-bin path for our configuration.
+  build_root = os.path.dirname(subprocess.check_output(
+      ('bazel', 'info', '--config=%s' % (config), 'bazel-bin'),
+      cwd=self_path).decode('utf-8').rstrip())
+  execution_root = subprocess.check_output(
+      ('bazel', 'info', '--config=%s' % (config), 'execution_root'),
+      cwd=self_path).decode('utf-8').rstrip()
+
   # Invoke blaze with the action listener and our build commands.
   # TODO(benvanik): multiple platforms, many roots, etc.
   # bazel build --experimental_action_listener tools/actions:generate_compile_commands_listener --experimental_extra_action_filter=-"external.*" //xrtl/base/...
   result = subprocess.call([
       'bazel',
       'build',
+      '--config=%s' % (config),
       '--experimental_action_listener',
       'tools/actions:generate_compile_commands_listener',
       '//xrtl/base/...',
@@ -795,6 +823,9 @@ def generate_compile_commands_database():
   result = shell_call([
       'python',
       'tools/actions/generate_compile_commands_json.py',
+      '--workspace_root=%s' % (self_path),
+      '--execution_root=%s' % (execution_root),
+      '--build_root=%s' % (build_root),
       '--output_file=%s' % (os.path.join('bazel-out', 'compile_commands.json')),
       ])
   if result:
@@ -816,7 +847,7 @@ def clang_tidy_files(check_all_files = False, apply_fixes = False):
   clang_tidy_binary = get_clang_tidy_binary()
 
   # TODO(benvanik): clang CROSSTOOL so we can generate the command database.
-  if sys.platform == 'win32':
+  if (sys.platform == 'cygwin' or sys.platform == 'win32'):
     print('ERROR: clang-tidy not supported on Windows!')
     print('https://github.com/google/xrtl/issues/2')
     return 0

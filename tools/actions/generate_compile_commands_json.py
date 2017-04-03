@@ -40,14 +40,25 @@ def _get_commands_from_file(file_path, command_directory):
     contents = f.read().split('\0')
     commands = []
     for i in range(0, len(contents) / 2):
+      command = contents[i * 2].replace('"', '\\"')
+      file_path = os.path.abspath(contents[i * 2 + 1])
+
+      # On Windows clang-tidy expects a Windows path (C:\foo). Convert here if
+      # we are under cygwin.
+      if sys.platform == 'cygwin' and file_path.startswith('/'):
+        file_path = file_path.replace('/cygdrive/', '')
+        drive_name = '%s:\\\\' % (file_path[0:1])
+        file_path = file_path[2:].replace('/', '\\\\')
+        file_path = '%s%s' % (drive_name, file_path)
+
       commands.append('''{
         "directory": "%s",
         "command": "%s",
         "file": "%s"
       },''' % (
           command_directory,
-          contents[i * 2].replace('"', '\\"'),
-          os.path.abspath(contents[i * 2 + 1]),
+          command,
+          file_path,
       ))
     return commands
 
@@ -65,15 +76,18 @@ def _get_compile_commands(path, command_directory):
   all_commands = []
   for root, dirnames, filenames in os.walk(path):
     for filename in fnmatch.filter(filenames, '*_compile_command'):
-        file_path = os.path.join(root, filename)
-        commands = _get_commands_from_file(file_path, command_directory)
-        if commands:
-          all_commands.extend(commands)
+      file_path = os.path.join(root, filename)
+      commands = _get_commands_from_file(file_path, command_directory)
+      if commands:
+        all_commands.extend(commands)
   return all_commands
 
 
 def main():
   parser = argparse.ArgumentParser(prog='generate_compile_commands_json')
+  parser.add_argument('--workspace_root', help='.')
+  parser.add_argument('--execution_root', help='bazel info execution_root')
+  parser.add_argument('--build_root', help='bazel-out/[config]/')
   parser.add_argument('--output_file', default='compile_commands.json',
                       help='Output file path for the database file.')
 
@@ -83,14 +97,11 @@ def main():
     return 1
   args = vars(parser.parse_args(sys.argv[1:]))
 
-  source_path = os.path.join(os.path.dirname(__file__), '../..')
-  action_outs = os.path.join(source_path,
-                             'bazel-bin/../extra_actions',
+  action_outs = os.path.join(args['build_root'],
+                             'extra_actions',
                              'tools/actions/generate_compile_commands_action')
-  command_directory = subprocess.check_output(
-      ('bazel', 'info', 'execution_root'),
-      cwd=source_path).decode('utf-8').rstrip()
-  commands = _get_compile_commands(action_outs, command_directory)
+  action_outs = action_outs.replace('/', os.sep)
+  commands = _get_compile_commands(action_outs, args['execution_root'])
   with open(args['output_file'], 'w') as f:
     f.write('[')
     for command in commands:
