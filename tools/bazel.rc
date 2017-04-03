@@ -6,101 +6,105 @@
 # Generic build options
 #===============================================================================
 
-build:clang --copt=-Wno-unused-function
+common:clang --copt=-Wno-unused-function
 
-build:msvc
+# TODO(benvanik): find a way to make this only on dbg/fastbuild?
+common:msvc --copt=/Zi
+common:msvc --linkopt=/DEBUG:FULL
+
+test --test_output=errors
 
 #===============================================================================
 # Android
 #===============================================================================
 
-build:android --config=clang
-build:android --dynamic_mode=off
+common:android --config=clang
+common:android --dynamic_mode=off
 
-build:android_emulator --config=android
-build:android_emulator --config=android_x86_64
-build:ios_simulator --define=XRTL_PLATFORM_ANDROID_EMULATOR=1
+common:android_emulator --config=android
+common:android_emulator --config=android_x86_64
+common:ios_simulator --define=XRTL_PLATFORM_ANDROID_EMULATOR=1
 
-build:android_arm --config=android
-build:android_arm --cpu=armeabi-v7a
-build:android_arm --android_cpu=armeabi-v7a
+common:android_arm --config=android
+common:android_arm --cpu=armeabi-v7a
+common:android_arm --android_cpu=armeabi-v7a
 
-build:android_arm64 --config=android
-build:android_arm64 --cpu=arm64-v8a
-build:android_arm64 --android_cpu=arm64-v8a
+common:android_arm64 --config=android
+common:android_arm64 --cpu=arm64-v8a
+common:android_arm64 --android_cpu=arm64-v8a
 
-build:android_x86 --config=android
-build:android_x86 --cpu=x86
-build:android_x86 --android_cpu=x86
+common:android_x86 --config=android
+common:android_x86 --cpu=x86
+common:android_x86 --android_cpu=x86
 
-build:android_x86_64 --config=android
-build:android_x86_64 --cpu=x86_64
-build:android_x86_64 --android_cpu=x86_64
+common:android_x86_64 --config=android
+common:android_x86_64 --cpu=x86_64
+common:android_x86_64 --android_cpu=x86_64
 
 #===============================================================================
 # Emscripten
 #===============================================================================
 
-build:emscripten --config=clang
+common:emscripten --config=clang
 
-build:emscripten_asmjs --config=emscripten
+common:emscripten_asmjs --config=emscripten
 
-build:emscripten_wasm --config=emscripten
+common:emscripten_wasm --config=emscripten
 
 #===============================================================================
 # iOS
 #===============================================================================
 
-build:ios --config=clang
-build:ios --dynamic_mode=off
-build:ios --experimental_enable_objc_cc_deps
+common:ios --config=clang
+common:ios --dynamic_mode=off
+common:ios --experimental_enable_objc_cc_deps
 
-build:ios_simulator --config=ios
-build:ios_simulator --config=ios_x86_64
-build:ios_simulator --define=XRTL_PLATFORM_IOS_SIMULATOR=1
+common:ios_simulator --config=ios
+common:ios_simulator --config=ios_x86_64
+common:ios_simulator --define=XRTL_PLATFORM_IOS_SIMULATOR=1
 
-build:ios_arm --config=ios
-build:ios_arm --cpu=ios_armv7
-build:ios_arm --ios_cpu=armv7
+common:ios_arm --config=ios
+common:ios_arm --cpu=ios_armv7
+common:ios_arm --ios_cpu=armv7
 
-build:ios_arm64 --config=ios
-build:ios_arm64 --cpu=ios_arm64
-build:ios_arm64 --ios_cpu=arm64
+common:ios_arm64 --config=ios
+common:ios_arm64 --cpu=ios_arm64
+common:ios_arm64 --ios_cpu=arm64
 
-build:ios_i386 --config=ios
-build:ios_i386 --cpu=ios_i386
-build:ios_i386 --ios_cpu=i386
+common:ios_i386 --config=ios
+common:ios_i386 --cpu=ios_i386
+common:ios_i386 --ios_cpu=i386
 
-build:ios_x86_64 --config=ios
-build:ios_x86_64 --cpu=ios_x86_64
-build:ios_x86_64 --ios_cpu=x86_64
+common:ios_x86_64 --config=ios
+common:ios_x86_64 --cpu=ios_x86_64
+common:ios_x86_64 --ios_cpu=x86_64
 
 #===============================================================================
 # Linux
 #===============================================================================
 
-build:linux --config=clang
+common:linux --config=clang
 
-build:linux_x86_64 --config=linux
+common:linux_x86_64 --config=linux
 
 #===============================================================================
 # MacOS
 #===============================================================================
 
-build:macos --config=clang
-build:macos --dynamic_mode=off
+common:macos --config=clang
+common:macos --dynamic_mode=off
 
-build:macos_x86_64 --config=macos
-build:macos_x86_64 --cpu=darwin
+common:macos_x86_64 --config=macos
+common:macos_x86_64 --cpu=darwin
 
 #===============================================================================
 # Windows
 #===============================================================================
 
-build:windows --config=msvc
-build:windows --dynamic_mode=off
-# https://github.com/bazelbuild/bazel/issues/1590
-build:windows --test_env TMP=/tmp
+common:windows --config=msvc
+common:windows --dynamic_mode=off
+# https://github.com/bazelcommon/bazel/issues/1590
+common:windows --test_env TMP=/tmp
 
-build:windows_x86_64 --config=windows
-build:windows_x86_64 --cpu=x64_windows_msvc
+common:windows_x86_64 --config=windows
+common:windows_x86_64 --cpu=x64_windows_msvc

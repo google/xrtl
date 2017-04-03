@@ -90,8 +90,20 @@ def main():
   except:
     pass
 
+  # Special case for bazel commands. This lets us pass everything we don't
+  # understand right to bazel.
+  allow_unknown_args = False
+  if len(command_args) and command_args[0] in ('clean', 'build', 'run', 'test',
+                                               'query'):
+    allow_unknown_args = True
+
   # Parse command name and dispatch.
-  args = vars(parser.parse_args(command_args))
+  if allow_unknown_args:
+    (known_args, unknown_args) = parser.parse_known_args(command_args)
+    args = vars(known_args)
+    pass_args = unknown_args + ['--'] + pass_args
+  else:
+    args = vars(parser.parse_args(command_args))
   command_name = args['subcommand']
   try:
     command = commands[command_name]
@@ -334,8 +346,11 @@ def discover_commands(subparsers):
   commands = {
       'setup': SetupCommand(subparsers),
       'pull': PullCommand(subparsers),
+      'clean': CleanCommand(subparsers),
       'build': BuildCommand(subparsers),
+      'run': RunCommand(subparsers),
       'test': TestCommand(subparsers),
+      'query': QueryCommand(subparsers),
       'lint': LintCommand(subparsers),
       'fix': FixCommand(subparsers),
       'tidy': TidyCommand(subparsers),
@@ -461,6 +476,10 @@ class BazelCommand(Command):
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
+    if 'BAZEL_SH' not in os.environ:
+      os.environ['BAZEL_SH'] = 'c:/tools/msys64/usr/bin/bash.exe'
+    if 'BAZEL_PYTHON' not in os.environ:
+      os.environ['BAZEL_PYTHON'] = sys.executable
     result = subprocess.call([
         'bazel',
         ] + pass_args, shell=False)
@@ -471,6 +490,24 @@ class BazelCommand(Command):
     return 0
 
 
+class CleanCommand(BazelCommand):
+  """'clean' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(CleanCommand, self).__init__(
+        subparsers,
+        name='clean',
+        help_short='Runs a bazel clean. `xtool clean -- args`',
+        *args, **kwargs)
+
+  def execute(self, args, pass_args, cwd):
+    # TODO(benvanik): build script.
+    result = super(CleanCommand, self).execute(args, ['clean'] + pass_args, cwd)
+    if not result:
+      print('Success!')
+    return result
+
+
 class BuildCommand(BazelCommand):
   """'build' command."""
 
@@ -478,12 +515,35 @@ class BuildCommand(BazelCommand):
     super(BuildCommand, self).__init__(
         subparsers,
         name='build',
-        help_short='Builds several platforms at once.',
+        help_short='Runs a bazel build. `xtool build -- args`',
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
     # TODO(benvanik): build script.
-    result = super(BuildCommand, self).execute(args, pass_args, cwd)
+    result = super(BuildCommand, self).execute(args, ['build'] + pass_args, cwd)
+    if not result:
+      print('Success!')
+    return result
+
+
+class RunCommand(BazelCommand):
+  """'run' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(RunCommand, self).__init__(
+        subparsers,
+        name='run',
+        help_short='Runs tests for several platforms at once.',
+        help_long='''
+        To pass arguments to the executables separate them with `--`.
+          $ xtool run -- --some_test_arg
+        ''',
+        *args, **kwargs)
+    # TODO(benvanik): configs for platforms to run tests on.
+
+  def execute(self, args, pass_args, cwd):
+    # TODO(benvanik): run script.
+    result = super(RunCommand, self).execute(args, ['run'] + pass_args, cwd)
     if not result:
       print('Success!')
     return result
@@ -496,17 +556,29 @@ class TestCommand(BazelCommand):
     super(TestCommand, self).__init__(
         subparsers,
         name='test',
-        help_short='Runs tests for several platforms at once.',
-        help_long='''
-        To pass arguments to the test executables separate them with `--`.
-          $ xtool test -- --some_test_arg
-        ''',
+        help_short='Runs a bazel test. `xtool test -- args`',
         *args, **kwargs)
-    # TODO(benvanik): configs for platforms to run tests on.
 
   def execute(self, args, pass_args, cwd):
     # TODO(benvanik): test script.
-    result = super(TestCommand, self).execute(args, pass_args, cwd)
+    result = super(TestCommand, self).execute(args, ['test'] + pass_args, cwd)
+    if not result:
+      print('Success!')
+    return result
+
+
+class QueryCommand(BazelCommand):
+  """'query' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(QueryCommand, self).__init__(
+        subparsers,
+        name='query',
+        help_short='Issues a bazel query. `xtool query -- args`',
+        *args, **kwargs)
+
+  def execute(self, args, pass_args, cwd):
+    result = super(QueryCommand, self).execute(args, ['query'] + pass_args, cwd)
     if not result:
       print('Success!')
     return result
