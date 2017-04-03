@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>dbg</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>fastbuild</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>opt</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{$TARGET_UUID}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='dbg|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='fastbuild|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='opt|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Condition="'$$(Configuration)|$$(Platform)'=='dbg|x64'" Label="PropertySheets">
+    <Import Project="$$(UserRootDir)\Microsoft.Cpp.$$(Platform).user.props" Condition="exists('$$(UserRootDir)\Microsoft.Cpp.$$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$$(Configuration)|$$(Platform)'=='fastbuild|x64'" Label="PropertySheets">
+    <Import Project="$$(UserRootDir)\Microsoft.Cpp.$$(Platform).user.props" Condition="exists('$$(UserRootDir)\Microsoft.Cpp.$$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$$(Configuration)|$$(Platform)'=='opt|x64'" Label="PropertySheets">
+    <Import Project="$$(UserRootDir)\Microsoft.Cpp.$$(Platform).user.props" Condition="exists('$$(UserRootDir)\Microsoft.Cpp.$$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='dbg|x64'">
+    <NMakeBuildCommandLine>$XTOOL build -c dbg --config=windows_x86_64 $TARGET_PACKAGE</NMakeBuildCommandLine>
+    <NMakeOutput>$TARGET_EXE_DBG</NMakeOutput>
+    <NMakeCleanCommandLine>$XTOOL clean</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$DEFINES;$$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>$INCLUDE_PATHS;$$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='fastbuild|x64'">
+    <NMakeBuildCommandLine>$XTOOL build -c fastbuild --config=windows_x86_64 $TARGET_PACKAGE</NMakeBuildCommandLine>
+    <NMakeOutput>$TARGET_EXE_FASTBUILD</NMakeOutput>
+    <NMakeCleanCommandLine>$XTOOL clean</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$DEFINES;$$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>$INCLUDE_PATHS;$$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='opt|x64'">
+    <NMakeBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeBuildCommandLine>
+    <NMakeOutput>TARGET_EXE_OPT</NMakeOutput>
+    <NMakeCleanCommandLine>$XTOOL clean</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeReBuildCommandLine>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$DEFINES;$$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeIncludeSearchPath>$INCLUDE_PATHS;$$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    $CL_COMPILE_LINES
+  </ItemGroup>
+  <ItemGroup>
+    $CL_INCLUDE_LINES
+  </ItemGroup>
+  <Import Project="$$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

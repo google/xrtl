@@ -23,6 +23,8 @@ cases).
 
 import argparse
 import difflib
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -173,8 +175,22 @@ def import_vs_environment():
   return version
 
 
+def format_uuid(uuid):
+  """Formats a dense hex UUID string into a dashed format.
+
+  Args:
+    uuid: input UUID as 'E90AFB8EA87B3B38903DC0A5B0928FDF'.
+
+  Returns:
+    UUID with dashes as 'E90AFB8E-A87B-3B38-903D-C0A5B0928FDF'.
+  """
+  return '%s-%s-%s-%s-%s' % (uuid[0:8], uuid[8:12], uuid[12:16], uuid[16:20],
+                             uuid[20:32])
+
+
 def convert_path_cygwin_to_win32(cygwin_path):
   """Converts a /cygdrive/c/foo path to a C:\\foo path.
+  No-op on non-cygwin platforms.
 
   Args:
     cygwin_path: file path in cygwin format.
@@ -182,10 +198,18 @@ def convert_path_cygwin_to_win32(cygwin_path):
   Returns:
     File path in win32 format.
   """
-  path = cygwin_path.replace('/cygdrive/', '')
-  drive = path[0:1]
-  path = path[2:]
-  return '%s:\\%s' % (drive, path.replace('/', '\\'))
+  # On Windows we want a Windows path (C:\foo). Convert here if
+  # we are under cygwin.
+  if sys.platform == 'cygwin' and cygwin_path.startswith('/'):
+    windows_path = cygwin_path.replace('/cygdrive/', '')
+    drive_name = '%s:\\\\' % (windows_path[0:1])
+    windows_path = windows_path[2:].replace('/', '\\\\')
+    windows_path = '%s%s' % (drive_name, windows_path)
+  elif sys.platform == 'cygwin' or sys.platform == 'win32':
+    windows_path = cygwin_path.replace('/', '\\\\')
+  else:
+    windows_path = cygwin_path
+  return windows_path
 
 
 def has_bin(bin):
@@ -248,6 +272,52 @@ def shell_call(command, throw_on_error=True, stdout_path=None):
   return result
 
 
+def invoke_bazel(command, args):
+  """Invokes a bazel command.
+
+  Args:
+    command: the bazel command, such as 'build'.
+    args: a list of arguments to pass to bazel.
+
+  Returns:
+    Exit value of bazel, 0 is success.
+  """
+  # Setup environment required by bazel.
+  if 'BAZEL_SH' not in os.environ:
+    os.environ['BAZEL_SH'] = get_bin('bash')
+  if 'BAZEL_PYTHON' not in os.environ:
+    os.environ['BAZEL_PYTHON'] = get_python_binary()
+  if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
+    os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
+
+  return subprocess.call(['bazel', command] + args, shell=False)
+
+
+def bazel_info(key, config = default_config):
+  """Gets a bazel info value.
+
+  Args:
+    key: bazel info key.
+    config: --config value (or platform default is unspecified).
+
+  Returns:
+    Key value.
+  """
+  # Setup environment required by bazel.
+  if 'BAZEL_SH' not in os.environ:
+    os.environ['BAZEL_SH'] = get_bin('bash')
+  if 'BAZEL_PYTHON' not in os.environ:
+    os.environ['BAZEL_PYTHON'] = get_python_binary()
+  if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
+    os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
+
+  # TODO(benvanik): cache the value per config.
+
+  return subprocess.check_output(
+      ('bazel', 'info', '--config=%s' % (config), key),
+      cwd=self_path).decode('utf-8').rstrip()
+
+
 def get_git_head_info():
   """Queries the current branch and commit checksum from git.
 
@@ -305,8 +375,7 @@ def get_python_binary():
     python_exe = get_bin('python')
   if not python_exe:
     python_exe = sys.executable
-  if sys.platform == 'cygwin':
-    python_exe = convert_path_cygwin_to_win32(python_exe)
+  python_exe = convert_path_cygwin_to_win32(python_exe)
   return python_exe
 
 
@@ -400,6 +469,7 @@ def discover_commands(subparsers):
       'fix': FixCommand(subparsers),
       'tidy': TidyCommand(subparsers),
       'presubmit': PresubmitCommand(subparsers),
+      'sln': GenerateSlnCommand(subparsers),
       }
   return commands
 
@@ -529,7 +599,7 @@ class PullCommand(Command):
     git_submodule_update()
     print('')
 
-    # TODO(benvanik): run tulsi/etc.
+    # TODO(benvanik): run tulsi/sln/etc.
 
     return 0
 
@@ -543,14 +613,6 @@ class BazelCommand(Command):
         *args, **kwargs)
 
   def execute(self, args, bazel_command, pass_args, cwd):
-    # Setup environment required by bazel.
-    if 'BAZEL_SH' not in os.environ:
-      os.environ['BAZEL_SH'] = get_bin('bash')
-    if 'BAZEL_PYTHON' not in os.environ:
-      os.environ['BAZEL_PYTHON'] = get_python_binary()
-    if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
-      os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
-
     # Add --config set to default if none was specified.
     has_config = False
     for arg in pass_args:
@@ -560,10 +622,7 @@ class BazelCommand(Command):
     if not has_config:
       pass_args = ['--config=%s' % (default_config)] + pass_args
 
-    result = subprocess.call([
-        'bazel',
-        bazel_command,
-        ] + pass_args, shell=False)
+    result = invoke_bazel(bazel_command, pass_args)
     print('')
     if result != 0:
       print('ERROR: build failed with one or more errors.')
@@ -938,41 +997,38 @@ class FixCommand(Command):
     return return_code
 
 
-def generate_compile_commands_database(config = default_config):
+def generate_command_databases(config = default_config):
   """
   Args:
     config: bazel --config= value used to generate the database.
             If none is provided the default for the host platform will be used.
 
   Returns:
-    0 if the database was created successfully. The database will be placed into
-    `bazel-out/compile_commands.json`.
+    0 if the databases were created successfully.
+    Outputs will live at:
+      `bazel-out/compile_commands.json`
+      `bazel-out/link_commands.json`
   """
   # Get bazel-bin path for our configuration.
-  build_root = os.path.dirname(subprocess.check_output(
-      ('bazel', 'info', '--config=%s' % (config), 'bazel-bin'),
-      cwd=self_path).decode('utf-8').rstrip())
-  execution_root = subprocess.check_output(
-      ('bazel', 'info', '--config=%s' % (config), 'execution_root'),
-      cwd=self_path).decode('utf-8').rstrip()
+  build_root = os.path.dirname(bazel_info('bazel-bin', config = config))
+  execution_root = bazel_info('execution_root', config = config)
 
-  # Invoke blaze with the action listener and our build commands.
+  # Invoke bazel with the action listener and our build commands.
   # TODO(benvanik): multiple platforms, many roots, etc.
-  # bazel build --experimental_action_listener tools/actions:generate_compile_commands_listener --experimental_extra_action_filter=-"external.*" //xrtl/base/...
-  result = subprocess.call([
-      'bazel',
-      'build',
+  result = invoke_bazel('build', [
       '--config=%s' % (config),
       '--experimental_action_listener',
       'tools/actions:generate_compile_commands_listener',
+      '--experimental_action_listener',
+      'tools/actions:generate_link_targets_listener',
       '//xrtl/base/...',
       '//xrtl/tools/...',
-      ], shell=False)
+      ])
   if result:
     print('Error performing build with extra action')
     return result
 
-  # Combine all files into a single database.
+  # Combine all compile files into a single database.
   result = shell_call([
       'python',
       'tools/actions/generate_compile_commands_json.py',
@@ -983,6 +1039,19 @@ def generate_compile_commands_database(config = default_config):
       ])
   if result:
     print('Error building compile command database')
+    return result
+
+  # Combine all link files into a single database.
+  result = shell_call([
+      'python',
+      'tools/actions/generate_link_targets_json.py',
+      '--workspace_root=%s' % (self_path),
+      '--execution_root=%s' % (execution_root),
+      '--build_root=%s' % (build_root),
+      '--output_file=%s' % (os.path.join('bazel-out', 'link_targets.json')),
+      ])
+  if result:
+    print('Error building link command database')
     return result
 
   return 0
@@ -1006,7 +1075,7 @@ def clang_tidy_files(check_all_files = False, apply_fixes = False):
     return 0
 
   # Build a command database.
-  result = generate_compile_commands_database()
+  result = generate_command_databases()
   if result:
     print('Error generating compile commands database')
     return result
@@ -1124,6 +1193,265 @@ class PresubmitCommand(Command):
       print('Presubmit checks finished successfully')
     else:
       print('Presubmit checks failed! Do not commit!')
+
+    return return_code
+
+
+class GenerateSlnCommand(Command):
+  """'sln' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(GenerateSlnCommand, self).__init__(
+        subparsers,
+        name='sln',
+        help_short='Generates a Visual Studio sln file.',
+        *args, **kwargs)
+    if not self.parser: return
+
+  def _import_msvc_tools(self):
+    output_base = bazel_info('output_base')
+    pydir = os.path.join(output_base,
+                         'external/local_config_cc/wrapper/bin/pydir')
+    if not pydir in sys.path:
+      sys.path.append(pydir)
+    global msvc_cl
+    import msvc_cl
+    global msvc_link
+    import msvc_link
+    global msvc_tools
+    import msvc_tools
+
+  def _extract_command_options(self, command):
+    # Prepare command line.
+    # - convert to ascii
+    # - drop the msvc_cl.bat arg[0]
+    command = command.decode('utf8')
+    command = command[command.find(' ') + 1:]
+    command = command.split(' ')
+    command += ['/w']  # Turn off msvc_tools warnings
+
+    # Extract arguments.
+    # Unfortunately this is *really* slow, like dozens/calls sec. Doesn't
+    # scale to our giant compile dbs.
+    # driver = msvc_tools.WindowsRunner()
+    # cl_parser = msvc_tools.ArgParser(driver, command, msvc_cl.GCCPATTERNS)
+    # defines = cl_parser.GetOptionValue('D')
+    # include_paths = cl_parser.GetOptionValue('I')
+
+    defines = []
+    include_paths = []
+    for arg in command:
+      if arg.startswith('/D') or arg.startswith('-D'):
+        defines.append(arg[2:])
+      elif arg.startswith('/I') or arg.startswith('-I'):
+        include_paths.append(arg[2:].replace('/', '\\'))
+
+    return (defines, include_paths)
+
+  def execute(self, args, pass_args, cwd):
+    # Generate a compile commands database.
+    # This will let us get the defines used for all our files.
+    return_code = generate_command_databases(config = 'windows_x86_64')
+    if return_code:
+      print('Error generating compile commands')
+      return return_code
+
+    # Enable the MSVC wrappers that bazel generates.
+    # These only exist after our build command from the compile database
+    # generation step.
+    self._import_msvc_tools()
+
+    # This is what we have Visual Studio invoke for build/etc.
+    xtool_path = '%s\\xtool.bat' % (convert_path_cygwin_to_win32(self_path))
+
+    # Load template files.
+    with open(os.path.join('tools', 'visual_studio', 'sln.template'),
+              'r') as template_file:
+      template_sln = string.Template(template_file.read())
+    with open(os.path.join('tools', 'visual_studio', 'vcxproj.template'),
+              'r') as template_file:
+      template_vcxproj = string.Template(template_file.read())
+    with open(os.path.join('tools', 'visual_studio', 'filters.template'),
+              'r') as template_file:
+      template_filters = string.Template(template_file.read())
+
+    # Load the compile commands JSON.
+    with open(os.path.join('bazel-out', 'compile_commands.json')) as json_file:
+      compile_json_data = json.load(json_file, encoding='ascii')
+
+    # Walk all commands in the database and extract their options.
+    # We use each command to create a set of all defines and include paths used,
+    # as the NMake project only allows global defines and paths.
+    all_sources = []
+    source_map = {}
+    all_defines = []
+    all_include_paths = []
+    for action_command in compile_json_data:
+      # This may be a .cc or .h.
+      source_file = action_command['file']
+      source_path = os.path.join(action_command['directory'], source_file)
+      source_map[source_path] = source_file
+      # Extract CL command options.
+      (defines, include_paths) = self._extract_command_options(
+          action_command['command'])
+      # Fix up include paths to be absolute.
+      directory = action_command['directory'].replace('/', '\\')
+      include_paths = ['%s\\%s' % (directory, include_path)
+                       for include_path in include_paths]
+      # Add to sets.
+      if source_path not in all_sources:
+        all_sources.append(source_path)
+      for define in defines:
+        if define not in all_defines:
+          all_defines.append(define)
+      for include_path in include_paths:
+        if include_path not in all_include_paths:
+          all_include_paths.append(include_path)
+
+    # Load the link targets JSON.
+    with open(os.path.join('bazel-out', 'link_targets.json')) as json_file:
+      link_json_data = json.load(json_file, encoding='ascii')
+
+    # Walk all link targets to find our projects.
+    all_projects = []  # (name, uuid, exe path, vcxproj path)
+    for link_target in link_json_data:
+      # TODO(benvaniK): filter under //xrtl only?
+
+      # Generate project info.
+      # Note that the UUID must remain stable for each project so that VS tracks
+      # them across updates properly.
+      # Note also that executable is a full path to a particular config
+      # (like fastbuild).
+      target_package = link_target['package']
+      target_uuid = format_uuid(link_target['uuid']).upper()
+      target_executable = link_target['executable']
+      target_executable = convert_path_cygwin_to_win32(target_executable)
+
+      # Get package path and rule name.
+      if ':' in target_package:
+        # //foo:bar form.
+        (package_path, rule_name) = target_package.split(':')
+      else:
+        # //foo/bar form.
+        package_path = target_package
+        rule_name = target_package[target_package.rfind('/') + 1:]
+      if package_path.startswith('//'):
+        package_path = package_path[2:]
+      package_path = package_path.replace('/', os.sep)
+
+      # TODO(benvanik): find only those files used by this package.
+      #                 Could be done with a bazel query.
+      used_sources = all_sources[:]
+
+      # Make a path for the vcxproj.
+      #   bazel-out/vs/..../package.vcxproj.
+      vcxproj_path = os.path.join('.vs', package_path, rule_name + '.vcxproj')
+      vcxproj_path = os.path.abspath(vcxproj_path)
+      if not os.path.exists(os.path.dirname(vcxproj_path)):
+        os.makedirs(os.path.dirname(vcxproj_path))
+
+      all_projects.append((target_package, target_uuid,
+                           convert_path_cygwin_to_win32(target_executable),
+                           convert_path_cygwin_to_win32(vcxproj_path)))
+
+      # Generate the target.vcxproj.
+      with open(vcxproj_path, 'w') as vcxproj_file:
+        cl_compile_lines = []
+        cl_include_lines = []
+        for source_file in all_sources:
+          source_file = convert_path_cygwin_to_win32(source_file)
+          if source_file.endswith('.cc') or source_file.endswith('.c'):
+            cl_compile_lines.append('<ClCompile Include="%s" />' % (source_file))
+          else:
+            cl_include_lines.append('<ClInclude Include="%s" />' % (source_file))
+        vcxproj_file.write(template_vcxproj.substitute({
+            'XTOOL': xtool_path,
+            'TARGET_PACKAGE': target_package,
+            'TARGET_UUID': target_uuid,
+            'TARGET_EXE_DBG': target_executable.replace('-fastbuild', '-dbg'),
+            'TARGET_EXE_FASTBUILD': target_executable,
+            'TARGET_EXE_OPT': target_executable.replace('-fastbuild', '-opt'),
+            'DEFINES': ';'.join(all_defines),
+            'INCLUDE_PATHS': ';'.join(all_include_paths),
+            'CL_COMPILE_LINES': '\n    '.join(cl_compile_lines),
+            'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
+            }))
+
+      # Generate the target.vcxproj.filters.
+      with open(vcxproj_path + '.filters', 'w') as filters_file:
+        filter_paths = []  # foo\bar
+        cl_compile_lines = []
+        cl_include_lines = []
+        for source_path in all_sources:
+          # Get a filter name in the 'foo\bar' format rooted in our repository
+          # root (like xrtl\base\foo.cc).
+          source_file = source_map[source_path]
+          filter_path = os.path.dirname(source_file)
+          filter_path = filter_path.replace(self_path, '')
+          if filter_path.startswith('/'):
+            filter_path = filter_path[1:]
+          filter_path = filter_path.replace('/', '\\')
+
+          # Add filter for the path and all of its parents, if needed.
+          parent_filter_path = filter_path
+          while True:
+            if not parent_filter_path:
+              break
+            if parent_filter_path not in filter_paths:
+              filter_paths.append(parent_filter_path)
+            else:
+              break
+            if '\\' not in parent_filter_path:
+              break
+            parent_filter_path = (
+                parent_filter_path[0:parent_filter_path.rfind('\\')])
+
+          source_path = convert_path_cygwin_to_win32(source_path)
+          if source_path.endswith('.cc') or source_path.endswith('.c'):
+            cl_compile_lines.append(
+                ('<ClCompile Include="%s"><Filter>%s</Filter></ClCompile>' % (
+                    source_path, filter_path)))
+          else:
+            cl_include_lines.append(
+                ('<ClInclude Include="%s"><Filter>%s</Filter></ClInclude>' % (
+                    source_path, filter_path)))
+        filter_lines = []
+        for filter_path in filter_paths:
+          filter_uuid = format_uuid(str(hashlib.md5(filter_path).hexdigest()))
+          filter_lines.append(
+              ('<Filter Include="%s"><UniqueIdentifier>{%s}</UniqueIdentifier></Filter>') % (
+                  filter_path, filter_uuid.upper()))
+        filters_file.write(template_filters.substitute({
+            'FILTER_LINES': '\n    '.join(filter_lines),
+            'CL_COMPILE_LINES': '\n    '.join(cl_compile_lines),
+            'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
+            }))
+
+    # Generate the sln with all projects and configurations.
+    sln_path = os.path.join('.vs', 'xrtl.sln')
+    sln_path = os.path.abspath(sln_path)
+    if not os.path.exists(os.path.dirname(sln_path)):
+      os.makedirs(os.path.dirname(sln_path))
+    with open(sln_path, 'w') as sln_file:
+      project_lines = []
+      project_config_lines = []
+      for (target_package, target_uuid, _, vcxproj_path) in all_projects:
+        project_lines.append(
+            ('Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "%s", "%s", "{%s}"' % (
+                target_package, vcxproj_path, target_uuid)))
+        for config in ('dbg', 'fastbuild', 'opt'):
+          project_config_lines.append(('{%s}.%s|x64.ActiveCfg = %s|x64') % (
+                                       target_uuid, config, config))
+          project_config_lines.append(('{%s}.%s|x64.Build.0 = %s|x64') % (
+                                       target_uuid, config, config))
+      sln_file.write(template_sln.substitute({
+          'PROJECT_LINES': '\n'.join(project_lines),
+          'PROJECT_CONFIG_LINES': '\n    '.join(project_config_lines),
+          }))
+
+    print('')
+    print('Visual Studio solution written to:')
+    print('  %s' % (convert_path_cygwin_to_win32(sln_path)))
 
     return return_code
 

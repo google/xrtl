@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Generates a compile_commands.json database.
+"""Generates a link_targets.json database.
 
 Usage:
-  bazel --experimental_action_listener=//tools/actions:generate_compile_commands_listener
+  bazel --experimental_action_listener=//tools/actions:generate_link_targets_listener
 """
 
 import argparse
@@ -27,59 +27,59 @@ import subprocess
 import sys
 
 
-def _get_commands_from_file(file_path, command_directory):
-  """Gets a set of commands for a single file.
+def _get_link_target_from_file(file_path, command_directory):
+  """Gets a link target for a single executable.
 
   Args:
     file_path: The path to a *_compile_command file.
     command_directory: The directory commands are run from.
   Returns:
-    A string to append to compile_commands.json.
+    A string to append to link_targets.json or None if the file was empty.
   """
   with open(file_path, 'r') as f:
     contents = f.read().split('\0')
-    commands = []
-    for i in range(0, len(contents) / 2):
-      command = contents[i * 2].replace('"', '\\"')
-      file_path = contents[i * 2 + 1]
-      commands.append('''{
-        "directory": "%s",
-        "command": "%s",
-        "file": "%s"
-      },''' % (
-          command_directory,
-          command,
-          file_path,
-      ))
-    return commands
+    if len(contents) < 3:
+      return None
+    target_package = contents[0]
+    target_uuid = contents[1]
+    target_executable = os.path.join(command_directory, contents[2])
+    return '''{
+      "package": "%s",
+      "uuid": "%s",
+      "executable": "%s"
+    },''' % (
+        target_package,
+        target_uuid,
+        target_executable,
+    )
 
 
-def _get_compile_commands(path, command_directory):
+def _get_link_targets(path, command_directory):
   """Recursively iterates all paths and gets the commands for all files within.
 
   Args:
-    path: A directory path to look for *_compile_command files under.
+    path: A directory path to look for *_link_target files under.
     command_directory: The directory commands are run from.
 
   Returns:
     A list of strings to append to compile_commands.json.
   """
-  all_commands = []
+  all_targets = []
   for root, dirnames, filenames in os.walk(path):
-    for filename in fnmatch.filter(filenames, '*_compile_command'):
+    for filename in fnmatch.filter(filenames, '*_link_target'):
       file_path = os.path.join(root, filename)
-      commands = _get_commands_from_file(file_path, command_directory)
-      if commands:
-        all_commands.extend(commands)
-  return all_commands
+      target = _get_link_target_from_file(file_path, command_directory)
+      if target:
+        all_targets.append(target)
+  return all_targets
 
 
 def main():
-  parser = argparse.ArgumentParser(prog='generate_compile_commands_json')
+  parser = argparse.ArgumentParser(prog='generate_link_targets_json')
   parser.add_argument('--workspace_root', help='.')
   parser.add_argument('--execution_root', help='bazel info execution_root')
   parser.add_argument('--build_root', help='bazel-out/[config]/')
-  parser.add_argument('--output_file', default='compile_commands.json',
+  parser.add_argument('--output_file', default='link_targets.json',
                       help='Output file path for the database file.')
 
   # If the user passed no args, die nicely.
@@ -90,13 +90,13 @@ def main():
 
   action_outs = os.path.join(args['build_root'],
                              'extra_actions',
-                             'tools/actions/generate_compile_commands_action')
+                             'tools/actions/generate_link_targets_action')
   action_outs = action_outs.replace('/', os.sep)
-  commands = _get_compile_commands(action_outs, args['execution_root'])
+  targets = _get_link_targets(action_outs, args['execution_root'])
   with open(args['output_file'], 'w') as f:
     f.write('[')
-    for command in commands:
-      f.write(command)
+    for target in targets:
+      f.write(target)
     # Delete the last comma to make the file valid JSON.
     f.seek(f.tell()-1)
     f.write(']')

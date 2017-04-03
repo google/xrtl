@@ -1,0 +1,19 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
+MinimumVisualStudioVersion = 10.0.40219.1
+$PROJECT_LINES
+EndProject
+Global
+  GlobalSection(SolutionConfigurationPlatforms) = preSolution
+    dbg|x64 = dbg|x64
+    fastbuild|x64 = fastbuild|x64
+    opt|x64 = opt|x64
+  EndGlobalSection
+  GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    $PROJECT_CONFIG_LINES
+  EndGlobalSection
+  GlobalSection(SolutionProperties) = preSolution
+    HideSolutionNode = FALSE
+  EndGlobalSection
+EndGlobal
