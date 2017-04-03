@@ -59,7 +59,7 @@ def main():
     return 1
 
   # Grab Visual Studio version and execute shell to set up environment.
-  if sys.platform == 'win32':
+  if sys.platform in ('cygwin', 'win32'):
     vs_version = import_vs_environment()
     # TODO(benvanik): support 2017 as well.
     if vs_version != 2015:
@@ -130,22 +130,36 @@ def import_vs_environment():
     return None
   tools_path = os.path.join(tools_path, '..\\..\\vc\\vcvarsall.bat')
 
-  args = [tools_path, '&&', 'set']
+  if sys.platform == 'cygwin':
+    args = ['tools\\/utils\\/echo_vcvarsall.bat']
+    envvars_to_save = (
+        'devenvdir',
+        'include',
+        'lib',
+        'libpath',
+        'pathext',
+        'systemroot',
+        'vcinstalldir',
+        'windowssdkdir',
+        )
+  else:
+    args = [tools_path, '&&', 'set']
+    envvars_to_save = (
+        'devenvdir',
+        'include',
+        'lib',
+        'libpath',
+        'path',
+        'pathext',
+        'systemroot',
+        'temp',
+        'tmp',
+        'vcinstalldir',
+        'windowssdkdir',
+        )
   popen = subprocess.Popen(
       args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   variables, _ = popen.communicate()
-  envvars_to_save = (
-      'devenvdir',
-      'include',
-      'lib',
-      'libpath',
-      'path',
-      'pathext',
-      'systemroot',
-      'temp',
-      'tmp',
-      'windowssdkdir',
-      )
   for line in variables.splitlines():
     for envvar in envvars_to_save:
       if re.match(envvar + '=', line.lower()):
@@ -157,6 +171,21 @@ def import_vs_environment():
 
   os.environ['VSVERSION'] = str(version)
   return version
+
+
+def convert_path_cygwin_to_win32(cygwin_path):
+  """Converts a /cygdrive/c/foo path to a C:\\foo path.
+
+  Args:
+    cygwin_path: file path in cygwin format.
+
+  Returns:
+    File path in win32 format.
+  """
+  path = cygwin_path.replace('/cygdrive/', '')
+  drive = path[0:1]
+  path = path[2:]
+  return '%s:\\%s' % (drive, path.replace('/', '\\'))
 
 
 def has_bin(bin):
@@ -263,6 +292,22 @@ def git_submodule_update():
       '--init',
       '--recursive',
       ])
+
+
+def get_python_binary():
+  """Finds the python binary. Aborts if none is found.
+
+  Returns:
+    A path to the python binary. This may differ from sys.executable.
+  """
+  python_exe = get_bin('python.exe')
+  if not python_exe:
+    python_exe = get_bin('python')
+  if not python_exe:
+    python_exe = sys.executable
+  if sys.platform == 'cygwin':
+    python_exe = convert_path_cygwin_to_win32(python_exe)
+  return python_exe
 
 
 def get_clang_format_binary():
@@ -475,13 +520,27 @@ class BazelCommand(Command):
         subparsers,
         *args, **kwargs)
 
-  def execute(self, args, pass_args, cwd):
+  def execute(self, args, bazel_command, pass_args, cwd):
+    # Setup environment required by bazel.
     if 'BAZEL_SH' not in os.environ:
-      os.environ['BAZEL_SH'] = 'c:/tools/msys64/usr/bin/bash.exe'
+      os.environ['BAZEL_SH'] = get_bin('bash')
     if 'BAZEL_PYTHON' not in os.environ:
-      os.environ['BAZEL_PYTHON'] = sys.executable
+      os.environ['BAZEL_PYTHON'] = get_python_binary()
+    if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
+      os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
+
+    # Add --config set to default if none was specified.
+    has_config = False
+    for arg in pass_args:
+      if arg.startswith('--config='):
+        has_config = True
+        break
+    if not has_config:
+      pass_args = ['--config=%s' % (default_config)] + pass_args
+
     result = subprocess.call([
         'bazel',
+        bazel_command,
         ] + pass_args, shell=False)
     print('')
     if result != 0:
@@ -497,12 +556,12 @@ class CleanCommand(BazelCommand):
     super(CleanCommand, self).__init__(
         subparsers,
         name='clean',
-        help_short='Runs a bazel clean. `xtool clean -- args`',
+        help_short='Runs a bazel clean.',
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
     # TODO(benvanik): build script.
-    result = super(CleanCommand, self).execute(args, ['clean'] + pass_args, cwd)
+    result = super(CleanCommand, self).execute(args, 'clean', pass_args, cwd)
     if not result:
       print('Success!')
     return result
@@ -515,12 +574,12 @@ class BuildCommand(BazelCommand):
     super(BuildCommand, self).__init__(
         subparsers,
         name='build',
-        help_short='Runs a bazel build. `xtool build -- args`',
+        help_short='Runs a bazel build.`',
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
     # TODO(benvanik): build script.
-    result = super(BuildCommand, self).execute(args, ['build'] + pass_args, cwd)
+    result = super(BuildCommand, self).execute(args, 'build', pass_args, cwd)
     if not result:
       print('Success!')
     return result
@@ -536,14 +595,14 @@ class RunCommand(BazelCommand):
         help_short='Runs tests for several platforms at once.',
         help_long='''
         To pass arguments to the executables separate them with `--`.
-          $ xtool run -- --some_test_arg
+          $ xtool run //:target -- --some_test_arg
         ''',
         *args, **kwargs)
     # TODO(benvanik): configs for platforms to run tests on.
 
   def execute(self, args, pass_args, cwd):
     # TODO(benvanik): run script.
-    result = super(RunCommand, self).execute(args, ['run'] + pass_args, cwd)
+    result = super(RunCommand, self).execute(args, 'run', pass_args, cwd)
     if not result:
       print('Success!')
     return result
@@ -556,12 +615,12 @@ class TestCommand(BazelCommand):
     super(TestCommand, self).__init__(
         subparsers,
         name='test',
-        help_short='Runs a bazel test. `xtool test -- args`',
+        help_short='Runs a bazel test.',
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
     # TODO(benvanik): test script.
-    result = super(TestCommand, self).execute(args, ['test'] + pass_args, cwd)
+    result = super(TestCommand, self).execute(args, 'test', pass_args, cwd)
     if not result:
       print('Success!')
     return result
@@ -574,11 +633,11 @@ class QueryCommand(BazelCommand):
     super(QueryCommand, self).__init__(
         subparsers,
         name='query',
-        help_short='Issues a bazel query. `xtool query -- args`',
+        help_short='Issues a bazel query.',
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
-    result = super(QueryCommand, self).execute(args, ['query'] + pass_args, cwd)
+    result = super(QueryCommand, self).execute(args, 'query', pass_args, cwd)
     if not result:
       print('Success!')
     return result

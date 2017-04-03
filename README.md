@@ -51,6 +51,16 @@ xtool setup
 
 ## Developing
 
+* Build/test/run/query for host platform:
+```
+$ ./xtool build //xrtl/base/...
+$ ./xtool test //xrtl/base/...
+$ ./xtool run //xrtl/base:math_test -- --some_arg
+# Note that you can use `bazel` instead of `xtool` in most cases, but you must
+# specify a config.
+$ bazel build --config=macos_x86_64 //xrtl/base/...
+```
+
 * Run linter and fix common errors:
 ```
 $ ./xtool fix
