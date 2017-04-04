@@ -27,3 +27,5 @@ wget -O llvm.tar.xz $LLVM_URL
 tar -xf llvm.tar.xz
 rm llvm.tar.xz
 mv $LLVM_ARTIFACT llvm
+
+pip install protobuf
