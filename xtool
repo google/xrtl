@@ -60,6 +60,11 @@ def main():
     print('ERROR: git must be installed and on PATH.')
     return 1
 
+  # Check bazel exists.
+  if not has_bin('bazel'):
+    print('ERROR: bazel must be installed and on PATH.')
+    return 1
+
   # Grab Visual Studio version and execute shell to set up environment.
   if sys.platform in ('cygwin', 'win32'):
     vs_version = import_vs_environment()
