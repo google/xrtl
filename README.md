@@ -7,6 +7,8 @@ prototyping and interation of rich interactive applications that run beautifully
 everywhere. The library is engineered for small code sizes to enable fast
 loading and low resource usage even within web browsers.
 
+Pronounced 'zurtle'.
+
 *This is not an official Google product.*
 
 ## Setup Instructions
