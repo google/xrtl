@@ -303,6 +303,13 @@ def bazel_info(key, config = default_config):
   Returns:
     Key value.
   """
+  # Memoize the lookup.
+  if not hasattr(bazel_info, 'cache'):
+    bazel_info.cache = {}
+  cache_key = '%s-%s' % (key, config)
+  if cache_key in bazel_info.cache:
+    return bazel_info.cache[cache_key]
+
   # Setup environment required by bazel.
   if 'BAZEL_SH' not in os.environ:
     os.environ['BAZEL_SH'] = get_bin('bash')
@@ -311,11 +318,13 @@ def bazel_info(key, config = default_config):
   if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
     os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
 
-  # TODO(benvanik): cache the value per config.
-
-  return subprocess.check_output(
+  value = subprocess.check_output(
       ('bazel', 'info', '--config=%s' % (config), key),
       cwd=self_path).decode('utf-8').rstrip()
+
+  # Add to cache.
+  bazel_info.cache[cache_key] = value
+  return value
 
 
 def get_git_head_info():
