@@ -199,20 +199,17 @@ class ref_ptr {
 // RefObjects are thread safe and may be used with ref_ptrs from multiple
 // threads.
 //
-// Subclasses must implemented void Deallocate() to delete themselves (or return
-// to pools/etc).
+// Subclasses may implement a custom delete operator to handle their
+// deallocation. It should be thread safe as it may be called from any thread.
 //
 // Usage:
 //   class MyRefObject : public RefObject<MyRefObject> {
 //    public:
 //     MyRefObject() = default;
-//
-//     static void Deallocate(MyRefObject* value) {
-//       // Delete or return to allocator.
-//       delete value;
+//     // Optional; can be used to return to pool/etc:
+//     static void operator delete(void* ptr, std::size_t sz) {
+//       ::operator delete(ptr);
 //     }
-//    private:
-//     ~MyRefObject() = default;  // force ref_ptr use.
 //   };
 template <class T>
 class RefObject {

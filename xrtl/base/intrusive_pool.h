@@ -51,6 +51,8 @@ namespace xrtl {
 //
 // Seeing issues with the pool? Change kPoolingEnabled to false and run with
 // --config=asan to ensure you aren't writing-after-free.
+//
+// This type is thread-unsafe.
 template <typename T, size_t kOffset = 0xffffffff>
 class IntrusivePoolBase {
  public:

@@ -66,6 +66,8 @@ namespace xrtl {
 //   IntrusiveList<ref_ptr<MyElement>> list;
 //   list.push_back(make_ref<MyElement>());
 //   ref_ptr<MyElement> elm = list.front();
+//
+// This type is thread-unsafe.
 
 // Define to enable extensive checks after each mutation of the intrusive list.
 // #define XRTL_PARANOID_INTRUSIVE_LIST
