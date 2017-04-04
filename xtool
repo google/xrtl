@@ -596,7 +596,7 @@ class BuildCommand(BazelCommand):
     super(BuildCommand, self).__init__(
         subparsers,
         name='build',
-        help_short='Runs a bazel build.`',
+        help_short='Runs a bazel build.',
         *args, **kwargs)
 
   def execute(self, args, pass_args, cwd):
