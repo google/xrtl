@@ -1236,12 +1236,10 @@ class PresubmitCommand(Command):
       return return_code
 
     # Run clang-tidy.
-    # TODO(benvanik): get clang-tidy running everywhere.
-    # https://github.com/google/xrtl/issues/7
-    # return_code = clang_tidy_files(apply_fixes = False)
-    # if return_code and not args['keep_going']:
-    #  print('Error running clang-tidy')
-    #  return return_code
+    return_code = clang_tidy_files(apply_fixes = False)
+    if return_code and not args['keep_going']:
+      print('Error running clang-tidy')
+      return return_code
 
     # TODO(benvanik): run tests.
 
