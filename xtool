@@ -23,6 +23,7 @@ cases).
 
 import argparse
 import difflib
+import fnmatch
 import hashlib
 import json
 import os
@@ -476,7 +477,7 @@ def write_if_changed(path, contents):
     # File exists - load contents and compare.
     with open(path, 'r') as file:
       existing_contents = file.read()
-    if contents == existing_contents:
+    if unicode(contents) == unicode(existing_contents):
       # Contents are the same.
       return
   with open(path, 'w') as file:
@@ -1047,6 +1048,25 @@ def generate_command_databases(config = default_config):
   # Get bazel-bin path for our configuration.
   build_root = os.path.dirname(bazel_info('bazel-bin', config = config))
   execution_root = bazel_info('execution_root', config = config)
+
+  # Remove all intermediate command files, as bazel won't clean them up for us.
+  # There are probably good ways of avoiding this, but it's not so bad.
+  compile_action_path = os.path.join(
+      build_root, 'extra_actions', 'tools', 'actions',
+      'generate_compile_commands_action')
+  for root, dirnames, filenames in os.walk(compile_action_path):
+    for filename in fnmatch.filter(filenames, '*_compile_command'):
+      file_path = os.path.join(root, filename)
+      os.chmod(file_path, 0777)
+      os.remove(file_path)
+  link_action_path = os.path.join(
+      build_root, 'extra_actions', 'tools', 'actions',
+      'generate_link_targets_action')
+  for root, dirnames, filenames in os.walk(link_action_path):
+    for filename in fnmatch.filter(filenames, '*_link_target'):
+      file_path = os.path.join(root, filename)
+      os.chmod(file_path, 0777)
+      os.remove(file_path)
 
   # Invoke bazel with the action listener and our build commands.
   # TODO(benvanik): multiple platforms, many roots, etc.
