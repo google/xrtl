@@ -50,7 +50,7 @@ def _get_link_target_from_file(file_path, command_directory):
     },''' % (
         target_package,
         target_uuid,
-        target_executable,
+        target_executable.replace('\\', '\\\\'),
     )
 
 

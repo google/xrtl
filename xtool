@@ -1360,7 +1360,7 @@ class GenerateSlnCommand(Command):
         os.makedirs(os.path.dirname(vcxproj_path))
 
       all_projects.append((target_package, target_uuid,
-                           convert_path_cygwin_to_win32(target_executable),
+                           target_executable,
                            convert_path_cygwin_to_win32(vcxproj_path)))
 
       # Generate the target.vcxproj.

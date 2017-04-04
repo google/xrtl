@@ -13,12 +13,18 @@ py_binary(
     visibility = ["//visibility:private"],
 )
 
+sh_binary(
+    name = "generate_compile_command_sh",
+    srcs = ["generate_compile_command.sh"],
+    data = [":generate_compile_command"],
+)
+
 extra_action(
     name = "generate_compile_commands_action",
-    tools = [":generate_compile_command"],
+    tools = [":generate_compile_command_sh"],
     out_templates = ["$(ACTION_ID)_compile_command"],
     cmd = " ".join([
-        "$(location :generate_compile_command)",
+        "$(location :generate_compile_command_sh)",
         "$(EXTRA_ACTION_FILE)",
         "$(output $(ACTION_ID)_compile_command)",
     ]),
@@ -42,12 +48,18 @@ py_binary(
     visibility = ["//visibility:private"],
 )
 
+sh_binary(
+    name = "generate_link_target_sh",
+    srcs = ["generate_link_target.sh"],
+    data = [":generate_link_target"],
+)
+
 extra_action(
     name = "generate_link_targets_action",
-    tools = [":generate_link_target"],
+    tools = [":generate_link_target_sh"],
     out_templates = ["$(ACTION_ID)_link_target"],
     cmd = " ".join([
-        "$(location :generate_link_target)",
+        "$(location :generate_link_target_sh)",
         "$(EXTRA_ACTION_FILE)",
         "$(output $(ACTION_ID)_link_target)",
     ]),
