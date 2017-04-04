@@ -272,6 +272,20 @@ def shell_call(command, throw_on_error=True, stdout_path=None):
   return result
 
 
+def _prepare_bazel_environ():
+  """Ensures bazel environment variables are set.
+
+  This is not required but ensures the tools used by bazel match the ones we
+  select and also quiets bazel warnings about them being autoconfigured.
+  """
+  if 'BAZEL_SH' not in os.environ:
+    os.environ['BAZEL_SH'] = get_bin('bash')
+  if 'BAZEL_PYTHON' not in os.environ:
+    os.environ['BAZEL_PYTHON'] = get_python_binary()
+  if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
+    os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
+
+
 def invoke_bazel(command, args):
   """Invokes a bazel command.
 
@@ -282,14 +296,7 @@ def invoke_bazel(command, args):
   Returns:
     Exit value of bazel, 0 is success.
   """
-  # Setup environment required by bazel.
-  if 'BAZEL_SH' not in os.environ:
-    os.environ['BAZEL_SH'] = get_bin('bash')
-  if 'BAZEL_PYTHON' not in os.environ:
-    os.environ['BAZEL_PYTHON'] = get_python_binary()
-  if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
-    os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
-
+  _prepare_bazel_environ()
   return subprocess.call(['bazel', command] + args, shell=False)
 
 
@@ -310,14 +317,7 @@ def bazel_info(key, config = default_config):
   if cache_key in bazel_info.cache:
     return bazel_info.cache[cache_key]
 
-  # Setup environment required by bazel.
-  if 'BAZEL_SH' not in os.environ:
-    os.environ['BAZEL_SH'] = get_bin('bash')
-  if 'BAZEL_PYTHON' not in os.environ:
-    os.environ['BAZEL_PYTHON'] = get_python_binary()
-  if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
-    os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
-
+  _prepare_bazel_environ()
   value = subprocess.check_output(
       ('bazel', 'info', '--config=%s' % (config), key),
       cwd=self_path).decode('utf-8').rstrip()
