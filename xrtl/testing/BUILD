@@ -13,9 +13,7 @@ cc_library(
     testonly = 1,
     hdrs = ["gtest.h"],
     deps = [
-        "//xrtl/base:flags",
-        "//xrtl/base:logging",
-        "@gtest//:gtest",
+        "//third_party/gtest_xrtl",
     ],
 )
 
@@ -27,7 +25,7 @@ cc_library(
     hdrs = ["gtest.h"],
     deps = [
         ":gtest",
-        "@gtest//:gtest",
+        "//third_party/gtest_xrtl",
     ] + select({
         "//xrtl/tools/target_config:google_internal": [
             "//xrtl/port/google/testing:google_test_main",

@@ -5,16 +5,6 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
-# Used by //third_party/gtest/ to use our flags/logging code.
-cc_library(
-    name = "gtest_deps",
-    deps = [
-        ":flags",
-        ":logging",
-    ],
-    visibility = ["//visibility:public"],
-)
-
 cc_library(
     name = "flags",
     srcs = ["flags.cc"],

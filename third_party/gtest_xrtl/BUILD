@@ -1,15 +1,15 @@
 # Description:
-#  gtest package.
+#  gtest bazel BUILD file.
+#  We need to do this separate from //third_party/gtest/ (or a gtest.BUILD)
+#  as we need to reference //xrtl for our flags/logging code.
 
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//visibility:private"])
 
-licenses(["notice"])  # 3-clause BSD
-
-exports_files(["LICENSE"])
+licenses(["notice"])
 
 genrule(
     name = "gtest_port_hdr_gen",
-    outs = ["googletest/gtest/internal/custom/gtest-port.h"],
+    outs = ["gtest/googletest/gtest/internal/custom/gtest-port.h"],
     cmd = "\n".join([
         "cat <<'EOF' > $@",
         "#ifndef GTEST_INCLUDE_GTEST_INTERNAL_CUSTOM_GTEST_PORT_H_",
@@ -44,40 +44,30 @@ genrule(
         "#endif  // GTEST_INCLUDE_GTEST_INTERNAL_CUSTOM_GTEST_PORT_H_",
         "EOF",
     ]),
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
-    name = "gtest_port_hdr",
-    hdrs = [":gtest_port_hdr_gen"],
-    deps = [
-        "@xrtl//xrtl/base:gtest_deps",
-    ],
-    visibility = ["//visibility:private"],
-)
-
-cc_library(
-    name = "gtest",
+    name = "gtest_xrtl",
     srcs = [
-        "googlemock/src/gmock-all.cc",
-        "googletest/src/gtest-all.cc",
+        "gtest/googlemock/src/gmock-all.cc",
+        "gtest/googletest/src/gtest-all.cc",
     ],
-    hdrs = glob([
-        "**/*.h",
-        "googletest/src/*.cc",
-        "googlemock/src/*.cc",
+    hdrs = [
+        ":gtest_port_hdr_gen",
+    ] + glob([
+        "gtest/**/*.h",
+        "gtest/googletest/src/*.cc",
+        "gtest/googlemock/src/*.cc",
     ]),
-    deps = [":gtest_port_hdr"],
-    includes = [
-        "googlemock",
-        "googlemock/include",
-        "googletest",
-        "googletest/include",
+    deps = [
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
     ],
-)
-
-cc_library(
-    name = "gtest_main",
-    srcs = ["googlemock/src/gmock_main.cc"],
-    deps = [":gtest"],
+    includes = [
+        "gtest/googlemock",
+        "gtest/googlemock/include",
+        "gtest/googletest",
+        "gtest/googletest/include",
+    ],
+    visibility = ["//visibility:public"],
 )

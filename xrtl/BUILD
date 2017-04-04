@@ -12,6 +12,7 @@ licenses(["notice"])  # Apache 2.0
 package_group(
     name = "internal",
     packages = [
+        "//third_party/...",
         "//xrtl/...",
     ],
 )

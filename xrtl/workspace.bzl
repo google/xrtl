@@ -57,10 +57,3 @@ def xrtl_workspace():
       name = "gflags_nothreads",
       actual = "@com_github_gflags_gflags//:gflags_nothreads",
   )
-
-  # //third_party/gtest/
-  native.new_local_repository(
-      name = "gtest",
-      path = "third_party/gtest/",
-      build_file = "third_party/gtest.BUILD",
-  )
