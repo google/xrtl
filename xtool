@@ -505,8 +505,9 @@ def discover_commands(subparsers):
       'fix': FixCommand(subparsers),
       'tidy': TidyCommand(subparsers),
       'presubmit': PresubmitCommand(subparsers),
-      'sln': GenerateSlnCommand(subparsers),
       }
+  if sys.platform in ('cygwin', 'win32'):
+    commands['sln'] = GenerateSlnCommand(subparsers)
   return commands
 
 
