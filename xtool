@@ -462,6 +462,27 @@ def get_clang_tidy_binary():
   sys.exit(1)
 
 
+def write_if_changed(path, contents):
+  """Writes file contents if they are different than what exists at the path.
+
+  This is useful for files that may be watched by other processes (such as
+  Visual Studio).
+
+  Args:
+    path: file path.
+    contents: file contents str.
+  """
+  if os.path.exists(path):
+    # File exists - load contents and compare.
+    with open(path, 'r') as file:
+      existing_contents = file.read()
+    if contents == existing_contents:
+      # Contents are the same.
+      return
+  with open(path, 'w') as file:
+    file.write(contents)
+
+
 def discover_commands(subparsers):
   """Looks for all commands and returns a dictionary of them.
   In the future commands could be discovered on disk.
@@ -1371,99 +1392,99 @@ class GenerateSlnCommand(Command):
                            convert_path_cygwin_to_win32(vcxproj_path)))
 
       # Generate the target.vcxproj.
-      with open(vcxproj_path, 'w') as vcxproj_file:
-        cl_compile_lines = []
-        cl_include_lines = []
-        for source_file in all_sources:
-          source_file = convert_path_cygwin_to_win32(source_file)
-          if source_file.endswith('.cc') or source_file.endswith('.c'):
-            cl_compile_lines.append('<ClCompile Include="%s" />' % (source_file))
-          else:
-            cl_include_lines.append('<ClInclude Include="%s" />' % (source_file))
-        vcxproj_file.write(template_vcxproj.substitute({
-            'XTOOL': xtool_path,
-            'TARGET_PACKAGE': target_package,
-            'TARGET_UUID': target_uuid,
-            'TARGET_EXE_DBG': target_executable.replace('-fastbuild', '-dbg'),
-            'TARGET_EXE_FASTBUILD': target_executable,
-            'TARGET_EXE_OPT': target_executable.replace('-fastbuild', '-opt'),
-            'DEFINES': ';'.join(all_defines),
-            'INCLUDE_PATHS': ';'.join(all_include_paths),
-            'CL_COMPILE_LINES': '\n    '.join(cl_compile_lines),
-            'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
-            }))
+      cl_compile_lines = []
+      cl_include_lines = []
+      for source_file in all_sources:
+        source_file = convert_path_cygwin_to_win32(source_file)
+        if source_file.endswith('.cc') or source_file.endswith('.c'):
+          cl_compile_lines.append('<ClCompile Include="%s" />' % (source_file))
+        else:
+          cl_include_lines.append('<ClInclude Include="%s" />' % (source_file))
+      vcxproj_file_contents = template_vcxproj.substitute({
+          'XTOOL': xtool_path,
+          'TARGET_PACKAGE': target_package,
+          'TARGET_UUID': target_uuid,
+          'TARGET_EXE_DBG': target_executable.replace('-fastbuild', '-dbg'),
+          'TARGET_EXE_FASTBUILD': target_executable,
+          'TARGET_EXE_OPT': target_executable.replace('-fastbuild', '-opt'),
+          'DEFINES': ';'.join(all_defines),
+          'INCLUDE_PATHS': ';'.join(all_include_paths),
+          'CL_COMPILE_LINES': '\n    '.join(cl_compile_lines),
+          'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
+          })
+      write_if_changed(vcxproj_path, vcxproj_file_contents)
 
       # Generate the target.vcxproj.filters.
-      with open(vcxproj_path + '.filters', 'w') as filters_file:
-        filter_paths = []  # foo\bar
-        cl_compile_lines = []
-        cl_include_lines = []
-        for source_path in all_sources:
-          # Get a filter name in the 'foo\bar' format rooted in our repository
-          # root (like xrtl\base\foo.cc).
-          source_file = source_map[source_path]
-          filter_path = os.path.dirname(source_file)
-          filter_path = filter_path.replace(self_path, '')
-          if filter_path.startswith('/'):
-            filter_path = filter_path[1:]
-          filter_path = filter_path.replace('/', '\\')
+      filter_paths = []  # foo\bar
+      cl_compile_lines = []
+      cl_include_lines = []
+      for source_path in all_sources:
+        # Get a filter name in the 'foo\bar' format rooted in our repository
+        # root (like xrtl\base\foo.cc).
+        source_file = source_map[source_path]
+        filter_path = os.path.dirname(source_file)
+        filter_path = filter_path.replace(self_path, '')
+        if filter_path.startswith('/'):
+          filter_path = filter_path[1:]
+        filter_path = filter_path.replace('/', '\\')
 
-          # Add filter for the path and all of its parents, if needed.
-          parent_filter_path = filter_path
-          while True:
-            if not parent_filter_path:
-              break
-            if parent_filter_path not in filter_paths:
-              filter_paths.append(parent_filter_path)
-            else:
-              break
-            if '\\' not in parent_filter_path:
-              break
-            parent_filter_path = (
-                parent_filter_path[0:parent_filter_path.rfind('\\')])
-
-          source_path = convert_path_cygwin_to_win32(source_path)
-          if source_path.endswith('.cc') or source_path.endswith('.c'):
-            cl_compile_lines.append(
-                ('<ClCompile Include="%s"><Filter>%s</Filter></ClCompile>' % (
-                    source_path, filter_path)))
+        # Add filter for the path and all of its parents, if needed.
+        parent_filter_path = filter_path
+        while True:
+          if not parent_filter_path:
+            break
+          if parent_filter_path not in filter_paths:
+            filter_paths.append(parent_filter_path)
           else:
-            cl_include_lines.append(
-                ('<ClInclude Include="%s"><Filter>%s</Filter></ClInclude>' % (
-                    source_path, filter_path)))
-        filter_lines = []
-        for filter_path in filter_paths:
-          filter_uuid = format_uuid(str(hashlib.md5(filter_path).hexdigest()))
-          filter_lines.append(
-              ('<Filter Include="%s"><UniqueIdentifier>{%s}</UniqueIdentifier></Filter>') % (
-                  filter_path, filter_uuid.upper()))
-        filters_file.write(template_filters.substitute({
-            'FILTER_LINES': '\n    '.join(filter_lines),
-            'CL_COMPILE_LINES': '\n    '.join(cl_compile_lines),
-            'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
-            }))
+            break
+          if '\\' not in parent_filter_path:
+            break
+          parent_filter_path = (
+              parent_filter_path[0:parent_filter_path.rfind('\\')])
+
+        source_path = convert_path_cygwin_to_win32(source_path)
+        if source_path.endswith('.cc') or source_path.endswith('.c'):
+          cl_compile_lines.append(
+              ('<ClCompile Include="%s"><Filter>%s</Filter></ClCompile>' % (
+                  source_path, filter_path)))
+        else:
+          cl_include_lines.append(
+              ('<ClInclude Include="%s"><Filter>%s</Filter></ClInclude>' % (
+                  source_path, filter_path)))
+      filter_lines = []
+      for filter_path in filter_paths:
+        filter_uuid = format_uuid(str(hashlib.md5(filter_path).hexdigest()))
+        filter_lines.append(
+            ('<Filter Include="%s"><UniqueIdentifier>{%s}</UniqueIdentifier></Filter>') % (
+                filter_path, filter_uuid.upper()))
+      filters_file_contents = template_filters.substitute({
+          'FILTER_LINES': '\n    '.join(filter_lines),
+          'CL_COMPILE_LINES': '\n    '.join(cl_compile_lines),
+          'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
+          })
+      write_if_changed(vcxproj_path + '.filters', filters_file_contents)
 
     # Generate the sln with all projects and configurations.
     sln_path = os.path.join('.vs', 'xrtl.sln')
     sln_path = os.path.abspath(sln_path)
     if not os.path.exists(os.path.dirname(sln_path)):
       os.makedirs(os.path.dirname(sln_path))
-    with open(sln_path, 'w') as sln_file:
-      project_lines = []
-      project_config_lines = []
-      for (target_package, target_uuid, _, vcxproj_path) in all_projects:
-        project_lines.append(
-            ('Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "%s", "%s", "{%s}"' % (
-                target_package, vcxproj_path, target_uuid)))
-        for config in ('dbg', 'fastbuild', 'opt'):
-          project_config_lines.append(('{%s}.%s|x64.ActiveCfg = %s|x64') % (
-                                       target_uuid, config, config))
-          project_config_lines.append(('{%s}.%s|x64.Build.0 = %s|x64') % (
-                                       target_uuid, config, config))
-      sln_file.write(template_sln.substitute({
-          'PROJECT_LINES': '\n'.join(project_lines),
-          'PROJECT_CONFIG_LINES': '\n    '.join(project_config_lines),
-          }))
+    project_lines = []
+    project_config_lines = []
+    for (target_package, target_uuid, _, vcxproj_path) in all_projects:
+      project_lines.append(
+          ('Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "%s", "%s", "{%s}"' % (
+              target_package, vcxproj_path, target_uuid)))
+      for config in ('dbg', 'fastbuild', 'opt'):
+        project_config_lines.append(('{%s}.%s|x64.ActiveCfg = %s|x64') % (
+                                     target_uuid, config, config))
+        project_config_lines.append(('{%s}.%s|x64.Build.0 = %s|x64') % (
+                                     target_uuid, config, config))
+    sln_file_contents = template_sln.substitute({
+        'PROJECT_LINES': '\n'.join(project_lines),
+        'PROJECT_CONFIG_LINES': '\n    '.join(project_config_lines),
+        })
+    write_if_changed(sln_path, sln_file_contents)
 
     print('')
     print('Visual Studio solution written to:')
