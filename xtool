@@ -570,26 +570,31 @@ class SetupCommand(Command):
     print('')
 
     # Install required python modules.
-    python_modules = ['protobuf']
-    return_code = 1
-    if has_bin('pip'):
-      print('- pip install %s' % (' '.join(python_modules)))
-      return_code = shell_call([
-          'pip',
-          'install',
-          ] + python_modules)
-    elif has_bin('easy_install'):
-      print('- easy_install %s' % (' '.join(python_modules)))
-      return_code = shell_call([
-          'easy_install',
-          ] + python_modules)
-    if return_code:
-      print('ERROR: pip and easy_install not found or an error occurred!')
-      print('You\'ll need to install the following python modules:')
-      for python_module in python_modules:
-        print('  %s' % (python_module))
-      return return_code
-    print('')
+    python_modules = []
+    try:
+      from google.protobuf import message
+    except:
+      python_modules.append('protobuf')
+    if python_modules:
+      return_code = 1
+      if has_bin('pip'):
+        print('- pip install %s' % (' '.join(python_modules)))
+        return_code = shell_call([
+            'pip',
+            'install',
+            ] + python_modules)
+      elif has_bin('easy_install'):
+        print('- easy_install %s' % (' '.join(python_modules)))
+        return_code = shell_call([
+            'easy_install',
+            ] + python_modules)
+      if return_code:
+        print('ERROR: pip and easy_install not found or an error occurred!')
+        print('You\'ll need to install the following python modules:')
+        for python_module in python_modules:
+          print('  %s' % (python_module))
+        return return_code
+      print('')
 
     return 0
 

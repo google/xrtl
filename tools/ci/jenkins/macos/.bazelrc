@@ -1,0 +1,16 @@
+# Default bazel configuration when running under Jenkins.
+
+common --ignore_unsupported_sandboxing
+
+build --verbose_failures
+build --spawn_strategy=standalone
+build --genrule_strategy=standalone
+
+test --verbose_failures
+test --spawn_strategy=standalone
+test --genrule_strategy=standalone
+test --test_output=errors
+test --test_strategy=standalone
+test --worker_verbose
+test --strategy=Javac=worker
+test --strategy=Closure=worker
