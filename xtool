@@ -892,11 +892,12 @@ def lint_check_files(check_all_files = False, diff_origin = False):
   return return_code
 
 
-def lint_fix_files(check_all_files = False, diff_origin = False):
+def lint_fix_files(check_all_files = False, diff_origin = False, force = False):
   """
   Args:
     check_all_files: True to run on all files, not just the git changes.
     diff_origin: git diff against origin/master, not HEAD.
+    force: perform changes even if files are not staged.
 
   Returns:
     0 if linting completed without errors.
@@ -932,7 +933,7 @@ def lint_fix_files(check_all_files = False, diff_origin = False):
         git_clang_format_py,
         '--binary=%s' % (clang_format_binary),
         '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
-        ])
+        ] + (['--force'] if force else []))
     print('')
   return 0
 
@@ -1025,12 +1026,16 @@ class FixCommand(Command):
     self.parser.add_argument(
         '--origin', action='store_true',
         help='Formats all files changed relative to origin/master.')
+    self.parser.add_argument(
+        '-f', '--force', action='store_true',
+        help='Apply changes even if files are not staged.')
 
   def execute(self, args, pass_args, cwd):
     # fix.
     return_code = lint_fix_files(
         check_all_files = args['all'],
-        diff_origin = args['origin'])
+        diff_origin = args['origin'],
+        force = args['force'])
     return return_code
 
 
