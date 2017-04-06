@@ -31,15 +31,15 @@ XRTL_ALWAYS_INLINE bool AreAlmostEqual(double a, double b, double epsilon) {
 // Returns -1 or 1 depending on the sign of the input.
 template <typename T>
 XRTL_ALWAYS_INLINE constexpr T Sign(T v) noexcept {
-  return v >= 0 ? 1 : -1;
+  return v >= 0 ? T(1) : T(-1);
 }
 
 // Returns the linear interpolation t percent between a and b.
 //   a: Lower bound on interpolation range.
 //   b: Upper bound on interpolation range.
 //   t: Interpolation value [0, 1].
-template <typename T>
-XRTL_ALWAYS_INLINE constexpr T Lerp(T a, T b, float t) noexcept {
+template <typename T, typename V>
+XRTL_ALWAYS_INLINE constexpr V Lerp(T a, T b, V t) noexcept {
   return a + t * (b - a);
 }
 
@@ -54,8 +54,8 @@ XRTL_ALWAYS_INLINE constexpr T Lerp(T a, T b, float t) noexcept {
 //   b: Upper bound on interpolation range.
 //   x: Value between a and b to find t for.
 //   Returns the interpolation value t [0, 1] for x between a and b.
-template <typename T>
-XRTL_ALWAYS_INLINE constexpr T InverseLerp(T a, T b, T x) noexcept {
+template <typename T, typename V>
+XRTL_ALWAYS_INLINE constexpr V InverseLerp(T a, T b, V x) noexcept {
   return (x - a) / (b - a);
 }
 

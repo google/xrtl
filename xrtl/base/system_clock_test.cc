@@ -44,8 +44,8 @@ TEST(SystemClockTest, PlatformClock) {
   SystemClock* platform_clock = SystemClock::default_clock();
 
   // Some valid range (2015-2030).
-  EXPECT_LT(1420070400, platform_clock->now_utc_secs());
-  EXPECT_GT(1893456000, platform_clock->now_utc_secs());
+  EXPECT_LT(1420070400u, platform_clock->now_utc_secs());
+  EXPECT_GT(1893456000u, platform_clock->now_utc_secs());
 
   // Some valid range (should be process relative, so small).
   EXPECT_LT(0, platform_clock->now_micros());
