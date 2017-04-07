@@ -45,16 +45,16 @@ $ ./xtool setup
 * Install Visual Studio 2015 or 2017 with the Windows SDK and C++ tools
 * Install bazel via [chocolatey](https://chocolatey.org/) or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
-$ choco install bazel
+> choco install bazel
 ```
 * Follow the [bazel on Windows](https://bazel.build/versions/master/docs/windows.html) instructions (set `BAZEL_SH`, etc)
 * Run initial setup with xtool:
 ```
-$ xtool setup
+> xtool setup
 ```
 * Generate a Visual Studio solution; do this each time you change BUILD files:
 ```
-$ xtool sln
+> xtool sln
 ```
 * Open `.vs\xrtl.sln`, select a project, and press `F5`!
 
