@@ -766,6 +766,26 @@ class QueryCommand(BazelCommand):
     return result
 
 
+def is_source_file(file_path):
+  """
+  Args:
+    file_path: file path (like '.../foo.cc').
+
+  Returns:
+    True if the file is considered a source file.
+  """
+  return file_path.endswith((
+      '.cc',
+      '.c',
+      '.h',
+      '.inl',
+      '.mm',
+      '.m',
+      '.java',
+      '.py',
+      ))
+
+
 def find_xrtl_source_files():
   """Gets all XRTL source files in the project.
 
@@ -775,16 +795,7 @@ def find_xrtl_source_files():
   return [os.path.join(root, name)
       for root, dirs, files in os.walk('xrtl')
       for name in files
-      if name.endswith((
-          '.cc',
-          '.c',
-          '.h',
-          '.inl',
-          '.mm',
-          '.m',
-          '.java',
-          '.py',
-          ))]
+      if is_source_file(name)]
 
 
 def find_all_source_files():
@@ -796,14 +807,27 @@ def find_all_source_files():
   return find_xrtl_source_files()
 
 
-def find_changed_source_files():
+def find_changed_source_files(diff_origin = False):
   """Gets all changed source files from the origin.
+
+  Args:
+    diff_origin: git diff against origin/master, not HEAD.
 
   Returns:
     A list of file paths.
   """
-  # TODO(benvanik): limit list.
-  return find_xrtl_source_files()
+  p = subprocess.Popen([
+      'git',
+      'diff',
+      '--name-only',
+      '%s' % ('origin/master' if diff_origin else 'HEAD')
+      ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  (stdout, stderr) = p.communicate()
+  changed_files = stdout.strip().split('\n')
+  changed_files = [file_path
+                   for file_path in changed_files
+                   if is_source_file(file_path)]
+  return changed_files
 
 
 def lint_check_files(check_all_files = False, diff_origin = False):
@@ -849,12 +873,8 @@ def lint_check_files(check_all_files = False, diff_origin = False):
         diff = difflib.unified_diff(
             open(file_path).readlines(),
             open(difftemp).readlines())
-        with open(difftemp, 'w') as f:
-          f.write(''.join(diff))
-        shell_call([
-            'type' if sys.platform == 'win32' else 'cat',
-            difftemp,
-            ])
+        diff_str = ''.join(diff)
+        print(diff_str)
         if os.path.exists(difftemp): os.remove(difftemp)
         print('')
     print('')
@@ -893,6 +913,7 @@ def lint_check_files(check_all_files = False, diff_origin = False):
       return_code = 1
     else:
       print('Linting completed successfully.')
+  print('')
 
   return return_code
 
@@ -943,10 +964,11 @@ def lint_fix_files(check_all_files = False, diff_origin = False, force = False):
   return 0
 
 
-def style_check_files(check_all_files = False):
+def style_check_files(check_all_files = False, diff_origin = False):
   """
   Args:
     check_all_files: True to run on all files, not just the git changes.
+    diff_origin: git diff against origin/master, not HEAD.
 
   Returns:
     0 if style check completed without errors.
@@ -956,7 +978,9 @@ def style_check_files(check_all_files = False):
   if check_all_files:
     source_files = find_all_source_files()
   else:
-    source_files = find_changed_source_files()
+    source_files = find_changed_source_files(diff_origin = diff_origin)
+  if not source_files:
+    return 0
 
   # Remove _test.cc files.
   source_files = [source_file for source_file in source_files
@@ -999,20 +1023,24 @@ class LintCommand(Command):
         help='Lints all files changed relative to origin/master.')
 
   def execute(self, args, pass_args, cwd):
+    # We allow both tools to run even if the other fails.
+
     # lint.
-    return_code = lint_check_files(
+    lint_return_code = lint_check_files(
         check_all_files = args['all'],
         diff_origin = args['origin'])
-    if return_code:
-      return return_code
 
     # style check.
-    return_code = style_check_files(
-        check_all_files = args['all'])
-    if return_code:
-      return return_code
+    style_return_code = style_check_files(
+        check_all_files = args['all'],
+        diff_origin = args['origin'])
 
-    return return_code
+    if lint_return_code:
+      return lint_return_code
+    if style_return_code:
+      return style_return_code
+
+    return 0
 
 
 class FixCommand(Command):
@@ -1123,10 +1151,12 @@ def generate_command_databases(config = default_config):
   return 0
 
 
-def clang_tidy_files(check_all_files = False, apply_fixes = False):
+def clang_tidy_files(check_all_files = False, diff_origin = False,
+                     apply_fixes = False):
   """
   Args:
     check_all_files: True to run on all files, not just the git changes.
+    diff_origin: git diff against origin/master, not HEAD.
     apply_fixes: automatically apply fixes suggested by clang-tidy.
 
   Returns:
@@ -1151,7 +1181,9 @@ def clang_tidy_files(check_all_files = False, apply_fixes = False):
   if check_all_files:
     source_files = find_all_source_files()
   else:
-    source_files = find_changed_source_files()
+    source_files = find_changed_source_files(diff_origin = diff_origin)
+  if not source_files:
+    return 0
 
   # Remove _test.cc files.
   source_files = [source_file for source_file in source_files
@@ -1230,24 +1262,24 @@ class PresubmitCommand(Command):
       if return_code and not args['keep_going']:
         print('Error running lint fix')
         return return_code
-      return_code = clang_tidy_files(apply_fixes = True)
+      return_code = clang_tidy_files(diff_origin = True, apply_fixes = True)
       if return_code and not args['keep_going']:
         print('Error running clang-tidy fix')
         return return_code
 
     # Run linter, which will error on anything fix could not fix or the style
     # checker finds.
-    return_code = lint_check_files()
+    return_code = lint_check_files(diff_origin = True)
     if return_code and not args['keep_going']:
       print('Error running linter')
       return return_code
-    return_code = style_check_files()
+    return_code = style_check_files(diff_origin = True)
     if return_code and not args['keep_going']:
       print('Error running style checker')
       return return_code
 
     # Run clang-tidy.
-    return_code = clang_tidy_files(apply_fixes = False)
+    return_code = clang_tidy_files(diff_origin = True, apply_fixes = False)
     if return_code and not args['keep_going']:
       print('Error running clang-tidy')
       return return_code
