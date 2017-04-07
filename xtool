@@ -1170,12 +1170,6 @@ def clang_tidy_files(check_all_files = False, diff_origin = False,
     print('https://github.com/google/xrtl/issues/2')
     return 0
 
-  # Build a command database.
-  result = generate_command_databases()
-  if result:
-    print('Error generating compile commands database')
-    return result
-
   # Select source files.
   source_files = []
   if check_all_files:
@@ -1184,6 +1178,12 @@ def clang_tidy_files(check_all_files = False, diff_origin = False,
     source_files = find_changed_source_files(diff_origin = diff_origin)
   if not source_files:
     return 0
+
+  # Build a command database.
+  result = generate_command_databases()
+  if result:
+    print('Error generating compile commands database')
+    return result
 
   # Remove _test.cc files.
   source_files = [source_file for source_file in source_files
