@@ -9,13 +9,16 @@ stage('Presubmit') {
 
 stage('Build and Test') {
   def workers = [:]
-  def platforms = ['linux']
-  for (platform in platforms) {
-    workers[platform] = {
-      node(platform) {
-        checkout scm
-        sh('./tools/ci/jenkins/' + platform + '/build_and_test.sh')
-      }
+  workers['linux'] = {
+    node('linux') {
+      checkout scm
+      sh('./tools/ci/jenkins/linux/build_and_test.sh')
+    }
+  }
+  workers['windows'] = {
+    node('windows') {
+      checkout scm
+      bat('tools/ci/jenkins/windows/build_and_test.bat')
     }
   }
   workers.failFast = false

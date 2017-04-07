@@ -136,7 +136,11 @@ def import_vs_environment():
     tools_path = os.environ['VS140COMNTOOLS']
   if version == 0:
     return None
-  tools_path = os.path.join(tools_path, '..\\..\\vc\\vcvarsall.bat')
+  vcvarsqueryregistry_path = os.path.join(tools_path, 'vcvarsqueryregistry.bat')
+  if os.path.exists(vcvarsqueryregistry_path):
+    tools_path = vcvarsqueryregistry_path
+  else:
+    tools_path = os.path.join(tools_path, '..\\..\\vc\\vcvarsall.bat')
 
   if sys.platform == 'cygwin':
     args = ['tools\\/utils\\/echo_vcvarsall.bat']

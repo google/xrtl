@@ -1,5 +1,7 @@
 # Default bazel configuration when running under Jenkins.
 
+startup --output_user_root=c:/jenkins-bazel/
+
 build --ignore_unsupported_sandboxing
 build --verbose_failures
 build --spawn_strategy=standalone
