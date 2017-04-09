@@ -100,6 +100,7 @@ cc_library(
             "//xrtl/port/common/base:logging_macros_hdrs",
         ],
     }),
+    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
@@ -213,6 +214,7 @@ cc_library(
 cc_library(
     name = "system_clock_hdrs",
     hdrs = ["system_clock.h"],
+    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
