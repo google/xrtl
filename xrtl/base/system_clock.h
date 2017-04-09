@@ -15,6 +15,7 @@
 #ifndef XRTL_BASE_SYSTEM_CLOCK_H_
 #define XRTL_BASE_SYSTEM_CLOCK_H_
 
+#include <chrono>
 #include <cstdint>
 #include <memory>
 
@@ -54,31 +55,40 @@ class SystemClock {
   virtual ~SystemClock() = default;
 
   // Returns the current UNIX epoch timestamp in seconds.
-  inline uint32_t now_utc_secs() { return now_utc_micros() / 1000000ull; }
+  inline std::chrono::seconds now_utc_secs() {
+    return std::chrono::duration_cast<std::chrono::seconds>(now_utc_micros());
+  }
   // Returns the current UNIX epoch timestamp in milliseconds.
-  inline uint64_t now_utc_millis() { return now_utc_micros() / 1000; }
+  inline std::chrono::milliseconds now_utc_millis() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        now_utc_micros());
+  }
   // Returns the current UNIX epoch timestamp in microseconds.
-  virtual uint64_t now_utc_micros() = 0;
+  virtual std::chrono::microseconds now_utc_micros() = 0;
 
   // Returns a clock-relative timestamp in milliseconds.
   // Time base is clock creation, not wall-clock, and is not compatible
   // with the values returned from any other clock.
-  inline uint32_t now_secs() { return now_micros() / 1000000; }
+  inline std::chrono::seconds now_secs() {
+    return std::chrono::duration_cast<std::chrono::seconds>(now_micros());
+  }
   // Returns a clock-relative timestamp in milliseconds.
   // Time base is clock creation, not wall-clock, and is not compatible
   // with the values returned from any other clock.
-  inline uint64_t now_millis() { return now_micros() / 1000; }
+  inline std::chrono::milliseconds now_millis() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now_micros());
+  }
   // Returns a high resolution timestamp in fractional milliseconds.
   // Time base is clock creation, not wall-clock, and is not compatible
   // with the values returned from any other clock.
   inline double now_millis_highp() {
-    uint64_t now_micros_value = now_micros();
+    uint64_t now_micros_value = now_micros().count();
     return static_cast<double>(now_micros_value) / 1000.0;
   }
   // Returns a clock-relative timestamp in microseconds.
   // Time base is clock creation, not wall-clock, and is not compatible
   // with the values returned from any other clock.
-  virtual uint64_t now_micros() = 0;
+  virtual std::chrono::microseconds now_micros() = 0;
 
  private:
   // Currently specified default clock, if any.

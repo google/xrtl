@@ -44,22 +44,26 @@ TEST(SystemClockTest, PlatformClock) {
   SystemClock* platform_clock = SystemClock::default_clock();
 
   // Some valid range (2015-2030).
-  EXPECT_LT(1420070400u, platform_clock->now_utc_secs());
-  EXPECT_GT(1893456000u, platform_clock->now_utc_secs());
+  EXPECT_LT(1420070400u, platform_clock->now_utc_secs().count());
+  EXPECT_GT(1893456000u, platform_clock->now_utc_secs().count());
 
   // Some valid range (should be process relative, so small).
-  EXPECT_LT(0, platform_clock->now_micros());
-  EXPECT_GT(100000, platform_clock->now_micros());
+  EXPECT_LT(0, platform_clock->now_micros().count());
+  EXPECT_GT(100000, platform_clock->now_micros().count());
 }
 
 class ManualClock : public SystemClock {
  public:
-  uint64_t now_utc_micros() override { return now_utc_micros_; }
+  std::chrono::microseconds now_utc_micros() override {
+    return std::chrono::microseconds(now_utc_micros_);
+  }
   void set_now_utc_micros(uint64_t now_utc_micros) {
     now_utc_micros_ = now_utc_micros;
   }
 
-  uint64_t now_micros() override { return now_micros_; }
+  std::chrono::microseconds now_micros() override {
+    return std::chrono::microseconds(now_micros_);
+  }
   void set_now_micros(uint64_t now_micros) { now_micros_ = now_micros; }
 
  private:
@@ -70,17 +74,17 @@ class ManualClock : public SystemClock {
 TEST(SystemClockTest, NowUtcUnits) {
   ManualClock manual_clock;
   manual_clock.set_now_utc_micros(1490657899300667);
-  EXPECT_EQ(1490657899300667, manual_clock.now_utc_micros());
-  EXPECT_EQ(1490657899300, manual_clock.now_utc_millis());
-  EXPECT_EQ(1490657899, manual_clock.now_utc_secs());
+  EXPECT_EQ(1490657899300667, manual_clock.now_utc_micros().count());
+  EXPECT_EQ(1490657899300, manual_clock.now_utc_millis().count());
+  EXPECT_EQ(1490657899, manual_clock.now_utc_secs().count());
 }
 
 TEST(SystemClockTest, NowUnits) {
   ManualClock manual_clock;
   manual_clock.set_now_micros(1490657899300667);
-  EXPECT_EQ(1490657899300667, manual_clock.now_micros());
-  EXPECT_EQ(1490657899300, manual_clock.now_millis());
-  EXPECT_EQ(1490657899, manual_clock.now_secs());
+  EXPECT_EQ(1490657899300667, manual_clock.now_micros().count());
+  EXPECT_EQ(1490657899300, manual_clock.now_millis().count());
+  EXPECT_EQ(1490657899, manual_clock.now_secs().count());
 }
 
 }  // namespace

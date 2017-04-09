@@ -28,7 +28,7 @@ namespace internal {
 
 void LogMessage::EmitLogMessage() {
   static SystemClock* clock = SystemClock::logging_clock();
-  uint64_t now_micros = clock->now_utc_micros();
+  uint64_t now_micros = clock->now_utc_micros().count();
   time_t now_seconds = static_cast<time_t>(now_micros / 1000000);
   int32_t micros_remainder = static_cast<int32_t>(now_micros % 1000000);
   constexpr size_t kTimeBufferSize = 30;

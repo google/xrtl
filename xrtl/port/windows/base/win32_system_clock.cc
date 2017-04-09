@@ -14,11 +14,10 @@
 
 #include "xrtl/port/windows/base/win32_system_clock.h"
 
-#include <windows.h>
-
 #include <chrono>
 
 #include "xrtl/base/macros.h"
+#include "xrtl/port/windows/base/windows.h"
 
 namespace xrtl {
 
@@ -42,13 +41,12 @@ class Win32SystemClock : public SystemClock {
     ::QueryPerformanceCounter(&qpc_timebase_);
   }
 
-  uint64_t now_utc_micros() override {
+  std::chrono::microseconds now_utc_micros() override {
     // If GetSystemTimePreciseAsFileTime is not available we fall back to the
     // (likely) millisecond-resolution chrono implementation.
     if (!GetSystemTimePreciseAsFileTime_) {
       return std::chrono::duration_cast<std::chrono::microseconds>(
-                 std::chrono::system_clock::now().time_since_epoch())
-          .count();
+          std::chrono::system_clock::now().time_since_epoch());
     }
 
     FILETIME system_time;
@@ -63,15 +61,15 @@ class Win32SystemClock : public SystemClock {
     li.QuadPart -= kUnixEpochStartTicks;
     // Convert to microsecs
     li.QuadPart /= kFtToMicroSec;
-    return li.QuadPart;
+    return std::chrono::microseconds(li.QuadPart);
   }
 
-  uint64_t now_micros() override {
+  std::chrono::microseconds now_micros() override {
     LARGE_INTEGER counter;
     ::QueryPerformanceCounter(&counter);
     uint64_t elapsed_ticks = counter.QuadPart - qpc_timebase_.QuadPart;
     uint64_t elapsed_micros = elapsed_ticks * 100000;
-    return elapsed_micros / qpc_frequency_.QuadPart;
+    return std::chrono::microseconds(elapsed_micros / qpc_frequency_.QuadPart);
   }
 
  private:

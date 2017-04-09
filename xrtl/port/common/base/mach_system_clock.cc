@@ -39,18 +39,20 @@ class MachSystemClock : public SystemClock {
     mach_port_deallocate(mach_host_self(), calendar_clock_);
   }
 
-  uint64_t now_utc_micros() override {
+  std::chrono::microseconds now_utc_micros() override {
     mach_timespec_t clock_time;
     clock_get_time(calendar_clock_, &clock_time);
-    return static_cast<uint64_t>(clock_time.tv_sec) * 1000000 +
-           clock_time.tv_nsec / 1000;
+    return std::chrono::microseconds(static_cast<uint64_t>(clock_time.tv_sec) *
+                                         1000000 +
+                                     clock_time.tv_nsec / 1000);
   }
 
-  uint64_t now_micros() override {
+  std::chrono::microseconds now_micros() override {
     // Note that we rebase the absolute time before we scale so that we preserve
     // as many bits as possible.
-    return (mach_absolute_time() - timebase_mach_time_) * timebase_info_.numer /
-           timebase_info_.denom / 1000;
+    return std::chrono::microseconds(
+        (mach_absolute_time() - timebase_mach_time_) * timebase_info_.numer /
+        timebase_info_.denom / 1000);
   }
 
  private:

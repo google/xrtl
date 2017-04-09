@@ -14,3 +14,12 @@ cc_library(
         "//xrtl/base:system_clock_hdrs",
     ],
 )
+
+cc_library(
+    name = "windows_headers",
+    hdrs = ["windows.h"],
+    deps = [
+      "//xrtl/tools/target_platform",
+    ],
+    visibility = ["//xrtl/port:windows_only"],
+)
