@@ -10,6 +10,7 @@ cc_library(
     srcs = ["win32_system_clock.cc"],
     hdrs = ["win32_system_clock.h"],
     deps = [
+        ":windows",
         "//xrtl/base:macros",
         "//xrtl/base:system_clock_hdrs",
     ],
