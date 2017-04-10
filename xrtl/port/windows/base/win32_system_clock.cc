@@ -57,9 +57,7 @@ class Win32SystemClock : public SystemClock {
     LARGE_INTEGER li;
     li.LowPart = system_time.dwLowDateTime;
     li.HighPart = system_time.dwHighDateTime;
-    // Subtract unix epoch start
     li.QuadPart -= kUnixEpochStartTicks;
-    // Convert to microsecs
     li.QuadPart /= kFtToMicroSec;
     return std::chrono::microseconds(li.QuadPart);
   }
@@ -67,8 +65,10 @@ class Win32SystemClock : public SystemClock {
   std::chrono::microseconds now_micros() override {
     LARGE_INTEGER counter;
     ::QueryPerformanceCounter(&counter);
+    // TODO(benvanik): ensure we aren't dropping too much precision here. There
+    //                 may be an ordering that's better.
     uint64_t elapsed_ticks = counter.QuadPart - qpc_timebase_.QuadPart;
-    uint64_t elapsed_micros = elapsed_ticks * 100000;
+    uint64_t elapsed_micros = elapsed_ticks * 1000000;
     return std::chrono::microseconds(elapsed_micros / qpc_frequency_.QuadPart);
   }
 

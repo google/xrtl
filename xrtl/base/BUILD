@@ -173,6 +173,22 @@ cc_test(
 )
 
 cc_library(
+    name = "stopwatch",
+    hdrs = ["stopwatch.h"],
+    deps = [":system_clock"],
+)
+
+cc_test(
+    name = "stopwatch_test",
+    srcs = ["stopwatch_test.cc"],
+    deps = [
+        ":stopwatch",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
     name = "string_view",
     srcs = ["string_view.cc"],
     hdrs = ["string_view.h"],

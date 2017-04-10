@@ -47,6 +47,12 @@ else:
   default_config = ''
 
 
+top_level_packages = [
+    '//xrtl/base/...',
+    '//xrtl/tools/...',
+    ]
+
+
 def main():
   # Add self to the root search path.
   sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -1119,9 +1125,7 @@ def generate_command_databases(config = default_config):
       'tools/actions:generate_compile_commands_listener',
       '--experimental_action_listener',
       'tools/actions:generate_link_targets_listener',
-      '//xrtl/base/...',
-      '//xrtl/tools/...',
-      ])
+      ] + top_level_packages)
   if result:
     print('Error performing build with extra action')
     return result
