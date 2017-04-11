@@ -24,6 +24,9 @@
 #if defined(XRTL_PLATFORM_APPLE)
 #include <mach/mach.h>
 #include <mach/thread_act.h>
+#elif defined(XRTL_PLATFORM_LINUX)
+#include <sys/resource.h>  // setpriority
+#include <sys/syscall.h>   // gettid
 #endif  // XRTL_PLATFORM_APPLE
 
 #include "xrtl/base/logging.h"
@@ -106,6 +109,11 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
 
   // pthreads thread handle.
   pthread_t handle_ = 0;
+  // System thread ID (tid).
+  uintptr_t thread_id_ = -1;
+
+  // Current thread priority.
+  std::atomic<PriorityClass> priority_class_{PriorityClass::kNormal};
 
   // Set true when the thread exits. This is used by the wait handle for joining
   // with the thread.
@@ -113,6 +121,8 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
   // Set true when pthread_join has been called.
   std::atomic<bool> has_joined_{false};
 
+  // An event signalled by the thread when it has completed OnEnter.
+  ref_ptr<Event> startup_fence_;
   // An event signalled when the thread has been resumed.
   // This will keep the thread in its start function waiting until the condition
   // is set.
@@ -229,8 +239,11 @@ ref_ptr<Thread> PthreadsThread::CreateThread(
     const CreateParams& create_params,
     std::unique_ptr<ThreadStartData> start_data) {
   // Create our Thread and stash the reference in the start data.
-  // When the thread spins up it will set the reference in its TLS.
-  auto thread = make_ref<PthreadsThread>(nullptr, create_params.name);
+  // When the thread spins up it will set the reference in its TLS and populate
+  // handle_ with a real handle. For now, we just pass an invalid (0) handle.
+  pthread_t invalid_handle;
+  std::memset(&invalid_handle, 0, sizeof(invalid_handle));
+  auto thread = make_ref<PthreadsThread>(invalid_handle, create_params.name);
   start_data->thread = thread;
 
   // Create the thread now.
@@ -248,12 +261,19 @@ ref_ptr<Thread> PthreadsThread::CreateThread(
   // Always create threads suspended.
   int rc = pthread_create_suspended_np(&thread->handle_, &thread_attr,
                                        &ThreadStartRoutine, start_data.get());
+  if (rc == 0) {
+    thread->thread_id_ = pthread_mach_thread_np(thread->handle_);
+  }
 #else
   // No support for actual create-suspended, so the fence is all we got.
   // This just means we'll get one additional spurious wake of the new thread
   // on startup, which isn't optimal but still safe due to our fence.
   int rc = pthread_create(&thread->handle_, &thread_attr, &ThreadStartRoutine,
                           start_data.get());
+  if (rc == 0) {
+    // Wait for the thread to start up and get its handle initialized.
+    Thread::Wait(thread->startup_fence_);
+  }
 #endif  // XRTL_PLATFORM_APPLE
   pthread_attr_destroy(&thread_attr);
 
@@ -571,6 +591,9 @@ PthreadsThread::PthreadsThread(pthread_t handle, std::string name)
     name_ = std::string("Thread-") + std::to_string(thread_id());
   }
 
+  // The thread create function will wait until we set this in OnEnter (on some
+  // platforms).
+  startup_fence_ = Event::CreateManualResetEvent(false);
   // The thread start routine will pause until we set this in Resume.
   suspend_fence_ = Event::CreateManualResetEvent(false);
 }
@@ -585,6 +608,16 @@ void PthreadsThread::OnEnter() {
   // but the value should be the same between the two so it's fine.
   handle_ = pthread_self();
 
+#if defined(XRTL_PLATFORM_APPLE)
+  // thread_id_ already set after creation.
+  DCHECK_NE(thread_id_, 0);
+#elif defined(XRTL_PLATFORM_LINUX)
+  // Linux needs the thread ID (tid) for priority manipulation.
+  thread_id_ = syscall(SYS_gettid);
+#else
+  thread_id_ = static_cast<uintptr_t>(handle_);
+#endif  // XRTL_PLATFORM_LINUX
+
   // Ensure we have TLS setup.
   InitializeCurrentThreadStorage();
 
@@ -598,8 +631,8 @@ void PthreadsThread::OnEnter() {
 
   // TODO(benvanik): WTF.
 
-  // Wait until the thread is resumed.
-  Thread::Wait(suspend_fence_);
+  // Thread is ready, signal creator and wait until we are resumed.
+  Thread::SignalAndWait(startup_fence_, suspend_fence_);
 }
 
 void PthreadsThread::OnExit() {
@@ -625,16 +658,11 @@ void PthreadsThread::OnExit() {
 }
 
 uintptr_t PthreadsThread::thread_id() {
-#if defined(XRTL_PLATFORM_APPLE)
-  mach_port_t tid = pthread_mach_thread_np(handle_);
-  return static_cast<uint32_t>(tid);
-#else
-  // TODO(benvanik): pthread_getunique_np?
-  return static_cast<uintptr_t>(handle_);
-#endif  // XRTL_PLATFORM_APPLE
+  return static_cast<uintptr_t>(thread_id_);
 }
 
 Thread::PriorityClass PthreadsThread::priority_class() const {
+#if defined(XRTL_PLATFORM_APPLE)
   int policy = 0;
   sched_param param = {0};
   pthread_getschedparam(handle_, &policy, &param);
@@ -650,9 +678,16 @@ Thread::PriorityClass PthreadsThread::priority_class() const {
   } else {
     return PriorityClass::kHighest;
   }
+#elif defined(XRTL_PLATFORM_LINUX)
+  return priority_class_;
+#else
+#error Platform not yet implemented
+#endif  // XRTL_PLATFORM_APPLE
 }
 
 void PthreadsThread::set_priority_class(PriorityClass priority_class) {
+  priority_class_ = priority_class;
+#if defined(XRTL_PLATFORM_APPLE)
   int policy = 0;
   sched_param param = {0};
   pthread_getschedparam(handle_, &policy, &param);
@@ -674,10 +709,15 @@ void PthreadsThread::set_priority_class(PriorityClass priority_class) {
       param.sched_priority = priorities.highest_priority;
       break;
   }
-#if defined(XRTL_PLATFORM_APPLE)
   pthread_setschedparam(handle_, policy, &param);
+#elif defined(XRTL_PLATFORM_LINUX)
+  // I have no idea. getpriority/setpriority(gettid()) seem busted.
+  if (priority_class != PriorityClass::kNormal) {
+    LOG(WARNING) << "Ignoring thread priority change request to "
+                 << static_cast<int>(priority_class);
+  }
 #else
-  pthread_setschedprio(handle_, param.sched_priority);
+#error Platform not yet implemented
 #endif  // XRTL_PLATFORM_APPLE
 }
 
@@ -690,16 +730,19 @@ uint64_t PthreadsThread::affinity_mask() const {
                     reinterpret_cast<thread_policy_t>(&policy_data),
                     &policy_count, &is_default);
   return policy_data.affinity_tag;
-#else
+#elif defined(XRTL_PLATFORM_LINUX)
   cpu_set_t cpu_set = {};
+  CPU_ZERO(&cpu_set);
   pthread_getaffinity_np(handle_, sizeof(cpu_set), &cpu_set);
   uint64_t affinity_mask = 0;
-  for (int cpu_index = 0; cpu_index < CPU_SETSIZE; ++cpu_index) {
+  for (int cpu_index = 0; cpu_index < std::min(CPU_SETSIZE, 64); ++cpu_index) {
     if (CPU_ISSET(cpu_index, &cpu_set)) {
-      affinity_mask |= (1 << cpu_index);
+      affinity_mask |= (1ull << cpu_index);
     }
   }
   return affinity_mask;
+#else
+#error Platform not yet implemented
 #endif  // XRTL_PLATFORM_APPLE
 }
 
@@ -713,15 +756,17 @@ void PthreadsThread::set_affinity_mask(uint64_t affinity_mask) {
   thread_policy_set(pthread_mach_thread_np(handle_), THREAD_AFFINITY_POLICY,
                     reinterpret_cast<thread_policy_t>(&policy_data),
                     THREAD_AFFINITY_POLICY_COUNT);
-#else
+#elif defined(XRTL_PLATFORM_LINUX)
   cpu_set_t cpu_set = {};
   CPU_ZERO(&cpu_set);
-  for (int cpu_index = 0; cpu_index < 64; ++cpu_index) {
-    if ((affinity_mask & (1 << cpu_index)) == 1) {
+  for (int cpu_index = 0; cpu_index < std::min(CPU_SETSIZE, 64); ++cpu_index) {
+    if ((affinity_mask & (1ull << cpu_index)) != 0) {
       CPU_SET(cpu_index, &cpu_set);
     }
   }
   pthread_setaffinity_np(handle_, sizeof(cpu_set), &cpu_set);
+#else
+#error Platform not yet implemented
 #endif  // XRTL_PLATFORM_APPLE
 }
 
