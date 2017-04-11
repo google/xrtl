@@ -577,6 +577,11 @@ PthreadsThread::PthreadsThread(pthread_t handle, std::string name)
 PthreadsThread::~PthreadsThread() {
   // WARNING: this may be called from any thread. Use OnExit to perform
   //          teardown on the thread during thread exit.
+
+  // If we never joined we should detach now to ensure we don't leak the thread.
+  if (!has_joined_) {
+    pthread_detach(handle_);
+  }
 }
 
 void PthreadsThread::OnEnter() {
