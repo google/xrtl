@@ -15,6 +15,67 @@ common:msvc --linkopt=/DEBUG:FULL
 test --test_output=errors
 
 #===============================================================================
+# ASAN/MSAN/etc (clang-only)
+#===============================================================================
+# We need to use a custom libc++:
+# https://github.com/google/sanitizers/wiki/MemorySanitizerLibcxxHowTo
+
+# https://clang.llvm.org/docs/AddressSanitizer.html
+common:asan --config=clang
+common:asan --copt=-DASAN_OPTIONS=\"color=always:malloc_context_size=10\"
+common:asan --copt=-DLSAN_OPTIONS=\"\"
+common:asan --strip=never
+common:asan --copt=-g
+common:asan --copt=-O1
+common:asan --copt=-fsanitize=address
+common:asan --copt=-fsanitize-coverage=edge
+common:asan --copt=-fno-optimize-sibling-calls
+common:asan --copt=-fno-omit-frame-pointer
+common:asan --linkopt=-fsanitize=address
+
+# https://clang.llvm.org/docs/MemorySanitizer.html
+common:msan --config=clang
+common:msan --copt=-DMSAN_OPTIONS=\"color=always\"
+common:msan --strip=never
+common:msan --copt=-g
+common:msan --copt=-O1
+common:msan --copt=-fsanitize=memory
+common:msan --copt=-fsanitize-memory-track-origins
+common:msan --copt=-fno-optimize-sibling-calls
+common:msan --copt=-fno-omit-frame-pointer
+common:msan --copt=-fPIE
+common:msan --linkopt=-fsanitize=memory
+common:msan --linkopt=-fPIE
+common:msan --linkopt=-pie
+# Custom toolchain for clang + msan libc++:
+common:msan --crosstool_top=//tools/crosstool/msan
+
+# https://clang.llvm.org/docs/ThreadSanitizer.html
+common:tsan --config=clang
+common:tsan --copt=-DTSAN_OPTIONS=\"color=always\"
+common:tsan --strip=never
+common:tsan --copt=-g
+common:tsan --copt=-O0
+common:tsan --copt=-fsanitize=thread
+common:tsan --copt=-fno-optimize-sibling-calls
+common:tsan --copt=-fno-omit-frame-pointer
+common:tsan --linkopt=-fsanitize=thread
+
+# https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+common:ubsan --config=clang
+common:ubsan --copt=-DUBSAN_OPTIONS=\"halt_on_error=1:print_stacktrace=1:color=always\"
+common:ubsan --strip=never
+common:ubsan --copt=-g
+common:ubsan --copt=-O0
+common:ubsan --copt=-fsanitize=bool,function,signed-integer-overflow,shift,vla-bound
+common:ubsan --copt=-fsanitize-coverage=edge
+common:ubsan --copt=-fno-sanitize-recover=undefined
+common:ubsan --copt=-fno-optimize-sibling-calls
+common:ubsan --copt=-fno-omit-frame-pointer
+common:ubsan --linkopt=-fsanitize=bool,function,signed-integer-overflow,shift,vla-bound
+common:ubsan --linkopt=-fno-sanitize-recover=undefined
+
+#===============================================================================
 # Android
 #===============================================================================
 

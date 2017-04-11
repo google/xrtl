@@ -302,18 +302,24 @@ def _prepare_bazel_environ():
     os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
 
 
-def invoke_bazel(command, args):
+def invoke_bazel(command, args, output_base = None):
   """Invokes a bazel command.
 
   Args:
     command: the bazel command, such as 'build'.
     args: a list of arguments to pass to bazel.
+    output_base: absolute path to dump bazel outputs.
 
   Returns:
     Exit value of bazel, 0 is success.
   """
   _prepare_bazel_environ()
-  return subprocess.call(['bazel', command] + args, shell=False)
+  run_args = ['bazel']
+  if output_base:
+    run_args.append('--output_base=%s' % (output_base))
+  run_args.append(command)
+  run_args.extend(args)
+  return subprocess.call(run_args, shell=False)
 
 
 def bazel_info(key, config = default_config):
@@ -663,6 +669,9 @@ class BazelCommand(Command):
     super(BazelCommand, self).__init__(
         subparsers,
         *args, **kwargs)
+    self.parser.add_argument(
+        '--output_base',
+        help='Write bazel outputs to the given path.')
 
   def execute(self, args, bazel_command, pass_args, cwd):
     # Add --config set to default if none was specified.
@@ -674,7 +683,8 @@ class BazelCommand(Command):
     if not has_config:
       pass_args = ['--config=%s' % (default_config)] + pass_args
 
-    result = invoke_bazel(bazel_command, pass_args)
+    result = invoke_bazel(bazel_command, pass_args,
+                          output_base = args['output_base'])
     print('')
     if result != 0:
       print('ERROR: build failed with one or more errors.')
@@ -1233,6 +1243,9 @@ class TidyCommand(Command):
         '--all', action='store_true',
         help='Format all files, not just those changed.')
     self.parser.add_argument(
+        '--origin', action='store_true',
+        help='Tidies all files changed relative to origin/master.')
+    self.parser.add_argument(
         '--fix', action='store_true',
         help='Applies suggested fixes, where possible.')
 
@@ -1240,6 +1253,7 @@ class TidyCommand(Command):
     # Tidy.
     return_code = clang_tidy_files(
         check_all_files = args['all'],
+        diff_origin = args['origin'],
         apply_fixes = args['fix'])
     return return_code
 

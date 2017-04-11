@@ -6,6 +6,12 @@ package(default_visibility = ["//xrtl:internal"])
 licenses(["notice"])  # Apache 2.0
 
 cc_library(
+    name = "debugging",
+    srcs = ["debugging.cc"],
+    hdrs = ["debugging.h"],
+)
+
+cc_library(
     name = "flags",
     srcs = ["flags.cc"],
     hdrs = ["flags.h"],
@@ -120,6 +126,7 @@ cc_library(
         "make_unique.h",
     ],
     deps = [
+        ":debugging",
         "//xrtl/tools/target_config",
         "//xrtl/tools/target_platform",
     ],

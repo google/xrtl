@@ -380,6 +380,8 @@ void Thread::Sleep(std::chrono::microseconds duration) {
 
 Thread::WaitResult Thread::Wait(ref_ptr<WaitHandle> wait_handle,
                                 std::chrono::milliseconds timeout) {
+  wait_handle = wait_handle;  // Keep analysis happy.
+
   // We only support pthreads wait handles.
   auto pthreads_wait_handle =
       reinterpret_cast<PthreadsWaitHandleImpl*>(wait_handle->native_handle());
@@ -439,6 +441,8 @@ Thread::WaitResult Thread::Wait(ref_ptr<WaitHandle> wait_handle,
 Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
                                          ref_ptr<WaitHandle> wait_handle,
                                          std::chrono::milliseconds timeout) {
+  signal_handle = signal_handle;  // Keep analysis happy.
+
   // Nothing fancy, just signal + wait.
   // We only support pthreads wait handles.
   auto pthreads_signal_handle =
@@ -446,7 +450,7 @@ Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
   if (!pthreads_signal_handle->Signal()) {
     return WaitResult::kError;
   }
-  return Wait(wait_handle, timeout);
+  return Wait(std::move(wait_handle), timeout);
 }
 
 Thread::WaitAnyResult Thread::WaitAny(ref_ptr<WaitHandle> wait_handles[],
@@ -564,7 +568,8 @@ PthreadsThread::PthreadsThread(pthread_t handle, std::string name)
   name_ = std::move(name);
   if (name_.empty()) {
     // TODO(benvanik): better naming.
-    name_ = std::string("Thread-") + std::to_string(thread_id());
+    name_ =
+        std::string("Thread-") + std::to_string(PthreadsThread::thread_id());
   }
 
   // The thread create function will wait until we set this in OnEnter (on some
