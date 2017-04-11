@@ -248,14 +248,14 @@ class RefObject {
   void ReleaseReference() { ref_ptr_release_ref(static_cast<T*>(this)); }
 
  protected:
-  RefObject() : counter_(0) {}
-  RefObject(const RefObject&) : counter_(0) {}
+  RefObject() = default;
+  RefObject(const RefObject&) = default;
   RefObject& operator=(const RefObject&) { return *this; }
 
   // Returns true if the object is deleted and undergoing destruction.
   bool is_deleted() const { return !counter_; }
 
-  std::atomic<int> counter_;
+  std::atomic<int> counter_{0};
 };
 
 // Various comparison operator overloads.
