@@ -29,5 +29,9 @@ stage('Analysis') {
   node('linux') {
     checkout scm
     sh('./tools/ci/jenkins/linux/analyze.sh')
+    sh('./tools/ci/jenkins/linux/test_sanitize.sh asan')
+    sh('./tools/ci/jenkins/linux/test_sanitize.sh msan')
+    sh('./tools/ci/jenkins/linux/test_sanitize.sh tsan')
+    sh('./tools/ci/jenkins/linux/test_sanitize.sh ubsan')
   }
 }

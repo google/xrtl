@@ -23,6 +23,9 @@
 // Pulls in the XRTL_PLATFORM_* and XRTL_ARCH_* defines.
 #include "xrtl/tools/target_platform/target_platform.h"  // IWYU pragma: export
 
+// Debugging macros pull in leak checking/sanitization/etc based on config.
+#include "xrtl/base/debugging.h"  // IWYU pragma: export
+
 // Temporary make_unique (until C++14 is everywhere).
 #include "xrtl/base/make_unique.h"  // IWYU pragma: export
 

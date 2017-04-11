@@ -15,6 +15,7 @@ sudo apt upgrade -y
 sudo apt install -y \
     curl \
     git \
+    subversion \
     wget \
     python-pip
 
@@ -44,6 +45,7 @@ sudo apt install -y -t jessie-backports \
 # install will fail.
 sudo apt upgrade -y -t jessie-backports ca-certificates-java
 sudo apt install -y openjdk-8-jdk
+sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
 # Install Bazel.
 echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | \
@@ -69,6 +71,25 @@ sudo apt install -y \
     clang-format-4.0 \
     clang-tidy-4.0 \
     lld-4.0
+
+# Install a modern cmake.
+wget -O cmake.sh https://cmake.org/files/v3.8/cmake-3.8.0-Linux-x86_64.sh
+chmod +x cmake.sh
+./cmake.sh --prefix=/usr/local/
+rm cmake.sh
+
+# Setup custom msan LLVM.
+sudo mkdir -p /usr/local/llvm_scratch/
+sudo chmod +rx /usr/local/llvm_scratch/
+svn co http://llvm.org/svn/llvm-project/llvm/trunk ~/llvm
+(cd ~/llvm/projects && svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx)
+(cd ~/llvm/projects && svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi)
+mkdir ~/libcxx_msan
+pushd ~/libcxx_msan
+cmake ../llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=Memory -DCMAKE_C_COMPILER=clang-4.0 -DCMAKE_CXX_COMPILER=clang++-4.0
+make cxx -j12
+popd
+sudo mv libcxx_msan/ /usr/local/llvm_scratch/libcxx_msan/
 
 # Setup Jenkins user.
 sudo adduser --system --group \
