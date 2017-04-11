@@ -20,7 +20,8 @@
 namespace xrtl {
 
 // An event based on the Win32 event object.
-// This is effectively a binary semaphore with a maximum_count of 1.
+// This is effectively a binary semaphore with a maximum_count of 1 when running
+// in auto-reset mode.
 //
 // Usage, as a fence:
 //   // This allows other threads to block until the event is set.

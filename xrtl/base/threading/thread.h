@@ -39,6 +39,11 @@ constexpr std::chrono::milliseconds kInfiniteTimeout =
 class Process {
  public:
   // Returns the total number of logical processors available.
+  // This may include those enabled by hyperthreading. For example, a 1 package
+  // 4 hardware core CPU with hyperthreading enabled would return as 8 logical
+  // processor cores.
+  // If you find this limiting add a physical_processor_count for the
+  // non-hyperthreaded cores.
   static int logical_processor_count();
 
   // Requests the process enter a high-resolution timing mode.
@@ -225,20 +230,17 @@ class Thread : public WaitHandle {
   // The mask is a bit vector in which each bit represents a logical processor
   // that a thread is allowed to run on. The mask is a subset of the process
   // affinity mask for the current process as defined by process_affinity_mask.
+  //
+  // Compatibility warning: Apple/darwin only support affinity groups, with each
+  // unique affinity_mask sharing time. This means that trying to get clever
+  // with several thread sets with overlapping masks will likely not work as
+  // expected. Try to stick with threads that run only on a single processor.
   virtual uint64_t affinity_mask() const = 0;
   // Sets the processor affinity mask for the thread.
   virtual void set_affinity_mask(uint64_t affinity_mask) = 0;
 
-  // Suspends execution of the thread until it is resumed.
-  // Each call to Suspend increments a thread suspend count and must be matched
-  // with a Resume call.
-  // WARNING: suspend is dangerous and may lead to deadlocks (if the target
-  // thread is holding a lock, etc). Threads should generally only suspend
-  // themselves and only when they know it is safe to do so.
-  virtual void Suspend() = 0;
-  // Decrements the thread suspend count and attempts to resume the thread.
-  // When the suspend count is decremented to zero the execution of the thread
-  // is resumed.
+  // Resumes the thread if it was created suspended.
+  // This has no effect if the thread is not suspended.
   virtual void Resume() = 0;
 
   // Joins with the thread, blocking until it has exited.
@@ -250,12 +252,6 @@ class Thread : public WaitHandle {
   // If you need more flexibility (timeouts, etc) you can pass the thread to a
   // wait routine.
   bool Join() { return Wait(ref_ptr<Thread>(this)) == WaitResult::kSuccess; }
-
-  // Forcefully terminates the thread.
-  // Always prefer returning from the thread main routine, as terminating will
-  // cause leaks and other issues.
-  // The thread handle becomes signaled waking any waiters.
-  virtual void Terminate() = 0;
 
  protected:
   Thread() = default;

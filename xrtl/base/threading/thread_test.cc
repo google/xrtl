@@ -86,6 +86,20 @@ TEST_F(ThreadTest, Create) {
   EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
 }
 
+// Tests threads with a raw function pointer instead of std::function.
+TEST_F(ThreadTest, CreateRawFunctionPtr) {
+  auto fence_event = Event::CreateAutoResetEvent(false);
+  auto thread = Thread::Create({},
+                               [](void* data) {
+                                 auto fence_event =
+                                     reinterpret_cast<Event*>(data);
+                                 fence_event->Set();
+                               },
+                               fence_event.get());
+  EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(fence_event));
+  EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
+}
+
 // Tests thread naming. This is a debug-only feature (really), so it doesn't
 // have to be great.
 TEST_F(ThreadTest, ThreadName) {
@@ -113,7 +127,6 @@ TEST_F(ThreadTest, Sleep) {
   //                 happens - this could be a bit flaky.
   Stopwatch stopwatch;
   Thread::Sleep(std::chrono::milliseconds(0));
-  EXPECT_GT(stopwatch.elapsed_micros(), std::chrono::milliseconds(0));
   EXPECT_LT(stopwatch.elapsed_micros(), std::chrono::milliseconds(10));
 
   // Ensure the sleep time is within the right ballpark. We expect it to not
@@ -198,43 +211,10 @@ TEST_F(ThreadTest, AffinityMask) {
   //                 equivalent times when run on their own threads.
   auto thread = Thread::current_thread();
   auto original_affinity_mask = thread->affinity_mask();
-  EXPECT_NE(0, original_affinity_mask);
   thread->set_affinity_mask(0b1);
   EXPECT_EQ(0b1, thread->affinity_mask());
   thread->set_affinity_mask(original_affinity_mask);
   EXPECT_EQ(original_affinity_mask, thread->affinity_mask());
-}
-
-// Tests suspending and resuming threads.
-TEST_F(ThreadTest, SuspendResume) {
-  // Spin up thread and wait for us to get it going.
-  auto fence_event = Event::CreateAutoResetEvent(false);
-  std::atomic<bool> has_suspended{false};
-  std::atomic<bool> has_resumed{false};
-  auto thread = Thread::Create({}, [&]() {
-    // Wait to be poked before suspending.
-    EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(fence_event));
-    // Suspend ourselves.
-    has_suspended = true;
-    Thread::current_thread()->Suspend();
-    // Resumed.
-    has_resumed = true;
-  });
-  EXPECT_FALSE(has_suspended);
-  EXPECT_FALSE(has_resumed);
-
-  // Poke the thread and get it to suspend itself.
-  fence_event->Set();
-  while (!has_suspended) {
-    Thread::Sleep(std::chrono::milliseconds(1));
-  }
-
-  // Resume the thread.
-  thread->Resume();
-
-  // Join with the thread and verify it resumed.
-  EXPECT_TRUE(thread->Join());
-  EXPECT_TRUE(has_resumed);
 }
 
 // Tests creating a thread suspended.
@@ -254,9 +234,15 @@ TEST_F(ThreadTest, CreateSuspended) {
   // Resume the thread.
   thread->Resume();
 
+  // Resuming again should be a no-op.
+  thread->Resume();
+
   // Wait for the thread to exit and ensure our routine actually ran.
   EXPECT_TRUE(thread->Join());
   EXPECT_TRUE(has_started_thread);
+
+  // Resuming on a zombie thread should be a no-op.
+  thread->Resume();
 }
 
 // Tests joining a thread via the simple Join method.
@@ -271,7 +257,7 @@ TEST_F(ThreadTest, Join) {
   });
   fence_event->Set();
   EXPECT_TRUE(thread->Join());
-  // No-op pm a;readu exited thread.
+  // No-op on already exited thread.
   EXPECT_TRUE(thread->Join());
 }
 
@@ -305,18 +291,6 @@ TEST_F(ThreadTest, JoinWait) {
   EXPECT_LE(stopwatch.elapsed_micros(), std::chrono::milliseconds(200));
 
   // Joining an already exited thread should be immediate.
-  EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
-}
-
-TEST_F(ThreadTest, Terminate) {
-  // Create our sacrificial thread.
-  auto thread = Thread::Create({}, [&]() {
-    // Sleep until our death.
-    Thread::Sleep(std::chrono::seconds(100));
-  });
-  thread->Terminate();
-
-  // Waits should be satisfied on the terminated thread.
   EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
 }
 

@@ -44,7 +44,7 @@ cc_library(
             "//xrtl/port/windows/base/threading:win32_event",
         ],
         "//conditions:default": [
-            # TODO(benvanik): other implementations.
+            "//xrtl/port/common/base/threading:pthreads_event",
         ],
     }),
 )
@@ -71,7 +71,7 @@ cc_library(
             "//xrtl/port/windows/base/threading:win32_semaphore",
         ],
         "//conditions:default": [
-            # TODO(benvanik): other implementations.
+            "//xrtl/port/common/base/threading:pthreads_semaphore",
         ],
     }),
 )
@@ -100,7 +100,7 @@ cc_library(
             "//xrtl/port/windows/base/threading:win32_thread",
         ],
         "//conditions:default": [
-            # TODO(benvanik): other implementations.
+            "//xrtl/port/common/base/threading:pthreads_thread",
         ],
     }),
 )
@@ -129,7 +129,8 @@ cc_library(
             # "//xrtl/port/windows/base/threading:win32_timer",
         ],
         "//conditions:default": [
-            # TODO(benvanik): other implementations.
+            # TODO(benvanik): implement pthreads timer.
+            # "//xrtl/port/common/base/threading:pthreads_timer",
         ],
     }),
 )

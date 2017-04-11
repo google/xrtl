@@ -246,6 +246,18 @@ TEST_F(SemaphoreTest, SignalAndWaitEvent) {
             Thread::SignalAndWait(semaphore_1, semaphore_2,
                                   std::chrono::milliseconds(100)));
   EXPECT_GE(stopwatch.elapsed_micros(), std::chrono::milliseconds(10));
+
+  // Attempting to release over the max should fail.
+  semaphore_1 = Semaphore::Create(0, 1);
+  semaphore_2 = Semaphore::Create(0, 1);
+  EXPECT_TRUE(ShouldBlock(semaphore_1));
+  EXPECT_TRUE(ShouldBlock(semaphore_2));
+  semaphore_1->Release(1);               // count = 1, should now be at max.
+  EXPECT_FALSE(semaphore_1->Release());  // At max.
+  EXPECT_EQ(Thread::WaitResult::kError,
+            Thread::SignalAndWait(semaphore_1, semaphore_2, kImmediateTimeout));
+  EXPECT_TRUE(ShouldNotBlock(semaphore_1));
+  EXPECT_TRUE(ShouldBlock(semaphore_2));
 }
 
 // Tests waiting on any semaphore.
@@ -275,6 +287,7 @@ TEST_F(SemaphoreTest, WaitAnySemaphores) {
 
   // Waiting on an semaphore with count 0 and a timeout should wait a bit before
   // timing out.
+  EXPECT_TRUE(ShouldBlock(semaphore_1));
   stopwatch.Reset();
   result = Thread::WaitAny({semaphore_1}, std::chrono::milliseconds(200));
   EXPECT_EQ(Thread::WaitResult::kTimeout, result.wait_result);

@@ -34,6 +34,16 @@ constexpr uint32_t kHighResolutionTimingPeriodMillis = 1;
 // is set. When the thread exits the reference is cleared up automatically.
 DWORD current_thread_fls_index_ = -1;
 
+class Win32Thread;
+
+// Heap allocated storage for thread start data passed to Thread::Create.
+struct ThreadStartData {
+  ref_ptr<Win32Thread> thread;
+  std::function<void()> start_routine_fn;
+  Thread::ThreadStartRoutine start_routine = nullptr;
+  void* start_param = nullptr;
+};
+
 class Win32Thread : public Win32WaitHandle<Thread> {
  public:
   explicit Win32Thread(HANDLE handle, std::string name = "");
@@ -56,14 +66,30 @@ class Win32Thread : public Win32WaitHandle<Thread> {
   void set_priority_class(PriorityClass priority_class) override;
   uint64_t affinity_mask() const override;
   void set_affinity_mask(uint64_t affinity_mask) override;
-  void Suspend() override;
   void Resume() override;
-  void Terminate() override;
 
  private:
+  friend class Thread;
+
+  // Creates a new thread and passes it the given start data.
+  static ref_ptr<Thread> CreateThread(
+      const Thread::CreateParams& create_params,
+      std::unique_ptr<ThreadStartData> start_data);
+  // Runs the thread entry point specified by the Thread::Create call.
+  static DWORD WINAPI ThreadStartRoutine(LPVOID param);
+
+  static WaitAnyResult WaitMultiple(ref_ptr<WaitHandle> wait_handles[],
+                                    size_t wait_handle_count,
+                                    std::chrono::milliseconds timeout,
+                                    bool require_all);
+
   // There's no easy way to get this so we cache it. It's not thread safe but
   // the affinity mask should really only be specified on startup once.
   uint64_t affinity_mask_ = 0;
+
+  // Whether the thread is currently suspended. All threads start suspended and
+  // must be resumed.
+  std::atomic<bool> suspended_{true};
 };
 
 // Ensures we have a TLS slot for the current thread.
@@ -83,87 +109,6 @@ void InitializeCurrentThreadStorage() {
       }
     });
   });
-}
-
-// Heap allocated storage for thread start data passed to Thread::Create.
-struct ThreadStartData {
-  ref_ptr<Win32Thread> thread;
-  std::function<void()> start_routine_fn;
-  Thread::ThreadStartRoutine start_routine = nullptr;
-  void* start_param = nullptr;
-};
-
-// Runs the thread entry point specified by the Thread::Create call.
-DWORD WINAPI ThreadStartRoutine(LPVOID param) {
-  std::unique_ptr<ThreadStartData> start_data(
-      reinterpret_cast<ThreadStartData*>(param));
-  DCHECK(start_data);
-
-  // Retain the thread object on the stack here for the duration of the thread.
-  auto self_thread = std::move(start_data->thread);
-
-  // Prep the thread.
-  self_thread->OnEnter();
-
-  if (start_data->start_routine) {
-    // Pull off the start routine and deallocate the start data.
-    auto start_routine = start_data->start_routine;
-    void* start_param = start_data->start_param;
-    start_data.reset();
-
-    // Run the thread start routine.
-    start_routine(start_param);
-  } else {
-    // Pull off the start routine and deallocate the start data.
-    auto start_routine = std::move(start_data->start_routine_fn);
-    start_data.reset();
-
-    // Run the thread start routine.
-    start_routine();
-  }
-
-  // TLS teardown will call back the FlsAlloc function and issue OnExit.
-  return 0;
-}
-
-// Creates a new thread and passes it the given start data.
-ref_ptr<Thread> CreateThread(const Thread::CreateParams& create_params,
-                             std::unique_ptr<ThreadStartData> start_data) {
-  // Create the thread now.
-  // Note that we always create the thread suspended so we have time to
-  // initialize the thread object.
-  // If we didn't do this it's possible the OS could schedule the thread
-  // immediately inside of CreateThread and we wouldn't be able to prepare it.
-  HANDLE handle =
-      ::CreateThread(nullptr, create_params.stack_size, ThreadStartRoutine,
-                     start_data.get(), CREATE_SUSPENDED, nullptr);
-  DCHECK_NE(handle, INVALID_HANDLE_VALUE);
-  if (handle == INVALID_HANDLE_VALUE) {
-    LOG(FATAL) << "Unable to create thread: " << ::GetLastError();
-    return nullptr;
-  }
-
-  // Create our Thread and stash the reference in the start data.
-  // When the thread spins up it will set the reference in its TLS.
-  auto thread = make_ref<Win32Thread>(handle, create_params.name);
-  start_data->thread = thread;
-
-  // Set initial values.
-  thread->set_priority_class(create_params.priority_class);
-  if (create_params.affinity_mask) {
-    thread->set_affinity_mask(create_params.affinity_mask);
-  }
-
-  // Release the start data, as it's now owned by the thread.
-  start_data.release();
-
-  // If we are not creating the thread suspended we can resume it now. We may
-  // context switch into it immediately.
-  if (!create_params.create_suspended) {
-    thread->Resume();
-  }
-
-  return thread;
 }
 
 // Sets the name of the current thread as seen in the debugger, if one is
@@ -221,7 +166,7 @@ ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
                                std::function<void()> start_routine) {
   auto start_data = make_unique<ThreadStartData>();
   start_data->start_routine_fn = std::move(start_routine);
-  return CreateThread(create_params, std::move(start_data));
+  return Win32Thread::CreateThread(create_params, std::move(start_data));
 }
 
 ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
@@ -230,7 +175,80 @@ ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
   auto start_data = make_unique<ThreadStartData>();
   start_data->start_routine = start_routine;
   start_data->start_param = start_param;
-  return CreateThread(create_params, std::move(start_data));
+  return Win32Thread::CreateThread(create_params, std::move(start_data));
+}
+
+// Creates a new thread and passes it the given start data.
+ref_ptr<Thread> Win32Thread::CreateThread(
+    const CreateParams& create_params,
+    std::unique_ptr<ThreadStartData> start_data) {
+  // Create the thread now.
+  // Note that we always create the thread suspended so we have time to
+  // initialize the thread object.
+  // If we didn't do this it's possible the OS could schedule the thread
+  // immediately inside of CreateThread and we wouldn't be able to prepare it.
+  HANDLE handle =
+      ::CreateThread(nullptr, create_params.stack_size, ThreadStartRoutine,
+                     start_data.get(), CREATE_SUSPENDED, nullptr);
+  DCHECK_NE(handle, INVALID_HANDLE_VALUE);
+  if (handle == INVALID_HANDLE_VALUE) {
+    LOG(FATAL) << "Unable to create thread: " << ::GetLastError();
+    return nullptr;
+  }
+
+  // Create our Thread and stash the reference in the start data.
+  // When the thread spins up it will set the reference in its TLS.
+  auto thread = make_ref<Win32Thread>(handle, create_params.name);
+  start_data->thread = thread;
+
+  // Set initial values.
+  thread->set_priority_class(create_params.priority_class);
+  if (create_params.affinity_mask) {
+    thread->set_affinity_mask(create_params.affinity_mask);
+  }
+
+  // Release the start data, as it's now owned by the thread.
+  start_data.release();
+
+  // If we are not creating the thread suspended we can resume it now. We may
+  // context switch into it immediately.
+  if (!create_params.create_suspended) {
+    thread->Resume();
+  }
+
+  return thread;
+}
+
+DWORD WINAPI Win32Thread::ThreadStartRoutine(LPVOID param) {
+  std::unique_ptr<ThreadStartData> start_data(
+      reinterpret_cast<ThreadStartData*>(param));
+  DCHECK(start_data);
+
+  // Retain the thread object on the stack here for the duration of the thread.
+  auto self_thread = std::move(start_data->thread);
+
+  // Prep the thread.
+  self_thread->OnEnter();
+
+  if (start_data->start_routine) {
+    // Pull off the start routine and deallocate the start data.
+    auto start_routine = start_data->start_routine;
+    void* start_param = start_data->start_param;
+    start_data.reset();
+
+    // Run the thread start routine.
+    start_routine(start_param);
+  } else {
+    // Pull off the start routine and deallocate the start data.
+    auto start_routine = std::move(start_data->start_routine_fn);
+    start_data.reset();
+
+    // Run the thread start routine.
+    start_routine();
+  }
+
+  // TLS teardown will call back the FlsAlloc function and issue OnExit.
+  return 0;
 }
 
 ref_ptr<Thread> Thread::current_thread() {
@@ -338,10 +356,24 @@ Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
   }
 }
 
-Thread::WaitAnyResult WaitMultiple(ref_ptr<WaitHandle> wait_handles[],
+Thread::WaitAnyResult Thread::WaitAny(ref_ptr<WaitHandle> wait_handles[],
+                                      size_t wait_handle_count,
+                                      std::chrono::milliseconds timeout) {
+  return Win32Thread::WaitMultiple(wait_handles, wait_handle_count, timeout,
+                                   false);
+}
+
+Thread::WaitResult Thread::WaitAll(ref_ptr<WaitHandle> wait_handles[],
                                    size_t wait_handle_count,
-                                   std::chrono::milliseconds timeout,
-                                   bool require_all) {
+                                   std::chrono::milliseconds timeout) {
+  return Win32Thread::WaitMultiple(wait_handles, wait_handle_count, timeout,
+                                   true)
+      .wait_result;
+}
+
+Thread::WaitAnyResult Win32Thread::WaitMultiple(
+    ref_ptr<WaitHandle> wait_handles[], size_t wait_handle_count,
+    std::chrono::milliseconds timeout, bool require_all) {
   // NOTE: the wait handle count is limited so we can stack allocate.
   DCHECK_LE(wait_handle_count, 64);
   HANDLE* handles =
@@ -354,34 +386,21 @@ Thread::WaitAnyResult WaitMultiple(ref_ptr<WaitHandle> wait_handles[],
       require_all ? TRUE : FALSE, static_cast<DWORD>(timeout.count()), FALSE);
   _freea(handles);
   if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + wait_handle_count) {
-    return {Thread::WaitResult::kSuccess, result - WAIT_OBJECT_0};
+    return {WaitResult::kSuccess, result - WAIT_OBJECT_0};
   } else if (result >= WAIT_ABANDONED_0 &&
              result < WAIT_ABANDONED_0 + wait_handle_count) {
     // NOTE: we shouldn't get abandoned handles.
-    return {Thread::WaitResult::kError, result - WAIT_ABANDONED_0};
+    return {WaitResult::kError, result - WAIT_ABANDONED_0};
   }
   switch (result) {
     case WAIT_TIMEOUT:
-      return {Thread::WaitResult::kTimeout, 0};
+      return {WaitResult::kTimeout, 0};
     default:
     case WAIT_IO_COMPLETION:
     case WAIT_FAILED:
       // NOTE: we don't support APC.
-      return {Thread::WaitResult::kError, 0};
+      return {WaitResult::kError, 0};
   }
-}
-
-Thread::WaitAnyResult Thread::WaitAny(ref_ptr<WaitHandle> wait_handles[],
-                                      size_t wait_handle_count,
-                                      std::chrono::milliseconds timeout) {
-  return WaitMultiple(wait_handles, wait_handle_count, timeout, false);
-}
-
-Thread::WaitResult Thread::WaitAll(ref_ptr<WaitHandle> wait_handles[],
-                                   size_t wait_handle_count,
-                                   std::chrono::milliseconds timeout) {
-  return WaitMultiple(wait_handles, wait_handle_count, timeout, true)
-      .wait_result;
 }
 
 Win32Thread::Win32Thread(HANDLE handle, std::string name)
@@ -417,8 +436,6 @@ Win32Thread::~Win32Thread() {
   //          teardown on the thread during thread exit.
 }
 
-// Performs one-time thread init before running the thread start routine.
-// This is called on the thread itself.
 void Win32Thread::OnEnter() {
   // Ensure we have TLS setup.
   InitializeCurrentThreadStorage();
@@ -434,11 +451,6 @@ void Win32Thread::OnEnter() {
   // TODO(benvanik): WTF.
 }
 
-// Performs one-time thread teardown after returning from the thread start
-// routine.
-// This is called on the thread itself after the thread start routine has
-// returned. Try not to do too much here, as the exact state of the thread
-// (especially with respect to other TLS values) is loosely defined.
 void Win32Thread::OnExit() {
   // TODO(benvanik): WTF.
 }
@@ -494,20 +506,13 @@ void Win32Thread::set_affinity_mask(uint64_t affinity_mask) {
   ::SetThreadAffinityMask(handle_, affinity_mask_);
 }
 
-void Win32Thread::Suspend() {
-  DWORD result = ::SuspendThread(handle_);
-  if (result == UINT_MAX) {
-    LOG(ERROR) << "Failed to suspend thread";
-  }
-}
-
 void Win32Thread::Resume() {
-  DWORD result = ::ResumeThread(handle_);
-  if (result == UINT_MAX) {
-    LOG(ERROR) << "Failed to resume thread";
+  if (suspended_.exchange(false) == true) {
+    DWORD result = ::ResumeThread(handle_);
+    if (result == UINT_MAX) {
+      LOG(ERROR) << "Failed to resume thread";
+    }
   }
 }
-
-void Win32Thread::Terminate() { ::TerminateThread(handle_, 1); }
 
 }  // namespace xrtl
