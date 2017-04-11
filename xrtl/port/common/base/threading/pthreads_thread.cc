@@ -164,30 +164,6 @@ timespec ConvertRelativeTimeoutToAbsolute(std::chrono::microseconds duration) {
   return ts;
 }
 
-struct SchedulerPriorities {
-  int lowest_priority = 0;
-  int low_priority = 0;
-  int normal_priority = 0;
-  int high_priority = 0;
-  int highest_priority = 0;
-};
-
-// Returns a structure containing our idea of OS scheduler priorities as they
-// map to our PriorityClass.
-SchedulerPriorities CalculateSchedulerPriorities(int policy) {
-  int min_priority = sched_get_priority_min(policy);
-  int max_priority = sched_get_priority_max(policy);
-  SchedulerPriorities result;
-  result.lowest_priority = min_priority;
-  result.normal_priority = (max_priority - min_priority) / 2 + min_priority;
-  result.highest_priority = max_priority;
-  result.low_priority =
-      (result.normal_priority - min_priority) / 2 + min_priority;
-  result.high_priority =
-      (max_priority - result.normal_priority) / 2 + result.normal_priority;
-  return result;
-}
-
 }  // namespace
 
 int Process::logical_processor_count() {
@@ -660,6 +636,36 @@ void PthreadsThread::OnExit() {
 uintptr_t PthreadsThread::thread_id() {
   return static_cast<uintptr_t>(thread_id_);
 }
+
+#if defined(XRTL_PLATFORM_APPLE)
+namespace {
+
+struct SchedulerPriorities {
+  int lowest_priority = 0;
+  int low_priority = 0;
+  int normal_priority = 0;
+  int high_priority = 0;
+  int highest_priority = 0;
+};
+
+// Returns a structure containing our idea of OS scheduler priorities as they
+// map to our PriorityClass.
+SchedulerPriorities CalculateSchedulerPriorities(int policy) {
+  int min_priority = sched_get_priority_min(policy);
+  int max_priority = sched_get_priority_max(policy);
+  SchedulerPriorities result;
+  result.lowest_priority = min_priority;
+  result.normal_priority = (max_priority - min_priority) / 2 + min_priority;
+  result.highest_priority = max_priority;
+  result.low_priority =
+      (result.normal_priority - min_priority) / 2 + min_priority;
+  result.high_priority =
+      (max_priority - result.normal_priority) / 2 + result.normal_priority;
+  return result;
+}
+
+}  // namespace
+#endif  // XRTL_PLATFORM_APPLE
 
 Thread::PriorityClass PthreadsThread::priority_class() const {
 #if defined(XRTL_PLATFORM_APPLE)
