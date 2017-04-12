@@ -27,7 +27,7 @@
 #elif defined(XRTL_PLATFORM_LINUX)
 #include <sys/resource.h>  // setpriority
 #include <sys/syscall.h>   // gettid
-#endif  // XRTL_PLATFORM_APPLE
+#endif                     // XRTL_PLATFORM_APPLE
 
 #include "xrtl/base/logging.h"
 #include "xrtl/base/stopwatch.h"

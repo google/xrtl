@@ -14,6 +14,7 @@
 
 #include "xrtl/tools/target_platform/target_platform.h"
 
+// XRTL_EMPTY_FILE(), inlined because we can't depend on macros.h.
 #if defined(__clang__) || defined(__GNUC__)
 static int dummy __attribute__((unused, used)) = 0;
 #endif  // GCC-ish
