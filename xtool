@@ -491,11 +491,13 @@ def write_if_changed(path, contents):
   """
   if os.path.exists(path):
     # File exists - load contents and compare.
-    with open(path, 'r') as file:
-      existing_contents = file.read()
-    if unicode(contents) == unicode(existing_contents):
-      # Contents are the same.
-      return
+    try:
+      with open(path, 'r') as file:
+        existing_contents = file.read()
+      if unicode(contents) == unicode(existing_contents):
+        # Contents are the same.
+        return
+    except: pass
   with open(path, 'w') as file:
     file.write(contents)
 
@@ -1391,9 +1393,12 @@ class GenerateSlnCommand(Command):
     with open(os.path.join('tools', 'visual_studio', 'vcxproj.template'),
               'r') as template_file:
       template_vcxproj = string.Template(template_file.read())
-    with open(os.path.join('tools', 'visual_studio', 'filters.template'),
-              'r') as template_file:
+    with open(os.path.join('tools', 'visual_studio',
+                           'vcxproj.filters.template'), 'r') as template_file:
       template_filters = string.Template(template_file.read())
+    with open(os.path.join('tools', 'visual_studio',
+                           'vcxproj.user.template'), 'r') as template_file:
+      template_user = string.Template(template_file.read())
 
     # Load the compile commands JSON.
     with open(os.path.join('bazel-out', 'compile_commands.json')) as json_file:
@@ -1546,6 +1551,15 @@ class GenerateSlnCommand(Command):
           'CL_INCLUDE_LINES': '\n    '.join(cl_include_lines),
           })
       write_if_changed(vcxproj_path + '.filters', filters_file_contents)
+
+      # Generate target.vcxproj.user, which contains debugging information.
+      # We only do this if the file doesn't already exist so that we don't
+      # overwrite information. User can bazel clean if they want new ones.
+      user_file_contents = template_user.substitute()
+      user_file_path = vcxproj_path + '.user'
+      if not os.path.exists(user_file_path):
+        with open(user_file_path, 'w') as file:
+          file.write(user_file_contents)
 
     # Generate the sln with all projects and configurations.
     sln_path = os.path.join('.vs', 'xrtl.sln')
