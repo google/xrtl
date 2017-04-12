@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_PORT_COMMON_BASE_MACH_SYSTEM_CLOCK_H_
-#define XRTL_PORT_COMMON_BASE_MACH_SYSTEM_CLOCK_H_
+#ifndef XRTL_PORT_APPLE_BASE_MACH_SYSTEM_CLOCK_H_
+#define XRTL_PORT_APPLE_BASE_MACH_SYSTEM_CLOCK_H_
 
 #include <memory>
 
@@ -26,4 +26,4 @@ std::unique_ptr<SystemClock> CreateMachSystemClock();
 
 }  // namespace xrtl
 
-#endif  // XRTL_PORT_COMMON_BASE_MACH_SYSTEM_CLOCK_H_
+#endif  // XRTL_PORT_APPLE_BASE_MACH_SYSTEM_CLOCK_H_

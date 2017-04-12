@@ -16,8 +16,8 @@
 
 #include "xrtl/base/macros.h"
 
-#if defined(XRTL_PLATFORM_IOS) || defined(XRTL_PLATFORM_MACOS)
-#include "xrtl/port/common/base/mach_system_clock.h"
+#if defined(XRTL_PLATFORM_APPLE)
+#include "xrtl/port/apple/base/mach_system_clock.h"
 #define CreatePlatformSystemClock xrtl::CreateMachSystemClock
 #elif defined(XRTL_PLATFORM_WINDOWS)
 #include "xrtl/port/windows/base/win32_system_clock.h"

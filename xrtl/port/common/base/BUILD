@@ -34,16 +34,6 @@ cc_library(
 )
 
 cc_library(
-    name = "mach_system_clock",
-    srcs = ["mach_system_clock.cc"],
-    hdrs = ["mach_system_clock.h"],
-    deps = [
-        "//xrtl/base:macros",
-        "//xrtl/base:system_clock_hdrs",
-    ],
-)
-
-cc_library(
     name = "posix_logging_sink",
     srcs = ["posix_logging_sink.cc"],
     deps = [
