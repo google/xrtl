@@ -27,17 +27,17 @@ namespace xrtl {
 // the count is greater than zero and nonsignaled when the count is zero.
 //
 // Usage:
-//   auto semaphore = Semaphore::Create(0, 2);
-//   StartWorkerThreads(2, [&]() {
-//     while (true) {
-//       Thread::Wait(semaphore);
-//       // ... do work.
-//     }
-//   });
-//   // ... queue work.
-//   semaphore->Release(1);
-//   // ... queue work.
-//   semaphore->Release(1);
+//  auto semaphore = Semaphore::Create(0, 2);
+//  StartWorkerThreads(2, [&]() {
+//    while (true) {
+//      Thread::Wait(semaphore);
+//      // ... do work.
+//    }
+//  });
+//  // ... queue work.
+//  semaphore->Release(1);
+//  // ... queue work.
+//  semaphore->Release(1);
 //
 // Reference:
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms685129(v=vs.85).aspx

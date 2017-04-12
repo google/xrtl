@@ -72,6 +72,7 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
   void OnExit();
 
   uintptr_t thread_id() override;
+  bool is_current() const override;
   PriorityClass priority_class() const override;
   void set_priority_class(PriorityClass priority_class) override;
   uint64_t affinity_mask() const override;
@@ -646,6 +647,8 @@ void PthreadsThread::OnExit() {
 uintptr_t PthreadsThread::thread_id() {
   return static_cast<uintptr_t>(thread_id_);
 }
+
+bool PthreadsThread::is_current() const { return handle_ == pthread_self(); }
 
 #if defined(XRTL_PLATFORM_APPLE)
 namespace {

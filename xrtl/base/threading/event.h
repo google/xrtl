@@ -24,28 +24,39 @@ namespace xrtl {
 // in auto-reset mode.
 //
 // Usage, as a fence:
-//   // This allows other threads to block until the event is set.
-//   // Once set, all threads will wake.
-//   auto fence_event = Event::CreateManualResetEvent(false);
-//   RunOnOtherThread1([&]() { Thread::Wait(fence_event); });
-//   RunOnOtherThread2([&]() { Thread::Wait(fence_event); });
-//   fence_event->Set();
+//  // This allows other threads to block until the event is set.
+//  // Once set, all threads will wake.
+//  auto fence_event = Event::CreateManualResetEvent(false);
+//  RunOnOtherThread1([&]() { Thread::Wait(fence_event); });
+//  RunOnOtherThread2([&]() { Thread::Wait(fence_event); });
+//  fence_event->Set();
 //
 // Usage, as a pulse event (binary semaphore):
-//   auto pulse_event = Event::CreateAutoResetEvent(false);
-//   RunOnOtherThread([&]() {
-//     while (true) {
-//       Thread::Wait(pulse_event);  // Wait for work.
-//       // ... do work.
-//     }
-//   });
-//   // ... queue work.
-//   pulse_event->Set();
+//  auto pulse_event = Event::CreateAutoResetEvent(false);
+//  RunOnOtherThread([&]() {
+//    while (true) {
+//      Thread::Wait(pulse_event);  // Wait for work.
+//      // ... do work.
+//    }
+//  });
+//  // ... queue work.
+//  pulse_event->Set();
 //
 // Reference:
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682396(v=vs.85).aspx
 class Event : public WaitHandle {
  public:
+  // Creates a fence event object.
+  // This is a manual reset event with an initial state of false but is a bit
+  // more readable when the intent is for a set-once fence.
+  //
+  // Usage:
+  //  auto fence_event = Event::CreateFence();
+  //  RunOnOtherThread1([&]() { Thread::Wait(fence_event); });
+  //  RunOnOtherThread2([&]() { Thread::Wait(fence_event); });
+  //  fence_event->Set();
+  static ref_ptr<Event> CreateFence() { return CreateManualResetEvent(false); }
+
   // Creates a new manual reset event object with the initial state.
   // While signaled all waits will pass and all threads already waiting on the
   // event will be released.

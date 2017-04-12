@@ -30,6 +30,13 @@ cc_library(
         "semaphore.h",
         "thread.h",
         "timer.h",
+        "wait_handle.h",
+    ],
+    deps = [
+        "//xrtl/base:intrusive_list",
+        "//xrtl/base:intrusive_pool",
+        "//xrtl/base:logging",
+        "//xrtl/base:ref_ptr",
     ],
     visibility = ["//xrtl/port:ports_only"],
 )

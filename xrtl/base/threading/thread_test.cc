@@ -79,10 +79,12 @@ TEST_F(ThreadTest, Create) {
   create_params.affinity_mask = 0b1;
   thread = Thread::Create(create_params, [&]() {
     auto self_thread = Thread::current_thread();
+    EXPECT_TRUE(self_thread->is_current());
     EXPECT_EQ(create_params.name, Thread::name());
     EXPECT_EQ(create_params.priority_class, self_thread->priority_class());
     EXPECT_EQ(create_params.affinity_mask, self_thread->affinity_mask());
   });
+  EXPECT_FALSE(thread->is_current());
   EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
 }
 
@@ -137,6 +139,14 @@ TEST_F(ThreadTest, Sleep) {
   EXPECT_LT(stopwatch.elapsed_micros(), std::chrono::milliseconds(75));
 }
 
+// Tests the TryWait helper.
+TEST_F(ThreadTest, TryWait) {
+  auto unsignaled_event = Event::CreateManualResetEvent(false);
+  auto signaled_event = Event::CreateManualResetEvent(true);
+  EXPECT_FALSE(Thread::TryWait(unsignaled_event));
+  EXPECT_TRUE(Thread::TryWait(signaled_event));
+}
+
 // Tests mixing and matching wait handle types.
 // NOTE: the wait methods are mostly tested within the various wait handle tests
 //       (such as event_test.cc). These tests are specifically for testing
@@ -171,22 +181,26 @@ TEST_F(ThreadTest, MixedWaitHandles) {
                             kImmediateTimeout));
 }
 
-// Tests thta thread_id is something valid.
+// Tests that thread_id is something valid.
 TEST_F(ThreadTest, ThreadId) {
   // Check self ID as something valid.
   uintptr_t main_thread_id = Thread::current_thread()->thread_id();
   EXPECT_NE(0, main_thread_id);
+  EXPECT_TRUE(Thread::current_thread()->is_current());
 
   // Create a new thread and ensure it gets a different ID.
   uintptr_t child_thread_id = 0;
   Thread::CreateParams create_params;
   create_params.create_suspended = true;
-  auto thread = Thread::Create(create_params, [&]() {
+  ref_ptr<Thread> thread;
+  thread = Thread::Create(create_params, [&]() {
+    EXPECT_TRUE(thread->is_current());
     EXPECT_NE(main_thread_id, Thread::current_thread()->thread_id());
     EXPECT_EQ(child_thread_id, Thread::current_thread()->thread_id());
   });
   child_thread_id = thread->thread_id();
   EXPECT_NE(main_thread_id, child_thread_id);
+  EXPECT_FALSE(thread->is_current());
   thread->Resume();
   EXPECT_TRUE(thread->Join());
 }
