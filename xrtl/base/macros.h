@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <memory>
+#include <utility>
 
 // Pulls in the XRTL_CONFIG_* defines.
 #include "xrtl/tools/target_config/target_config.h"  // IWYU pragma: export
@@ -118,6 +119,37 @@ inline Dest bit_cast(const Source& source) {
   std::memcpy(&dest, &source, sizeof(dest));
   return dest;
 }
+
+// A helper wrapper that moves the wrapped object on copy.
+// This is particularly handy for capturing unique_ptrs in lambdas.
+//
+// Usage example:
+//  std::unique_ptr<Foo> foo_ptr(new Foo());
+//  move_on_copy<std::unique_ptr<Foo>> foo(std::move(foo_ptr));
+//  auto some_lambda = [bar]() { ... }
+//
+template <typename T>
+struct move_on_copy {
+  explicit move_on_copy(T&& t) : value(std::move(t)) {}
+  move_on_copy(move_on_copy const& other) : value(std::move(other.value)) {}
+  move_on_copy(move_on_copy&& other) : value(std::move(other.value)) {}
+  move_on_copy& operator=(move_on_copy const& other) {
+    value = std::move(other.value);
+    return *this;
+  }
+  move_on_copy& operator=(move_on_copy&& other) {
+    value = std::move(other.value);
+    return *this;
+  }
+  mutable T value;
+};
+
+// Utility to aid in moving ref_ptr's into closures.
+//
+// Usage:
+//  auto baton = MoveToLambda(my_ref);
+//  DoSomething([baton] () { baton.value; });
+#define MoveToLambda(p) xrtl::move_on_copy<decltype(p)>(std::move(p))
 
 }  // namespace xrtl
 

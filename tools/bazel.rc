@@ -57,6 +57,7 @@ common:msan --crosstool_top=//tools/crosstool/msan
 common:tsan --config=clang
 common:tsan --copt=-DTSAN_OPTIONS=\"color=always\"
 common:tsan --strip=never
+common:tsan --copt=-DNDEBUG=1  # DCHECKs make tsan sad
 common:tsan --copt=-g
 common:tsan --copt=-O0
 common:tsan --copt=-fsanitize=thread

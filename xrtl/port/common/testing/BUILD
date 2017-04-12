@@ -13,4 +13,14 @@ cc_library(
         "//xrtl/base:flags",
         "//xrtl/testing:gtest",
     ],
+    linkopts = select({
+        # TODO(benvanik): find a way to remove this requirement.
+        "//xrtl/tools/target_platform:ios": [
+            "-framework CoreFoundation",
+        ],
+        "//xrtl/tools/target_platform:macos": [
+            "-framework CoreFoundation",
+        ],
+        "//conditions:default": [],
+    }),
 )

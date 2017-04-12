@@ -23,5 +23,22 @@
 // Additionally one or more of these may be defined:
 // XRTL_CONFIG_GOOGLE_INTERNAL
 // XRTL_CONFIG_LOGGING_VERBOSE
+//
+// Depending on instrumentation mode, we set these dynamically:
+// XRTL_CONFIG_ASAN
+// XRTL_CONFIG_MSAN
+// XRTL_CONFIG_TSAN
+
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define XRTL_CONFIG_ASAN 1
+#endif  // __has_feature(address_sanitizer)
+#if __has_feature(address_sanitizer)
+#define XRTL_CONFIG_MSAN 1
+#endif  // __has_feature(address_sanitizer)
+#if __has_feature(thread_sanitizer)
+#define XRTL_CONFIG_TSAN 1
+#endif  // __has_feature(thread_sanitizer)
+#endif  // __has_feature
 
 #endif  // XRTL_TOOLS_TARGET_CONFIG_TARGET_CONFIG_H_

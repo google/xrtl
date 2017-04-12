@@ -14,6 +14,7 @@
 
 #include "xrtl/base/macros.h"
 
+#include "xrtl/base/ref_ptr.h"
 #include "xrtl/testing/gtest.h"
 
 namespace xrtl {
@@ -33,6 +34,23 @@ TEST(MacrosTest, BitCast) {
   EXPECT_EQ(0x3FF3C0CA428C51F2ull, bit_cast<uint64_t>(1.234567890123));
   EXPECT_EQ(1.234f, bit_cast<float>(0x3F9DF3B6));
   EXPECT_EQ(1.234567890123, bit_cast<double>(0x3FF3C0CA428C51F2ull));
+}
+
+class MoveableType : public RefObject<MoveableType> {
+ public:
+  using RefObject::counter_;
+};
+
+TEST(MacrosTest, MoveToLambda) {
+  auto moveable = make_ref<MoveableType>();
+  EXPECT_EQ(1, moveable->counter_);
+  auto moveable_baton = MoveToLambda(moveable);
+  EXPECT_EQ(nullptr, moveable);
+  auto lambda = [moveable_baton]() {
+    auto moveable = std::move(moveable_baton.value);
+    EXPECT_EQ(1, moveable->counter_);
+  };
+  lambda();
 }
 
 }  // namespace

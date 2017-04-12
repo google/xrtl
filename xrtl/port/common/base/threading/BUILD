@@ -6,6 +6,18 @@ package(default_visibility = ["//xrtl:internal"])
 licenses(["notice"])  # Apache 2.0
 
 cc_library(
+    name = "epoll_message_loop",
+    srcs = ["epoll_message_loop.cc"],
+    hdrs = ["epoll_message_loop.h"],
+    deps = [
+        "//xrtl/base:system_clock",
+        "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
+        "//xrtl/base/threading:threading_hdrs",
+    ],
+)
+
+cc_library(
     name = "pthreads_event",
     srcs = ["pthreads_event.cc"],
     deps = [

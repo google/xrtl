@@ -140,6 +140,7 @@ cc_test(
     srcs = ["macros_test.cc"],
     deps = [
         ":macros",
+        ":ref_ptr",
         "//xrtl/testing:gtest_main",
     ],
     size = "small",

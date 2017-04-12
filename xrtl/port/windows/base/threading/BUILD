@@ -16,6 +16,20 @@ cc_library(
 )
 
 cc_library(
+    name = "win32_message_loop",
+    srcs = ["win32_message_loop.cc"],
+    deps = [
+        "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
+        "//xrtl/base/threading:threading_hdrs",
+        "//xrtl/port/windows/base:windows_headers",
+    ],
+    linkopts = [
+        "-Wl,user32.lib",
+    ],
+)
+
+cc_library(
     name = "win32_semaphore",
     srcs = ["win32_semaphore.cc"],
     deps = [
