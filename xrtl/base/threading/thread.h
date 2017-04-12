@@ -159,6 +159,16 @@ class Thread : public WaitHandle {
   static WaitResult Wait(ref_ptr<WaitHandle> wait_handle,
                          std::chrono::milliseconds timeout = kInfiniteTimeout);
 
+  // Tries to wait on the given wait handle but immediately returns if the
+  // thread would have blocked. This is equivalent to calling Wait with an
+  // immediate timeout.
+  // Returns true if the wait succeeded and false if the operation would have
+  // blocked or failed.
+  static bool TryWait(ref_ptr<WaitHandle> wait_handle) {
+    return Wait(std::move(wait_handle), kImmediateTimeout) ==
+           WaitResult::kSuccess;
+  }
+
   // Signals one wait handle and waits on another as a single operation.
   // This acts as a Set when signal_handle is an Event and Release when it is
   // a Semaphore.
@@ -220,6 +230,10 @@ class Thread : public WaitHandle {
 
   // Returns a process-unique ID for the thread.
   virtual uintptr_t thread_id() = 0;
+
+  // Returns true if this thread is the current thread.
+  // Slightly more efficient than thread == Thread::current_thread().
+  virtual bool is_current() const = 0;
 
   // Returns the current thread priority.
   virtual PriorityClass priority_class() const = 0;

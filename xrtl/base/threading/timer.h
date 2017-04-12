@@ -32,17 +32,17 @@ namespace xrtl {
 // to Reset.
 //
 // Usage, as synchronization:
-//   auto timer = Timer::CreateAutoResetTimer();
-//   timer->ScheduleOnce(std::chrono::milliseconds(500));
-//   Thread::Wait(timer);
-//   LOG(INFO) << "Timer fired";
+//  auto timer = Timer::CreateAutoResetTimer();
+//  timer->ScheduleOnce(std::chrono::milliseconds(500));
+//  Thread::Wait(timer);
+//  LOG(INFO) << "Timer fired";
 //
 // Usage, as a user callback:
-//   auto timer = Timer::CreateManualResetTimer([]() {
-//     LOG(INFO) << "Timer fired";
-//   });
-//   timer->ScheduleRepeating(std::chrono::milliseconds(100),   // delay
-//                            std::chrono::milliseconds(500));  // period
+//  auto timer = Timer::CreateManualResetTimer([]() {
+//    LOG(INFO) << "Timer fired";
+//  });
+//  timer->ScheduleRepeating(std::chrono::milliseconds(100),   // delay
+//                           std::chrono::milliseconds(500));  // period
 //
 // Reference:
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms687012(v=vs.85).aspx

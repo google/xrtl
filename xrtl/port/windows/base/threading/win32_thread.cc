@@ -62,6 +62,7 @@ class Win32Thread : public Win32WaitHandle<Thread> {
   void OnExit();
 
   uintptr_t thread_id() override;
+  bool is_current() const override;
   PriorityClass priority_class() const override;
   void set_priority_class(PriorityClass priority_class) override;
   uint64_t affinity_mask() const override;
@@ -265,7 +266,10 @@ ref_ptr<Thread> Thread::current_thread() {
   }
 
   // Create a new thread handle.
-  HANDLE handle = ::GetCurrentThread();
+  HANDLE handle = INVALID_HANDLE_VALUE;
+  ::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentThread(),
+                    ::GetCurrentProcess(), &handle, 0, FALSE,
+                    DUPLICATE_SAME_ACCESS);
   DCHECK_NE(handle, INVALID_HANDLE_VALUE);
   auto thread = make_ref<Win32Thread>(handle);
 
@@ -457,6 +461,10 @@ void Win32Thread::OnExit() {
 
 uintptr_t Win32Thread::thread_id() {
   return static_cast<uintptr_t>(::GetThreadId(handle_));
+}
+
+bool Win32Thread::is_current() const {
+  return ::GetThreadId(handle_) == ::GetCurrentThreadId();
 }
 
 Thread::PriorityClass Win32Thread::priority_class() const {
