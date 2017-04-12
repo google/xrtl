@@ -220,10 +220,10 @@ cc_library(
         ":macros",
     ] + select({
         "//xrtl/tools/target_platform:ios": [
-            "//xrtl/port/common/base:mach_system_clock",
+            "//xrtl/port/apple/base:mach_system_clock",
         ],
         "//xrtl/tools/target_platform:macos": [
-            "//xrtl/port/common/base:mach_system_clock",
+            "//xrtl/port/apple/base:mach_system_clock",
         ],
         "//xrtl/tools/target_platform:windows": [
             "//xrtl/port/windows/base:win32_system_clock",

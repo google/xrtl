@@ -1,6 +1,7 @@
 # Description:
 #  iOS port root. Packages under here match those in the root XRTL package.
-#  May use some of the common port files under //xrtl/port/common/.
+#  May use some of the common port files under //xrtl/port/common/ and
+#  //xrtl/port/apple/.
 #
 #  Targets:
 #  - Xcode Version: 8.2

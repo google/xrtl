@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/port/common/base/mach_system_clock.h"
+#include "xrtl/port/apple/base/mach_system_clock.h"
 
 #include <mach/clock.h>
 #include <mach/mach.h>
