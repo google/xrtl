@@ -14,6 +14,6 @@
 
 #include "xrtl/tools/target_config/target_config.h"
 
-namespace {
-void Dummy() {}  // Quiet linker.
-}  // namespace
+#if defined(__clang__) || defined(__GNUC__)
+static int dummy __attribute__((unused, used)) = 0;
+#endif  // GCC-ish

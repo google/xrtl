@@ -15,10 +15,16 @@
 #ifndef XRTL_BASE_DEBUGGING_H_
 #define XRTL_BASE_DEBUGGING_H_
 
+#include <string>
+
 namespace xrtl {
 namespace debugging {
 
 // TODO(benvanik): APIs for querying debugger presence, breaking, etc.
+
+// Returns a multi-line string containing a stack trace.
+// May be a no-op on some platforms and return empty string.
+std::string CaptureStackTraceString();
 
 }  // namespace debugging
 }  // namespace xrtl

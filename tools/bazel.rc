@@ -9,6 +9,8 @@
 common:clang --copt=-Wno-unused-function
 common:clang --copt=-Wno-invalid-offsetof
 
+common:objc --experimental_enable_objc_cc_deps
+
 # TODO(benvanik): find a way to make this only on dbg/fastbuild?
 common:msvc --copt=/Zi
 common:msvc --linkopt=/DEBUG:FULL
@@ -118,6 +120,7 @@ common:emscripten_wasm --config=emscripten
 #===============================================================================
 
 common:ios --config=clang
+common:ios --config=objc
 common:ios --dynamic_mode=off
 common:ios --experimental_enable_objc_cc_deps
 
@@ -154,6 +157,7 @@ common:linux_x86_64 --config=linux
 #===============================================================================
 
 common:macos --config=clang
+common:macos --config=objc
 common:macos --dynamic_mode=off
 
 common:macos_x86_64 --config=macos

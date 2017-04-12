@@ -14,40 +14,64 @@
 
 #include "xrtl/base/debugging.h"
 
+#include <sstream>
+
+#include "xrtl/tools/target_platform/target_platform.h"
+
+#if defined(XRTL_PLATFORM_APPLE) || defined(XRTL_PLATFORM_LINUX)
+#define HAS_BACKTRACE
+#include <execinfo.h>
+#include <unistd.h>
+#endif  // APPLE || LINUX
+
 namespace xrtl {
 namespace debugging {
 
 // These options functions are used by the --config=asan/msan/etc settings.
 
 #if defined(ASAN_OPTIONS)
-extern "C" const char *__asan_default_options() {
-  return ASAN_OPTIONS;
-}
+extern "C" const char* __asan_default_options() { return ASAN_OPTIONS; }
 #endif  // ASAN_OPTIONS
 
 #if defined(LSAN_OPTIONS)
-extern "C" const char *__lsan_default_options() {
-  return "report_objects=1";
-}
+extern "C" const char* __lsan_default_options() { return "report_objects=1"; }
 #endif  // LSAN_OPTIONS
 
 #if defined(MSAN_OPTIONS)
-extern "C" const char *__msan_default_options() {
-  return "";
-}
+extern "C" const char* __msan_default_options() { return ""; }
 #endif  // MSAN_OPTIONS
 
 #if defined(TSAN_OPTIONS)
-extern "C" const char *__tsan_default_options() {
-  return "";
-}
+extern "C" const char* __tsan_default_options() { return ""; }
 #endif  // TSAN_OPTIONS
 
 #if defined(UBSAN_OPTIONS)
-extern "C" const char *__ubsan_default_options() {
-  return "";
-}
+extern "C" const char* __ubsan_default_options() { return ""; }
 #endif  // UBSAN_OPTIONS
+
+#if defined(HAS_BACKTRACE)
+std::string CaptureStackTraceString() {
+  constexpr int kStackBufferSize = 64;
+  void* stack_buffer[kStackBufferSize] = {0};
+  int stack_depth = backtrace(stack_buffer, kStackBufferSize);
+  if (stack_depth <= 1) {
+    return "";
+  }
+  char** stack_strings = backtrace_symbols(stack_buffer, stack_depth);
+  if (!stack_strings) {
+    return "";
+  }
+  std::ostringstream ss;
+  ss << "Stack:\n";
+  for (int i = 1; i < stack_depth; ++i) {
+    ss << stack_strings[i] << '\n';
+  }
+  std::free(stack_strings);
+  return ss.str();
+}
+#else
+std::string CaptureStackTraceString() { return ""; }
+#endif  // HAS_BACKTRACE
 
 }  // namespace debugging
 }  // namespace xrtl
