@@ -15,6 +15,7 @@
 #include "xrtl/base/tracing.h"
 
 #include "xrtl/base/logging.h"
+#include "xrtl/base/macros.h"
 
 namespace xrtl {
 namespace tracing {
@@ -48,10 +49,7 @@ void SaveToFile(std::string file_path) {
 
 #else
 
-// Make linkers happy with our empty file.
-namespace {
-void Dummy() {}
-}  // namespace
+XRTL_EMPTY_FILE();
 
 #endif  // WTF_ENABLE
 

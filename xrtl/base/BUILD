@@ -9,6 +9,9 @@ cc_library(
     name = "debugging",
     srcs = ["debugging.cc"],
     hdrs = ["debugging.h"],
+    deps = [
+        "//xrtl/tools/target_platform",
+    ],
 )
 
 cc_library(
@@ -256,6 +259,7 @@ cc_library(
     hdrs = ["tracing.h"],
     deps = [
         ":logging",
+        ":macros",
         # TODO(benvanik): third_party/tracing_framework_bindings_cpp/
     ],
 )

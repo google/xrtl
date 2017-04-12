@@ -37,6 +37,7 @@
 #define XRTL_ATTRIBUTE_UNUSED __attribute__((unused))
 #define XRTL_ATTRIBUTE_COLD __attribute__((cold))
 #define XRTL_ATTRIBUTE_WEAK __attribute__((weak))
+#define XRTL_EMPTY_FILE() static int dummy __attribute__((unused, used)) = 0;
 
 #elif defined(XRTL_COMPILER_MSVC)
 
@@ -46,6 +47,7 @@
 #define XRTL_ATTRIBUTE_UNUSED
 #define XRTL_ATTRIBUTE_COLD
 #define XRTL_ATTRIBUTE_WEAK
+#define XRTL_EMPTY_FILE()
 
 #else
 
@@ -55,6 +57,7 @@
 #define XRTL_ATTRIBUTE_UNUSED
 #define XRTL_ATTRIBUTE_COLD
 #define XRTL_ATTRIBUTE_WEAK
+#define XRTL_EMPTY_FILE()
 
 #endif  // XRTL_COMPILER_[GCC_COMPAT/MSVC/etc]
 
