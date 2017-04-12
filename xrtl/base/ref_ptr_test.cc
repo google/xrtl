@@ -202,7 +202,7 @@ TEST(RefPtrTest, DefaultDeleter) {
 class CustomDeleterType : public RefObject<CustomDeleterType> {
  public:
   CustomDeleterType() { ++alloc_count; }
-  static void operator delete(void* ptr, std::size_t sz) {
+  static void Delete(CustomDeleterType* ptr) {
     --alloc_count;
     ::operator delete(ptr);
   }

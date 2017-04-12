@@ -24,6 +24,8 @@ namespace xrtl {
 // execution until a condition is set.
 class WaitHandle : public RefObject<WaitHandle> {
  public:
+  WaitHandle(const WaitHandle&) = delete;
+  WaitHandle& operator=(WaitHandle const&) = delete;
   virtual ~WaitHandle() = default;
 
   // Returns the native platform handle of the wait object.

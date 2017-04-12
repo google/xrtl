@@ -25,6 +25,9 @@
 
 namespace xrtl {
 
+// Use this to get really verbose refptr logging:
+// #define XRTL_VERBOSE_REF_PTR
+
 // Reference counted pointer container.
 // This is modeled on boost::instrusive_ptr in that it requires no
 // extra storage over the pointer type and should compile to almost
@@ -199,21 +202,66 @@ class ref_ptr {
 // RefObjects are thread safe and may be used with ref_ptrs from multiple
 // threads.
 //
-// Subclasses may implement a custom delete operator to handle their
+// Subclasses may implement a custom Delete operator to handle their
 // deallocation. It should be thread safe as it may be called from any thread.
 //
 // Usage:
 //   class MyRefObject : public RefObject<MyRefObject> {
 //    public:
 //     MyRefObject() = default;
-//     // Optional; can be used to return to pool/etc:
-//     static void operator delete(void* ptr, std::size_t sz) {
+//     // Optional; can be used to return to pool/etc - must be public:
+//     static void Delete(MyRefObject* ptr) {
 //       ::operator delete(ptr);
 //     }
 //   };
 template <class T>
 class RefObject {
   static_assert(!std::is_array<T>::value, "T must not be an array");
+
+  // value is true if a static Delete(T*) function is present.
+  template <typename V>
+  struct has_custom_deleter {
+    template <typename U, U>
+    struct Check;
+    template <typename U>
+    static std::true_type Test(Check<void (*)(V*), &U::Delete>*);
+    template <typename U>
+    static std::false_type Test(...);
+    static const bool value = decltype(Test<V>(nullptr))::value;
+  };
+
+  template <typename V, bool has_custom_deleter>
+  struct delete_thunk {
+    static void Delete(V* p) {
+      auto ref_obj = static_cast<RefObject<V>*>(p);
+      int previous_count = ref_obj->counter_.fetch_sub(1);
+#ifdef XRTL_VERBOSE_REF_PTR
+      LOG(INFO) << "ro-- " << typeid(V).name() << " " << p << " now "
+                << previous_count - 1
+                << (previous_count == 1 ? " DEAD (CUSTOM)" : "");
+#endif  // XRTL_VERBOSE_REF_PTR
+      if (previous_count == 1) {
+        // We delete type T pointer here to avoid the need for a virtual dtor.
+        V::Delete(p);
+      }
+    }
+  };
+
+  template <typename V>
+  struct delete_thunk<V, false> {
+    static void Delete(V* p) {
+      auto ref_obj = static_cast<RefObject<V>*>(p);
+      int previous_count = ref_obj->counter_.fetch_sub(1);
+#ifdef XRTL_VERBOSE_REF_PTR
+      LOG(INFO) << "ro-- " << typeid(V).name() << " " << p << " now "
+                << previous_count - 1 << (previous_count == 1 ? " DEAD" : "");
+#endif  // XRTL_VERBOSE_REF_PTR
+      if (previous_count == 1) {
+        // We delete type T pointer here to avoid the need for a virtual dtor.
+        delete p;
+      }
+    }
+  };
 
  public:
   // Adds a reference; used by ref_ptr.
@@ -223,17 +271,17 @@ class RefObject {
     }
     auto ref_obj = static_cast<RefObject*>(p);
     ++ref_obj->counter_;
+
+#ifdef XRTL_VERBOSE_REF_PTR
+    LOG(INFO) << "ro++ " << typeid(T).name() << " " << p << " now "
+              << ref_obj->counter_;
+#endif  // XRTL_VERBOSE_REF_PTR
   }
 
   // Releases a reference, potentially deleting the object; used by ref_ptr.
   friend void ref_ptr_release_ref(T* p) {
-    if (!p) {
-      return;
-    }
-    auto ref_obj = static_cast<RefObject*>(p);
-    if (ref_obj->counter_.fetch_sub(1) == 1) {
-      // We delete type T pointer here to avoid the need for a virtual dtor.
-      delete p;
+    if (p) {
+      delete_thunk<T, has_custom_deleter<T>::value>::Delete(p);
     }
   }
 
@@ -248,7 +296,7 @@ class RefObject {
   void ReleaseReference() { ref_ptr_release_ref(static_cast<T*>(this)); }
 
  protected:
-  RefObject() = default;
+  RefObject() {}
   RefObject(const RefObject&) = default;
   RefObject& operator=(const RefObject&) { return *this; }
 
