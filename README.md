@@ -1,7 +1,7 @@
 Cross-platform Real-Time Rendering Library
 ==========================================
 
-[![Build Status](https://35.185.235.106/buildStatus/icon?job=XRTL%20TAP/master&style=plastic)](https://35.185.235.106/blue/organizations/jenkins/XRTL%20TAP/activity)
+**Status**: currently bringing up the foundations of the library and massaging code from previous internal projects to something acceptable for public release. Please be patient!
 
 A lightweight framework for writing efficient cross-platform rendering code in
 modern C++. It abstracts operating system and toolchain concepts to enable quick
