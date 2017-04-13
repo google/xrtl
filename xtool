@@ -1002,6 +1002,7 @@ def style_check_files(check_all_files = False, diff_origin = False):
   else:
     source_files = find_changed_source_files(diff_origin = diff_origin)
   if not source_files:
+    print('No source file changes found to style check')
     return 0
 
   # Remove _test.cc files.
@@ -1197,6 +1198,7 @@ def clang_tidy_files(check_all_files = False, diff_origin = False,
   else:
     source_files = find_changed_source_files(diff_origin = diff_origin)
   if not source_files:
+    print('No source file changes found to tidy')
     return 0
 
   # Build a command database.
