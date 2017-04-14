@@ -674,6 +674,9 @@ class BazelCommand(Command):
     self.parser.add_argument(
         '--output_base',
         help='Write bazel outputs to the given path.')
+    self.parser.add_argument(
+        '--all', action='store_true',
+        help='Performs the bazel action on all top-level packages.')
 
   def execute(self, args, bazel_command, pass_args, cwd):
     # Add --config set to default if none was specified.
@@ -684,6 +687,8 @@ class BazelCommand(Command):
         break
     if not has_config:
       pass_args = ['--config=%s' % (default_config)] + pass_args
+    if args['all']:
+      pass_args += top_level_packages
 
     result = invoke_bazel(bazel_command, pass_args,
                           output_base = args['output_base'])
