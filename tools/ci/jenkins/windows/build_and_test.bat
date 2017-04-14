@@ -27,9 +27,9 @@ REM ============================================================================
 REM Run Build and Test
 REM ============================================================================
 
-CMD /C xtool.bat build //xrtl/base/...
+CMD /C xtool.bat build --all
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-CMD /C xtool.bat test //xrtl/base/...
+CMD /C xtool.bat test --all
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 
 EXIT /b 0

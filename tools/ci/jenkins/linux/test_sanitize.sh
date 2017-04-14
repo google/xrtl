@@ -8,4 +8,4 @@ export CXX=clang++-4.0
 cp tools/ci/jenkins/linux/.bazelrc .
 
 echo "Running $1 and writing to $WORKSPACE/sanitize-$1/"
-./xtool test --output_base=$WORKSPACE/sanitize-$1/ --config=$1 //xrtl/base/...
+./xtool test --output_base=$WORKSPACE/sanitize-$1/ --config=$1 --all

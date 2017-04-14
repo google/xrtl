@@ -8,5 +8,5 @@ export CXX=clang++-4.0
 cp tools/ci/jenkins/linux/.bazelrc .
 
 ./xtool setup
-./xtool build //xrtl/base/...
-./xtool test //xrtl/base/...
+./xtool build --all
+./xtool test --all
