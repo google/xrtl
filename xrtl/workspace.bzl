@@ -79,3 +79,14 @@ def xrtl_workspace():
       path = "third_party/spirv_tools/",
       build_file = "third_party/spirv_tools.BUILD",
   )
+
+  # //third_party/stblib/
+  native.new_local_repository(
+      name = "com_github_nothings_stb",
+      path = "third_party/stblib/",
+      build_file = "third_party/stblib.BUILD",
+  )
+  native.bind(
+      name = "stb_image",
+      actual = "@com_github_nothings_stb//:stb_image",
+  )
