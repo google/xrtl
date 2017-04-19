@@ -33,9 +33,9 @@
 #if __has_feature(address_sanitizer)
 #define XRTL_CONFIG_ASAN 1
 #endif  // __has_feature(address_sanitizer)
-#if __has_feature(address_sanitizer)
+#if __has_feature(memory_sanitizer)
 #define XRTL_CONFIG_MSAN 1
-#endif  // __has_feature(address_sanitizer)
+#endif  // __has_feature(memory_sanitizer)
 #if __has_feature(thread_sanitizer)
 #define XRTL_CONFIG_TSAN 1
 #endif  // __has_feature(thread_sanitizer)
