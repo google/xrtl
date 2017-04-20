@@ -16,8 +16,6 @@
 
 #include <sstream>
 
-#include "xrtl/tools/target_platform/target_platform.h"
-
 #if defined(XRTL_PLATFORM_APPLE) || defined(XRTL_PLATFORM_LINUX)
 #define HAS_BACKTRACE
 #include <execinfo.h>
@@ -26,28 +24,6 @@
 
 namespace xrtl {
 namespace debugging {
-
-// These options functions are used by the --config=asan/msan/etc settings.
-
-#if defined(ASAN_OPTIONS)
-extern "C" const char* __asan_default_options() { return ASAN_OPTIONS; }
-#endif  // ASAN_OPTIONS
-
-#if defined(LSAN_OPTIONS)
-extern "C" const char* __lsan_default_options() { return "report_objects=1"; }
-#endif  // LSAN_OPTIONS
-
-#if defined(MSAN_OPTIONS)
-extern "C" const char* __msan_default_options() { return ""; }
-#endif  // MSAN_OPTIONS
-
-#if defined(TSAN_OPTIONS)
-extern "C" const char* __tsan_default_options() { return ""; }
-#endif  // TSAN_OPTIONS
-
-#if defined(UBSAN_OPTIONS)
-extern "C" const char* __ubsan_default_options() { return ""; }
-#endif  // UBSAN_OPTIONS
 
 #if defined(HAS_BACKTRACE)
 std::string CaptureStackTraceString() {

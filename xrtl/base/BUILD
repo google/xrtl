@@ -10,6 +10,39 @@ cc_library(
     srcs = ["debugging.cc"],
     hdrs = ["debugging.h"],
     deps = [
+        ":macros",
+        "//xrtl/tools/target_platform",
+    ] + select({
+        "//xrtl/tools/target_platform:ios": [
+            "//xrtl/port/apple/base:darwin_debugging",
+        ],
+        "//xrtl/tools/target_platform:macos": [
+            "//xrtl/port/apple/base:darwin_debugging",
+        ],
+        "//xrtl/tools/target_platform:windows": [
+            "//xrtl/port/windows/base:win32_debugging",
+        ],
+        "//conditions:default": [
+            "//xrtl/port/common/base:posix_debugging",
+        ],
+    }),
+)
+
+cc_library(
+    name = "debugging_hdrs",
+    hdrs = ["debugging.h"],
+    deps = [
+        ":macros",
+        "//xrtl/tools/target_platform",
+    ],
+    visibility = ["//xrtl/port:ports_only"],
+)
+
+cc_library(
+    name = "debugging_settings",
+    srcs = ["debugging_settings.cc"],
+    hdrs = ["debugging_settings.h"],
+    deps = [
         "//xrtl/tools/target_platform",
     ],
 )
@@ -129,7 +162,7 @@ cc_library(
         "make_unique.h",
     ],
     deps = [
-        ":debugging",
+        ":debugging_settings",
         "//xrtl/tools/target_config",
         "//xrtl/tools/target_platform",
     ],

@@ -17,10 +17,65 @@
 
 #include <string>
 
+#include "xrtl/base/macros.h"
+
+#if defined(XRTL_CONFIG_ASAN)
+#include <sanitizer/lsan_interface.h>
+#define XRTL_DISABLE_LEAK_CHECKS() __lsan_disable()
+#define XRTL_ENABLE_LEAK_CHECKS() __lsan_enable()
+#else
+#define XRTL_DISABLE_LEAK_CHECKS()
+#define XRTL_ENABLE_LEAK_CHECKS()
+#endif  // XRTL_CONFIG_ASAN
+
 namespace xrtl {
 namespace debugging {
 
-// TODO(benvanik): APIs for querying debugger presence, breaking, etc.
+// Disables leak checking in the scope that contains it.
+// This should only be used if absolutely required.
+class LeakCheckDisabler {
+ public:
+  LeakCheckDisabler() { XRTL_DISABLE_LEAK_CHECKS(); }
+  ~LeakCheckDisabler() { XRTL_ENABLE_LEAK_CHECKS(); }
+};
+
+// Returns true if a user-visible output console is attached.
+// If false the user will not see anything written to the logs.
+bool is_console_attached();
+
+// Attempts to attach a user-visible output console if not already present.
+// Returns true if the console was successfully attached.
+bool AttachConsole();
+
+// Returns true if a debugger is currently attached.
+// Note that a debugger may be attached at any time.
+bool is_debugger_attached();
+
+// Breaks into the debugger if it is currently attached.
+// If no debugger is present a signal will be raised and the user will either
+// receive a crash or a prompt to attach a debugger.
+XRTL_ALWAYS_INLINE void Break() {
+// We implement this directly in the header with ALWAYS_INLINE so that the
+// stack doesn't get all messed up.
+#if defined(XRTL_PLATFORM_WINDOWS)
+  __debugbreak();
+#elif defined(XRTL_COMPILER_CLANG)
+  // TODO(benvanik): test and make sure this works everywhere. It's clang
+  //                 builtin but only definitely works on OSX.
+  __builtin_debugtrap();
+#elif defined(XRTL_ARCH_ARM_V7A)
+  __asm__ volatile(".inst 0xe7f001f0");
+#elif defined(XRTL_ARCH_ARM_V8A)
+  __asm__ volatile(".inst 0xd4200000");
+#elif defined(XRTL_ARCH_X86_32) || defined(XRTL_ARCH_X86_64)
+  __asm__ volatile("int $0x03");
+#elif defined(XRTL_ARCH_EMSCRIPTEN)
+  EM_ASM({ debugger; });
+#else
+  // NOTE: this is unrecoverable and debugging cannot continue.
+  __builtin_trap();
+#endif  // XRTL_PLATFORM_WINDOWS
+}
 
 // Returns a multi-line string containing a stack trace.
 // May be a no-op on some platforms and return empty string.

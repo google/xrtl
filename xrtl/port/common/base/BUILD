@@ -34,6 +34,14 @@ cc_library(
 )
 
 cc_library(
+    name = "posix_debugging",
+    srcs = ["posix_debugging.cc"],
+    deps = [
+        "//xrtl/base:debugging_hdrs",
+    ],
+)
+
+cc_library(
     name = "posix_logging_sink",
     srcs = ["posix_logging_sink.cc"],
     deps = [
