@@ -21,10 +21,7 @@ namespace xrtl {
 
 namespace {
 
-// Custom window messages used by us for internal signaling:
-const DWORD kMsgLoopMarshalSync = WM_APP + 0x100;
-const DWORD kMsgLoopInvoke = WM_APP + 0x101;
-const DWORD kMsgLoopQuit = WM_APP + 0x102;
+const wchar_t* kMessageWindowClassName = L"XrtlMessageWindowClass";
 
 // Temporary data used when performing a MarshalSync.
 struct MarshalCall {
@@ -49,6 +46,10 @@ class Win32MessageLoop : public MessageLoop {
   uintptr_t native_handle() override { return thread_->native_handle(); }
 
  private:
+  static LRESULT CALLBACK WndProcThunk(HWND hwnd, UINT message, WPARAM w_param,
+                                       LPARAM l_param);
+  LRESULT WndProc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param);
+
   void ScheduleTask(ref_ptr<Task> task) override;
   void DescheduleTask(ref_ptr<Task> task) override;
 
@@ -56,8 +57,15 @@ class Win32MessageLoop : public MessageLoop {
 
   // Thread that the message loop runs on.
   ref_ptr<Thread> thread_;
+  // Hidden message window.
+  HWND message_hwnd_ = nullptr;
   // Timer queue used for delayed tasks.
   HANDLE timer_queue_ = INVALID_HANDLE_VALUE;
+
+  // Messages registered with the system we send to the window.
+  UINT marshal_sync_message_ = 0;
+  UINT invoke_message_ = 0;
+  UINT quit_message_ = 0;
 
   // All tasks that have been canceled since the last message loop pump.
   // Since we can't snoop the message loop and remove the tasks this is the
@@ -75,15 +83,44 @@ Win32MessageLoop::Win32MessageLoop() {
   timer_queue_ = ::CreateTimerQueue();
   DCHECK_NE(timer_queue_, INVALID_HANDLE_VALUE);
 
+  // Ensure we create the window class we use for the hidden message window.
+  // This should be process-local so we only need to do it once.
+  static std::once_flag register_class_flag;
+  std::call_once(register_class_flag, []() {
+    WNDCLASSEXW wcex = {0};
+    wcex.cbSize = sizeof(WNDCLASSEXW);
+    wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    wcex.lpfnWndProc = Win32MessageLoop::WndProcThunk;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = ::GetModuleHandle(nullptr);
+    wcex.hIcon = nullptr;
+    wcex.hIconSm = nullptr;
+    wcex.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = nullptr;
+    wcex.lpszClassName = kMessageWindowClassName;
+    if (!::RegisterClassExW(&wcex)) {
+      LOG(FATAL) << "Unable to register window class";
+    }
+  });
+
+  // Reserve message IDs unique to our app.
+  marshal_sync_message_ =
+      ::RegisterWindowMessage(L"XRTL_MESSAGE_LOOP_MARSHAL_SYNC");
+  invoke_message_ = ::RegisterWindowMessage(L"XRTL_MESSAGE_LOOP_INVOKE");
+  quit_message_ = ::RegisterWindowMessage(L"XRTL_MESSAGE_LOOP_QUIT");
+
   // We run a thread dedicated to the loop.
   Thread::CreateParams create_params;
   create_params.name = "Win32MessageLoop";
   ref_ptr<Event> ready_fence = Event::CreateFence();
   thread_ = Thread::Create(create_params, [this, &ready_fence]() {
-    // Make a Win32 call to enable the thread queue. Until we do this posted
-    // messages will be dropped on the floor.
-    MSG msg;
-    PeekMessage(&msg, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
+    // Create hidden message window.
+    message_hwnd_ = ::CreateWindowExW(
+        0, kMessageWindowClassName, L"(xrtl message loop)", 0, 0, 0, 0, 0,
+        HWND_MESSAGE, nullptr, ::GetModuleHandle(nullptr), this);
+    DCHECK(message_hwnd_);
 
     OnEnter();
 
@@ -94,7 +131,8 @@ Win32MessageLoop::Win32MessageLoop() {
     while (true) {
       // First peek to see if there are any messages waiting.
       // This lets us prevent blocking if we don't need to.
-      if (!PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE | PM_NOYIELD)) {
+      MSG msg;
+      if (!::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE | PM_NOYIELD)) {
         // No messages were available.
         // We are going to block on GetMessage, so first run cleanup.
         {
@@ -105,42 +143,18 @@ Win32MessageLoop::Win32MessageLoop() {
         // Now block until we get a message. Note that in a race where
         // PeekMessage fails this may pass immediately if another thread
         // inserted a message.
-        if (!GetMessage(&msg, nullptr, 0, 0)) {
+        if (!::GetMessage(&msg, nullptr, 0, 0)) {
           OnExit();
           return;
         }
       }
 
       // Normal message handling for Windows messages.
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-      if (msg.wParam != reinterpret_cast<WPARAM>(this)) {
-        continue;
-      }
+      ::TranslateMessage(&msg);
+      ::DispatchMessage(&msg);
 
-      // Handle our own messages.
-      // We retain ourselves while handling the message as the callback may
-      // delete the loop.
-      ref_ptr<Win32MessageLoop> self_loop(this);
-      switch (msg.message) {
-        case kMsgLoopMarshalSync: {
-          // Invoke the function on the loop thread and signal completion.
-          auto marshal_call = reinterpret_cast<MarshalCall*>(msg.lParam);
-          marshal_call->callback();
-          marshal_call->callback = nullptr;
-          marshal_call->fence->Set();
-          break;
-        }
-        case kMsgLoopInvoke: {
-          // Invoke the task on the loop thread.
-          InvokeTask(ref_ptr<Task>(reinterpret_cast<Task*>(msg.lParam)));
-          break;
-        }
-        case kMsgLoopQuit: {
-          // Exit the while and end the thread.
-          OnExit();
-          return;
-        }
+      if (msg.message == quit_message_) {
+        break;
       }
     }
   });
@@ -158,6 +172,67 @@ Win32MessageLoop::~Win32MessageLoop() {
     ::DeleteTimerQueueEx(timer_queue_, INVALID_HANDLE_VALUE);
     timer_queue_ = INVALID_HANDLE_VALUE;
   }
+
+  // Kill the message window.
+  if (message_hwnd_) {
+    ::DestroyWindow(message_hwnd_);
+    message_hwnd_ = nullptr;
+  }
+}
+
+LRESULT CALLBACK Win32MessageLoop::WndProcThunk(HWND hwnd, UINT message,
+                                                WPARAM w_param,
+                                                LPARAM l_param) {
+  // Retrieve the target loop from the hwnd.
+  Win32MessageLoop* message_loop = nullptr;
+  if (message == WM_NCCREATE) {
+    // The window has been created with the system.
+    // This is called *inline* in the ::CreateWindow call, so we have to be
+    // very careful what state we access.
+    auto create_struct = reinterpret_cast<LPCREATESTRUCT>(l_param);
+    message_loop =
+        reinterpret_cast<Win32MessageLoop*>(create_struct->lpCreateParams);
+    message_loop->message_hwnd_ = hwnd;
+    ::SetWindowLongPtr(
+        hwnd, GWLP_USERDATA,
+        static_cast<__int3264>(reinterpret_cast<LONG_PTR>(message_loop)));
+  } else {
+    message_loop = reinterpret_cast<Win32MessageLoop*>(
+        ::GetWindowLongPtr(hwnd, GWLP_USERDATA));
+  }
+  if (message_loop) {
+    return message_loop->WndProc(hwnd, message, w_param, l_param);
+  } else {
+    return ::DefWindowProc(hwnd, message, w_param, l_param);
+  }
+}
+
+LRESULT Win32MessageLoop::WndProc(HWND hwnd, UINT message, WPARAM w_param,
+                                  LPARAM l_param) {
+  // Handle our messages to the hidden window.
+  // We retain ourselves while handling the message as the callback may
+  // delete the loop.
+  if (message == marshal_sync_message_) {
+    // Invoke the function on the loop thread and signal completion.
+    ref_ptr<Win32MessageLoop> self_loop(this);
+    auto marshal_call = reinterpret_cast<MarshalCall*>(l_param);
+    marshal_call->callback();
+    marshal_call->callback = nullptr;
+    marshal_call->fence->Set();
+    return 0;
+  } else if (message == invoke_message_) {
+    // Invoke the task on the loop thread.
+    ref_ptr<Win32MessageLoop> self_loop(this);
+    InvokeTask(ref_ptr<Task>(reinterpret_cast<Task*>(l_param)));
+    return 0;
+  } else if (message == quit_message_) {
+    // Exit the while and end the thread.
+    ref_ptr<Win32MessageLoop> self_loop(this);
+    OnExit();
+    return 0;
+  } else {
+    return ::DefWindowProc(hwnd, message, w_param, l_param);
+  }
 }
 
 void Win32MessageLoop::MarshalSync(std::function<void()> callback) {
@@ -174,9 +249,9 @@ void Win32MessageLoop::MarshalSync(std::function<void()> callback) {
   marshal_call.callback = std::move(callback);
 
   // Post the request to the loop.
-  ::PostThreadMessage(thread_->thread_id(), kMsgLoopMarshalSync,
-                      reinterpret_cast<WPARAM>(this),
-                      reinterpret_cast<LPARAM>(&marshal_call));
+  ::PostMessage(message_hwnd_, marshal_sync_message_,
+                reinterpret_cast<WPARAM>(this),
+                reinterpret_cast<LPARAM>(&marshal_call));
 
   // Wait for the request to complete.
   Thread::Wait(marshal_call.fence);
@@ -191,9 +266,9 @@ void Win32MessageLoop::ScheduleTask(ref_ptr<Task> task) {
   if (!task->delay_millis().count() && !task->period_millis().count()) {
     task->set_platform_handle(
         reinterpret_cast<uintptr_t>(INVALID_HANDLE_VALUE));
-    ::PostThreadMessage(thread_->thread_id(), kMsgLoopInvoke,
-                        reinterpret_cast<WPARAM>(this),
-                        reinterpret_cast<LPARAM>(task.get()));
+    ::PostMessage(message_hwnd_, invoke_message_,
+                  reinterpret_cast<WPARAM>(this),
+                  reinterpret_cast<LPARAM>(task.get()));
     return;
   }
 
@@ -245,9 +320,9 @@ void Win32MessageLoop::TimerQueueCallback(void* context, uint8_t) {
   // we need to marshal onto it.
   Win32MessageLoop* message_loop =
       static_cast<Win32MessageLoop*>(task->message_loop());
-  ::PostThreadMessage(message_loop->thread_->thread_id(), kMsgLoopInvoke,
-                      reinterpret_cast<WPARAM>(task->message_loop()),
-                      reinterpret_cast<LPARAM>(task.get()));
+  ::PostMessage(message_loop->message_hwnd_, message_loop->invoke_message_,
+                reinterpret_cast<WPARAM>(task->message_loop()),
+                reinterpret_cast<LPARAM>(task.get()));
 }
 
 ref_ptr<WaitHandle> Win32MessageLoop::Exit() {
@@ -258,8 +333,8 @@ ref_ptr<WaitHandle> Win32MessageLoop::Exit() {
 
   // Post a quit message to the loop. When it receives this it will exit.
   if (!Thread::TryWait(thread_)) {
-    ::PostThreadMessage(thread_->thread_id(), kMsgLoopQuit,
-                        reinterpret_cast<WPARAM>(this), 0);
+    ::PostMessage(message_hwnd_, quit_message_, reinterpret_cast<WPARAM>(this),
+                  0);
   }
 
   return wait_handle;
