@@ -122,9 +122,9 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
   // Set true when pthread_join has been called.
   std::atomic<bool> has_joined_{false};
 
-  // An event signalled by the thread when it has completed OnEnter.
+  // An event signaled by the thread when it has completed OnEnter.
   ref_ptr<Event> startup_fence_;
-  // An event signalled when the thread has been resumed.
+  // An event signaled when the thread has been resumed.
   // This will keep the thread in its start function waiting until the condition
   // is set.
   ref_ptr<Event> suspend_fence_;
