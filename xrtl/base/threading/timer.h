@@ -24,7 +24,7 @@ namespace xrtl {
 
 // A timer based on the Win32 timer object.
 // Timers are waitable handles that can be used to synchronize threads and may
-// optionally make callbacks when they are signalled. There are two types of
+// optionally make callbacks when they are signaled. There are two types of
 // timers: manual reset and auto reset. Manual reset timers work like manual
 // reset events, with the timer firing being equivalent to Set and scheduling
 // being equivalent to Reset. Auto reset timers work like auto reset events,

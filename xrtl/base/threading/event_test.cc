@@ -258,7 +258,7 @@ TEST_F(EventTest, WaitAnyEvents) {
   EXPECT_EQ(Thread::WaitResult::kSuccess, result.wait_result);
   EXPECT_EQ(1, result.wait_handle_index);
 
-  // Waiting on multiple signalled events should succeed.
+  // Waiting on multiple signaled events should succeed.
   result = Thread::WaitAny({signaled_event_1, signaled_event_2});
   EXPECT_EQ(Thread::WaitResult::kSuccess, result.wait_result);
   EXPECT_LE(0, result.wait_handle_index);
