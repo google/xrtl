@@ -46,6 +46,10 @@ void SetVersionString(const std::string& version);
 // Returns the index (into argv) of the first non-flag argument.
 uint32_t ParseCommandLineFlags(int* argc, char*** argv, bool remove_flags);
 
+// Shuts down the command line flags system and reclaims all memory.
+// This should be called before exiting to make leak checkers happy.
+void ShutDownCommandLineFlags();
+
 // Gets a list of all flags by name.
 std::vector<std::string> GetAllFlagNames();
 

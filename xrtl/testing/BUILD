@@ -5,6 +5,41 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+# demo main() entry point.
+# This is linked in to demo cc_binaries.
+cc_library(
+    name = "demo_main",
+    srcs = ["demo_main.cc"],
+    hdrs = ["demo_main.h"],
+    deps = [
+        ":platform_demo_main",
+        "//xrtl/base:debugging",
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "demo_main_hdrs",
+    hdrs = ["demo_main.h"],
+    visibility = ["//xrtl/port:ports_only"],
+)
+
+cc_library(
+    name = "platform_demo_main",
+    deps = select({
+        "//xrtl/tools/target_platform:windows": [
+            "//xrtl/port/windows/testing:win32_demo_main",
+        ],
+        "//conditions:default": [
+            "//xrtl/port/common/testing:posix_demo_main",
+        ],
+    }),
+    visibility = ["//visibility:private"],
+)
+
+
 # googletest header shim.
 # This can be linked in to cc_library rules that require access to the gunit
 # headers (such as test utility libraries/etc).

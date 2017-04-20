@@ -22,5 +22,8 @@ cc_library(
     deps = [
       "//xrtl/tools/target_platform",
     ],
+    defines = [
+        "UNICODE=1",
+    ],
     visibility = ["//xrtl/port:windows_only"],
 )

@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/base/flags.h"
-#include "xrtl/testing/gtest.h"
+#include "xrtl/testing/demo_main.h"
 
-extern "C" int main(int argc, char** argv) {
-  xrtl::flags::SetUsageMessage(std::string("\n$ ") + argv[0]);
-  xrtl::flags::ParseCommandLineFlags(&argc, &argv, true);
+namespace xrtl {
+namespace testing {
 
-  ::testing::InitGoogleTest(&argc, argv);
+extern "C" int main(int argc, char** argv) { return DemoMain(argc, argv); }
 
-  int exit_code = RUN_ALL_TESTS();
-
-  xrtl::flags::ShutDownCommandLineFlags();
-
-  return exit_code;
-}
+}  // namespace testing
+}  // namespace xrtl

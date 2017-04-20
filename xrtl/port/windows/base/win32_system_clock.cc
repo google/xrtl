@@ -28,7 +28,7 @@ class Win32SystemClock : public SystemClock {
     // versions of Windows. For that reason, we try to look it up in
     // kernel32.dll at runtime and use an alternative option if the function
     // is not available.
-    HMODULE module = ::GetModuleHandle("kernel32.dll");
+    HMODULE module = ::GetModuleHandleA("kernel32.dll");
     if (module) {
       GetSystemTimePreciseAsFileTime_ =
           reinterpret_cast<FnGetSystemTimePreciseAsFileTime>(

@@ -29,6 +29,8 @@ uint32_t ParseCommandLineFlags(int* argc, char*** argv, bool remove_flags) {
   return gflags::ParseCommandLineFlags(argc, argv, remove_flags);
 }
 
+void ShutDownCommandLineFlags() { gflags::ShutDownCommandLineFlags(); }
+
 std::vector<std::string> GetAllFlagNames() {
   std::vector<gflags::CommandLineFlagInfo> all_flags;
   gflags::GetAllFlags(&all_flags);
