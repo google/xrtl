@@ -25,7 +25,7 @@
 #include "xrtl/tools/target_platform/target_platform.h"  // IWYU pragma: export
 
 // Debugging macros pull in leak checking/sanitization/etc based on config.
-#include "xrtl/base/debugging.h"  // IWYU pragma: export
+#include "xrtl/base/debugging_settings.h"  // IWYU pragma: export
 
 // Temporary make_unique (until C++14 is everywhere).
 #include "xrtl/base/make_unique.h"  // IWYU pragma: export
@@ -38,6 +38,7 @@
 #define XRTL_ATTRIBUTE_UNUSED __attribute__((unused))
 #define XRTL_ATTRIBUTE_COLD __attribute__((cold))
 #define XRTL_ATTRIBUTE_WEAK __attribute__((weak))
+#define XRTL_ATTRIBUTE_NOSANITIZE __attribute__((no_sanitize_address))
 #define XRTL_EMPTY_FILE() static int dummy __attribute__((unused, used)) = 0;
 
 #elif defined(XRTL_COMPILER_MSVC)
@@ -48,6 +49,7 @@
 #define XRTL_ATTRIBUTE_UNUSED
 #define XRTL_ATTRIBUTE_COLD
 #define XRTL_ATTRIBUTE_WEAK
+#define XRTL_ATTRIBUTE_NOSANITIZE
 #define XRTL_EMPTY_FILE()
 
 #else
@@ -58,12 +60,18 @@
 #define XRTL_ATTRIBUTE_UNUSED
 #define XRTL_ATTRIBUTE_COLD
 #define XRTL_ATTRIBUTE_WEAK
+#define XRTL_ATTRIBUTE_NOSANITIZE
 #define XRTL_EMPTY_FILE()
 
 #endif  // XRTL_COMPILER_[GCC_COMPAT/MSVC/etc]
 
 #define XRTL_PREDICT_FALSE(x) (x)
 #define XRTL_PREDICT_TRUE(x) (x)
+
+#if defined(XRTL_CONFIG_ASAN)
+#define XRTL_DISABLE_LEAK_CHECKS() __lsan_disable()
+#define XRTL_ENABLE_LEAK_CHECKS() __lsan_enable()
+#endif  // XRTL_CONFIG_ASAN
 
 #if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 // Define this to 1 if the code is compiled in C++11 mode.
