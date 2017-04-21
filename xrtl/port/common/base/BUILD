@@ -10,6 +10,7 @@ cc_library(
     srcs = ["logging_macros.cc"],
     hdrs = ["logging_macros.h"],
     deps = [
+        "//xrtl/base:flags",
         "//xrtl/base:logging_hdrs",
         "//xrtl/base:macros",
     ] + select({

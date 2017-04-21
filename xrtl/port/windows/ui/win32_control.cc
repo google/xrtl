@@ -14,6 +14,8 @@
 
 #include "xrtl/port/windows/ui/win32_control.h"
 
+#include "xrtl/base/logging.h"
+
 // TODO(benvanik): figure out why uxtheme.h chokes.
 #define MILCORE_KERNEL_COMPONENT
 typedef struct _MARGINS {

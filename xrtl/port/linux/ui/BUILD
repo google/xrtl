@@ -16,6 +16,7 @@ cc_library(
         ":x11_headers",
         "//xrtl/base:debugging",
         "//xrtl/base:flags",
+        "//xrtl/base:logging",
         "//xrtl/base/threading:event",
         "//xrtl/ui:control_hdrs",
     ],
@@ -27,6 +28,7 @@ cc_library(
     hdrs = ["x11_display.h"],
     deps = [
         ":x11_headers",
+        "//xrtl/base:logging",
         "//xrtl/base:ref_ptr",
         "//xrtl/base/threading:message_loop",
         "//xrtl/port/common/base/threading:epoll_message_loop",
@@ -73,6 +75,7 @@ cc_library(
         ":x11_control",
         ":x11_display",
         ":x11_headers",
+        "//xrtl/base:logging",
         "//xrtl/ui:window_hdrs",
     ],
 )
