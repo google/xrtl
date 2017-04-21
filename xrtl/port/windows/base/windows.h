@@ -34,6 +34,8 @@
 // Must be first.
 #include <windows.h>
 
-#include <mmsystem.h>
+#include <mmsystem.h>  // winmm
+#include <objbase.h>   // ole32
+#include <shellapi.h>  // shell32
 
 #endif  // XRTL_PORT_WINDOWS_BASE_WINDOWS_H_
