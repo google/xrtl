@@ -29,6 +29,7 @@ cc_library(
     srcs = ["posix_test_main.cc"],
     deps = [
         "//xrtl/base:flags",
+        "//xrtl/base:logging",
         "//xrtl/testing:gtest",
     ],
     linkopts = select({

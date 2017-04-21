@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "xrtl/base/flags.h"
+#include "xrtl/base/logging.h"
 #include "xrtl/testing/gtest.h"
 
 extern "C" int main(int argc, char** argv) {
