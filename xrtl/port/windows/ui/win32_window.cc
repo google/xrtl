@@ -14,6 +14,8 @@
 
 #include "xrtl/port/windows/ui/win32_window.h"
 
+#include "xrtl/base/logging.h"
+
 namespace xrtl {
 namespace ui {
 

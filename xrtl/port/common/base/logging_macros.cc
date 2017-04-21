@@ -17,7 +17,11 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
+
+DEFINE_int32(minloglevel, 0, "Minimum logging level. 0 = INFO and above.");
+DEFINE_int32(v, 0, "Verbosity level maximum. 1 = VLOG(0-1), 2 = VLOG(0-2).");
 
 namespace xrtl {
 namespace internal {
@@ -28,9 +32,11 @@ LogMessage::LogMessage(const char* file_name, int line, int severity)
 namespace {
 
 // Parse log level (int64_t) from environment variable (char*).
-int64_t LogLevelStrToInt(const char* xrtl_env_var_val) {
+// Returns true if the value was present and parsed successfully.
+bool LogLevelStrToInt(const char* xrtl_env_var_val, int64_t* out_level) {
+  *out_level = 0;
   if (xrtl_env_var_val == nullptr) {
-    return 0;
+    return false;
   }
 
   // Ideally we would use env_var / safe_strto64, but it is
@@ -41,20 +47,29 @@ int64_t LogLevelStrToInt(const char* xrtl_env_var_val) {
   int64_t level;
   if (!(ss >> level)) {
     // Invalid vlog level setting, set level to default (0).
-    level = 0;
+    return false;
   }
 
-  return level;
+  *out_level = level;
+  return true;
 }
 
 int64_t MinLogLevelFromEnv() {
   const char* xrtl_env_var_val = getenv("XRTL_MIN_LOG_LEVEL");
-  return LogLevelStrToInt(xrtl_env_var_val);
+  int64_t level = 0;
+  if (LogLevelStrToInt(xrtl_env_var_val, &level)) {
+    return level;
+  }
+  return FLAGS_minloglevel;
 }
 
 int64_t MinVLogLevelFromEnv() {
   const char* xrtl_env_var_val = getenv("XRTL_MIN_VLOG_LEVEL");
-  return LogLevelStrToInt(xrtl_env_var_val);
+  int64_t level = 0;
+  if (LogLevelStrToInt(xrtl_env_var_val, &level)) {
+    return level;
+  }
+  return FLAGS_v;
 }
 
 }  // namespace

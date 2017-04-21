@@ -14,6 +14,8 @@
 
 #include "xrtl/port/linux/ui/x11_window.h"
 
+#include "xrtl/base/logging.h"
+
 namespace xrtl {
 namespace ui {
 

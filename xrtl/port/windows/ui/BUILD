@@ -10,6 +10,7 @@ cc_library(
     srcs = ["win32_control.cc"],
     hdrs = ["win32_control.h"],
     deps = [
+        "//xrtl/base:logging",
         "//xrtl/base/threading:event",
         "//xrtl/port/windows/base:windows_headers",
         "//xrtl/ui:control_hdrs",
@@ -31,6 +32,7 @@ cc_library(
     hdrs = ["win32_window.h"],
     deps = [
         ":win32_control",
+        "//xrtl/base:logging",
         "//xrtl/port/windows/base:windows_headers",
         "//xrtl/ui:window_hdrs",
     ],

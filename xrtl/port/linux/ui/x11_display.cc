@@ -16,6 +16,8 @@
 
 #include <utility>
 
+#include "xrtl/base/logging.h"
+
 namespace xrtl {
 namespace ui {
 

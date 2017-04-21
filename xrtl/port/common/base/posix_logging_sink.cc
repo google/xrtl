@@ -36,7 +36,7 @@ void LogMessage::EmitLogMessage() {
   strftime(time_buffer, kTimeBufferSize, "%Y-%m-%d %H:%M:%S",
            localtime(&now_seconds));
 
-  std::fprintf(stderr, "%s.%06d: %c %s:%d] %s\n", time_buffer, micros_remainder,
+  std::fprintf(stdout, "%s.%06d: %c %s:%d] %s\n", time_buffer, micros_remainder,
                "IWEF"[severity_], file_name_, line_, str().c_str());
 }
 

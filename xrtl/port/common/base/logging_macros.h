@@ -90,13 +90,13 @@ class LogMessageFatal : public LogMessage {
 
 #define LOG(severity) _XRTL_LOG_##severity
 
-#ifdef XRTL_CONFIG_LOGGING_VERBOSE
-// Turn VLOG off at compile time when we want to reduce code size.
-#define VLOG_IS_ON(lvl) ((lvl) <= 0)
-#else
-// Otherwise, Set XRTL_MIN_VLOG_LEVEL environment to update the minimum log
+#if defined(XRTL_CONFIG_LOGGING_VERBOSE)
+// Set XRTL_MIN_VLOG_LEVEL envvar or pass -v=N to update the minimum log
 // level of VLOG at runtime.
 #define VLOG_IS_ON(lvl) ((lvl) <= ::xrtl::internal::LogMessage::MinVLogLevel())
+#else
+// Turn VLOG off at compile time when we want to reduce code size.
+#define VLOG_IS_ON(lvl) ((lvl) <= 0)
 #endif  // XRTL_CONFIG_LOGGING_VERBOSE
 
 #define VLOG(lvl)                          \

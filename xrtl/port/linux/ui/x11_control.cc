@@ -16,6 +16,7 @@
 
 #include "xrtl/base/debugging.h"
 #include "xrtl/base/flags.h"
+#include "xrtl/base/logging.h"
 
 DEFINE_string(display, ":0.0",
               "X11 display to use, otherwise the DISPLAY envvar is used");
