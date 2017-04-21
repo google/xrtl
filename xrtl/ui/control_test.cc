@@ -381,7 +381,7 @@ TEST_F(ControlTest, SetFocusInitial) {
                 GetWaitTimeout()));
 
   // Take focus and wait for the event.
-  control->set_focused(false);
+  control->set_focused(true);
   ASSERT_EQ(
       Thread::WaitResult::kSuccess,
       Thread::WaitAll({listener.focus_changed_counter}, GetWaitTimeout()));

@@ -688,6 +688,10 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
 
     case WM_KILLFOCUS: {
       VLOG(1) << "WM_KILLFOCUS";
+      if (reinterpret_cast<HWND>(w_param) == hwnd) {
+        // Killing focus to then send it to ourselves... wat.
+        break;
+      }
       std::lock_guard<std::recursive_mutex> lock(mutex_);
       is_focused_ = false;
       if (state_ == State::kCreated) {
