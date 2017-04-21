@@ -127,6 +127,7 @@ cc_library(
             "//xrtl/port/common/base:logging_macros",
         ],
     }),
+    alwayslink = 1,
 )
 
 cc_library(
