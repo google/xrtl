@@ -52,6 +52,7 @@ cc_test(
         "//xrtl/testing:gtest_main",
         "//xrtl/ui/testing:mock_control_listener",
     ],
+    tags = ["exclusive"],
 )
 
 cc_library(
@@ -144,4 +145,5 @@ cc_test(
         "//xrtl/testing:gtest_main",
         "//xrtl/ui/testing:mock_control_listener",
     ],
+    tags = ["exclusive"],
 )
