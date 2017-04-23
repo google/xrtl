@@ -134,6 +134,19 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "window_pong_demo",
+    srcs = ["window_pong_demo.cc"],
+    deps = [
+        ":window",
+        "//xrtl/base:logging",
+        "//xrtl/base:math",
+        "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
+        "//xrtl/testing:demo_main",
+    ],
+)
+
 cc_test(
     name = "window_test",
     srcs = ["window_test.cc"],
