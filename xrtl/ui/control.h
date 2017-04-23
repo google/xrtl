@@ -61,6 +61,13 @@ struct Rect2D {
     return origin == other.origin && size == other.size;
   }
   bool operator!=(const Rect2D& other) const { return !(*this == other); }
+  // Returns true if this Rect2D intersects with another Rect2D.
+  bool TestIntersection(const Rect2D& other) {
+    return !(other.origin.x > origin.x + size.width ||
+             other.origin.x + other.size.width < origin.x ||
+             other.origin.y > origin.y + size.height ||
+             other.origin.y + other.size.height < origin.y);
+  }
 };
 
 struct Frame2D {
