@@ -20,7 +20,35 @@ namespace xrtl {
 namespace {
 
 TEST(GeometryTest, RectIntersection) {
-  // TODO(scotttodd): tests!
+  Rect2D rect = {1000, 2000, 100, 200};
+
+  // Should intersect with self.
+  EXPECT_TRUE(rect.TestIntersection(rect));
+
+  // Other rect fully inside of this rect.
+  EXPECT_TRUE(rect.TestIntersection({1025, 2025, 50, 50}));
+  // Other rect fully enclosing this rect.
+  EXPECT_TRUE(rect.TestIntersection({0, 0, 5000, 5000}));
+
+  // Other rect far away from this rect.
+  EXPECT_FALSE(rect.TestIntersection({3000, 4000, 50, 50}));
+
+  // Intersect with each side.
+  EXPECT_TRUE(rect.TestIntersection({950, 2025, 200, 50}));
+  EXPECT_TRUE(rect.TestIntersection({1050, 2025, 200, 50}));
+  EXPECT_TRUE(rect.TestIntersection({1025, 1950, 50, 200}));
+  EXPECT_TRUE(rect.TestIntersection({1025, 2050, 50, 200}));
+
+  // Other rect touching the edge of this rect, should intersect.
+  EXPECT_TRUE(rect.TestIntersection({1100, 2050, 100, 200}));
+  // Other rect barely not touching the edge of this rect, should not intersect.
+  EXPECT_FALSE(rect.TestIntersection({1101, 2050, 100, 200}));
+
+  // Negative origin.
+  rect = {-1000, -2000, 100, 200};
+  EXPECT_TRUE(rect.TestIntersection(rect));
+  EXPECT_TRUE(rect.TestIntersection({-975, -1975, 50, 50}));
+  EXPECT_FALSE(rect.TestIntersection({1000, 2000, 100, 200}));
 }
 
 }  // namespace
