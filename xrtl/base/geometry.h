@@ -33,6 +33,27 @@ struct Point2D {
   bool operator!=(const Point2D& other) const { return !(*this == other); }
 };
 
+struct Point3D {
+  int x = 0;
+  int y = 0;
+  int z = 0;
+
+  Point3D() = default;
+  Point3D(int x, int y) : x(x), y(y), z(0) {}
+  Point3D(int x, int y, int z) : x(x), y(y), z(z) {}
+  explicit Point3D(const Point2D& other) : x(other.x), y(other.y), z(0) {}
+
+  bool operator==(const Point2D& other) const {
+    return x == other.x && y == other.y;
+  }
+  bool operator!=(const Point2D& other) const { return !(*this == other); }
+
+  bool operator==(const Point3D& other) const {
+    return x == other.x && y == other.y && z == other.z;
+  }
+  bool operator!=(const Point3D& other) const { return !(*this == other); }
+};
+
 struct Size2D {
   int width = 0;
   int height = 0;
@@ -44,6 +65,30 @@ struct Size2D {
     return width == other.width && height == other.height;
   }
   bool operator!=(const Size2D& other) const { return !(*this == other); }
+};
+
+struct Size3D {
+  int width = 0;
+  int height = 0;
+  int depth = 0;
+
+  Size3D() = default;
+  Size3D(int width, int height) : width(width), height(height), depth(0) {}
+  Size3D(int width, int height, int depth)
+      : width(width), height(height), depth(depth) {}
+  explicit Size3D(const Size2D& other)
+      : width(other.width), height(other.height), depth(0) {}
+
+  bool operator==(const Size2D& other) const {
+    return width == other.width && height == other.height;
+  }
+  bool operator!=(const Size2D& other) const { return !(*this == other); }
+
+  bool operator==(const Size3D& other) const {
+    return width == other.width && height == other.height &&
+           depth == other.depth;
+  }
+  bool operator!=(const Size3D& other) const { return !(*this == other); }
 };
 
 struct Rect2D {
@@ -66,6 +111,39 @@ struct Rect2D {
              other.origin.x + other.size.width < origin.x ||
              other.origin.y > origin.y + size.height ||
              other.origin.y + other.size.height < origin.y);
+  }
+};
+
+struct Rect3D {
+  Point3D origin;
+  Size3D size;
+
+  Rect3D() = default;
+  Rect3D(Point2D origin, Size2D size) : origin(origin), size(size) {}
+  Rect3D(Point3D origin, Size3D size) : origin(origin), size(size) {}
+  Rect3D(int x, int y, int width, int height)
+      : origin(x, y), size(width, height) {}
+  Rect3D(int x, int y, int z, int width, int height, int depth)
+      : origin(x, y, z), size(width, height, depth) {}
+
+  bool operator==(const Rect2D& other) const {
+    return origin == other.origin && size == other.size;
+  }
+  bool operator!=(const Rect2D& other) const { return !(*this == other); }
+
+  bool operator==(const Rect3D& other) const {
+    return origin == other.origin && size == other.size;
+  }
+  bool operator!=(const Rect3D& other) const { return !(*this == other); }
+
+  // Returns true if this Rect3D intersects with another Rect3D.
+  bool TestIntersection(const Rect3D& other) {
+    return !(other.origin.x > origin.x + size.width ||
+             other.origin.x + other.size.width < origin.x ||
+             other.origin.y > origin.y + size.height ||
+             other.origin.y + other.size.height < origin.y ||
+             other.origin.z > origin.z + size.depth ||
+             other.origin.z + other.size.depth < origin.z);
   }
 };
 
