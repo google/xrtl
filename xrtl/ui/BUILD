@@ -13,6 +13,7 @@ cc_library(
     srcs = ["control.cc"],
     hdrs = ["control.h"],
     deps = [
+        "//xrtl/base:geometry",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
         "//xrtl/base/threading:message_loop",
@@ -32,6 +33,7 @@ cc_library(
     name = "control_hdrs",
     hdrs = ["control.h"],
     deps = [
+        "//xrtl/base:geometry",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
         "//xrtl/base/threading:message_loop",

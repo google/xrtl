@@ -74,6 +74,21 @@ cc_test(
 )
 
 cc_library(
+    name = "geometry",
+    hdrs = ["geometry.h"],
+)
+
+cc_test(
+    name = "geometry_test",
+    srcs = ["geometry_test.cc"],
+    deps = [
+        ":geometry",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
     name = "intrusive_list",
     hdrs = ["intrusive_list.h"],
     deps = [
