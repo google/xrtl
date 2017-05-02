@@ -67,6 +67,25 @@ cc_library(
 )
 
 cc_library(
+    name = "fixed_vector",
+    hdrs = ["fixed_vector.h"],
+    deps = [
+        ":logging",
+        ":macros",
+    ],
+)
+
+cc_test(
+    name = "fixed_vector_test",
+    srcs = ["fixed_vector_test.cc"],
+    deps = [
+        ":fixed_vector",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
     name = "flags",
     srcs = ["flags.cc"],
     hdrs = ["flags.h"],
