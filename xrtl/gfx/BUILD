@@ -6,6 +6,14 @@ package(default_visibility = ["//xrtl:internal"])
 licenses(["notice"])  # Apache 2.0
 
 cc_library(
+    name = "buffer",
+    hdrs = ["buffer.h"],
+    deps = [
+        ":resource",
+    ],
+)
+
+cc_library(
     name = "color",
     srcs = ["color.cc"],
     hdrs = ["color.h"],
@@ -26,6 +34,183 @@ cc_test(
 )
 
 cc_library(
+    name = "command_buffer",
+    hdrs = ["command_buffer.h"],
+    deps = [
+        ":command_encoder",
+        ":framebuffer",
+        ":render_pass",
+        "//xrtl/base:logging",
+        "//xrtl/base:macros",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "command_encoder",
+    hdrs = ["command_encoder.h"],
+    deps = [
+        ":buffer",
+        ":command_fence",
+        ":image",
+        ":pipeline",
+        ":pipeline_layout",
+        ":resource_set",
+        ":sampler",
+        "//xrtl/base:array_view",
+        "//xrtl/base:logging",
+        "//xrtl/base:macros",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "command_fence",
+    hdrs = ["command_fence.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "context",
+    hdrs = ["context.h"],
+    deps = [
+        ":command_buffer",
+        ":command_fence",
+        ":device",
+        ":framebuffer",
+        ":image_view",
+        ":memory_pool",
+        ":pipeline",
+        ":pipeline_layout",
+        ":pixel_format",
+        ":queue_fence",
+        ":render_pass",
+        ":resource_set",
+        ":sampler",
+        ":shader_module",
+        ":swap_chain",
+        "//xrtl/base:array_view",
+        "//xrtl/base:ref_ptr",
+        "//xrtl/base/threading:event",
+        "//xrtl/ui:control",
+    ],
+)
+
+cc_library(
+    name = "context_factory",
+    srcs = ["context_factory.cc"],
+    hdrs = ["context_factory.h"],
+    deps = [
+        ":context_factory_hdrs",
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+    ] + select({
+        "//xrtl/tools/target_platform:android": [],
+        "//xrtl/tools/target_platform:emscripten": [],
+        "//xrtl/tools/target_platform:ios": [],
+        "//xrtl/tools/target_platform:linux": [],
+        "//xrtl/tools/target_platform:macos": [],
+        "//xrtl/tools/target_platform:windows": [],
+    }),
+)
+
+cc_library(
+    name = "context_factory_hdrs",
+    hdrs = ["context_factory.h"],
+    deps = [
+        ":context",
+        ":device",
+        "//xrtl/base:array_view",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_test(
+    name = "context_factory_test",
+    srcs = ["context_factory_test.cc"],
+    deps = [
+        ":context_factory",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
+    name = "device",
+    hdrs = ["device.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "framebuffer",
+    hdrs = ["framebuffer.h"],
+    deps = [
+        ":image_view",
+        ":render_pass",
+        "//xrtl/base:array_view",
+        "//xrtl/base:geometry",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "image",
+    hdrs = ["image.h"],
+    deps = [
+        ":render_state",
+        ":resource",
+        "//xrtl/base:geometry",
+    ],
+)
+
+cc_library(
+    name = "image_view",
+    hdrs = ["image_view.h"],
+    deps = [
+        ":pixel_format",
+        ":image",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "memory_pool",
+    hdrs = ["memory_pool.h"],
+    deps = [
+        ":buffer",
+        ":image",
+        ":resource",
+        "//xrtl/base:macros",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "pipeline",
+    hdrs = ["pipeline.h"],
+    deps = [
+        ":pipeline_layout",
+        ":shader_module",
+        ":render_state",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "pipeline_layout",
+    hdrs = ["pipeline_layout.h"],
+    deps = [
+        ":render_pass",
+        "//xrtl/base:array_view",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
     name = "pixel_format",
     srcs = ["pixel_format.cc"],
     hdrs = ["pixel_format.h"],
@@ -43,4 +228,85 @@ cc_test(
         "//xrtl/testing:gtest_main",
     ],
     size = "small",
+)
+
+cc_library(
+    name = "queue_fence",
+    hdrs = ["queue_fence.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "render_pass",
+    hdrs = ["render_pass.h"],
+    deps = [
+        ":image",
+        ":pixel_format",
+        ":render_state",
+        "//xrtl/base:array_view",
+        "//xrtl/base:macros",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "render_state",
+    hdrs = ["render_state.h"],
+    deps = [
+        ":pixel_format",
+        "//xrtl/base:fixed_vector",
+    ],
+)
+
+cc_library(
+    name = "resource",
+    hdrs = ["resource.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "resource_set",
+    hdrs = ["resource_set.h"],
+    deps = [
+        ":buffer",
+        ":image",
+        ":image_view",
+        ":pipeline_layout",
+        ":sampler",
+        "//xrtl/base:array_view",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "sampler",
+    hdrs = ["sampler.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "shader_module",
+    hdrs = ["shader_module.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "swap_chain",
+    hdrs = ["swap_chain.h"],
+    deps = [
+        ":command_buffer",
+        ":framebuffer",
+        ":pixel_format",
+        ":queue_fence",
+        "//xrtl/base:geometry",
+        "//xrtl/base:ref_ptr",
+    ],
 )

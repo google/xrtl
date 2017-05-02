@@ -169,6 +169,7 @@ enum class ComponentFormat : uint8_t {
 // us to use tables to map to internal formats.
 class PixelFormat {
  public:
+  PixelFormat() = default;
   constexpr PixelFormat(uint8_t unique_id, PixelPacking packing_format,
                         uint8_t packed_bytes_per_pixel,
                         ComponentFormat component_format,
@@ -230,10 +231,15 @@ class PixelFormat {
             static_cast<uint8_t>(PixelPacking::kFlexibleMask)) != 0;
   }
 
-  // Returns true if the given color format contains compressed data.
+  // Returns true if the given format contains compressed data.
   constexpr bool is_compressed() const {
     return (static_cast<uint8_t>(packing_format_) &
             static_cast<uint8_t>(PixelPacking::kCompressedMask)) != 0;
+  }
+
+  // Returns true if the given format represents depth/stencil data.
+  constexpr bool is_depth_stencil() const {
+    return packing_format_ == PixelPacking::kDepthStencil;
   }
 
   // Returns true if the given color format includes an alpha channel or other
