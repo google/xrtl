@@ -77,6 +77,7 @@ TEST(PixelFormatTest, UncompressedTypes) {
   EXPECT_EQ(2, format.component_bits_a());
   EXPECT_FALSE(format.is_flexible());
   EXPECT_FALSE(format.is_compressed());
+  EXPECT_FALSE(format.is_depth_stencil());
   EXPECT_TRUE(format.has_transparency());
   EXPECT_TRUE(format.is_linear());
   EXPECT_EQ(4 * 100 * 100, format.ComputeDataSize(100, 100));
@@ -93,6 +94,7 @@ TEST(PixelFormatTest, DepthStencilTypes) {
   EXPECT_EQ(8, format.component_bits_stencil());
   EXPECT_FALSE(format.is_flexible());
   EXPECT_FALSE(format.is_compressed());
+  EXPECT_TRUE(format.is_depth_stencil());
   EXPECT_FALSE(format.has_transparency());
   EXPECT_TRUE(format.is_linear());
   EXPECT_EQ(4 * 100 * 100, format.ComputeDataSize(100, 100));
@@ -111,6 +113,7 @@ TEST(PixelFormatTest, CompressedTypes) {
   EXPECT_EQ(1, format.component_bits_a());
   EXPECT_FALSE(format.is_flexible());
   EXPECT_TRUE(format.is_compressed());
+  EXPECT_FALSE(format.is_depth_stencil());
   EXPECT_TRUE(format.has_transparency());
   EXPECT_FALSE(format.is_linear());
   EXPECT_EQ(100 * 100, format.ComputeDataSize(100, 100));

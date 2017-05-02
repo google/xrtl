@@ -150,40 +150,40 @@ inline Dest bit_cast(const Source& source) {
 //  XRTL_BITMASK(MyBitmask);
 //  MyBitmask value = ~(MyBitmask::kFoo | MyBitmask::kBar);
 #define XRTL_BITMASK(enum_class)                                       \
-  enum_class operator|(enum_class lhs, enum_class rhs) {               \
+  inline enum_class operator|(enum_class lhs, enum_class rhs) {        \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     return static_cast<enum_class>(static_cast<enum_type>(lhs) |       \
                                    static_cast<enum_type>(rhs));       \
   }                                                                    \
-  enum_class& operator|=(enum_class& lhs, enum_class rhs) {            \
+  inline enum_class& operator|=(enum_class& lhs, enum_class rhs) {     \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     lhs = static_cast<enum_class>(static_cast<enum_type>(lhs) |        \
                                   static_cast<enum_type>(rhs));        \
     return lhs;                                                        \
   }                                                                    \
-  enum_class operator&(enum_class lhs, enum_class rhs) {               \
+  inline enum_class operator&(enum_class lhs, enum_class rhs) {        \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     return static_cast<enum_class>(static_cast<enum_type>(lhs) &       \
                                    static_cast<enum_type>(rhs));       \
   }                                                                    \
-  enum_class& operator&=(enum_class& lhs, enum_class rhs) {            \
+  inline enum_class& operator&=(enum_class& lhs, enum_class rhs) {     \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     lhs = static_cast<enum_class>(static_cast<enum_type>(lhs) &        \
                                   static_cast<enum_type>(rhs));        \
     return lhs;                                                        \
   }                                                                    \
-  enum_class operator^(enum_class lhs, enum_class rhs) {               \
+  inline enum_class operator^(enum_class lhs, enum_class rhs) {        \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     return static_cast<enum_class>(static_cast<enum_type>(lhs) ^       \
                                    static_cast<enum_type>(rhs));       \
   }                                                                    \
-  enum_class& operator^=(enum_class& lhs, enum_class rhs) {            \
+  inline enum_class& operator^=(enum_class& lhs, enum_class rhs) {     \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     lhs = static_cast<enum_class>(static_cast<enum_type>(lhs) ^        \
                                   static_cast<enum_type>(rhs));        \
     return lhs;                                                        \
   }                                                                    \
-  enum_class operator~(enum_class lhs) {                               \
+  inline enum_class operator~(enum_class lhs) {                        \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     return static_cast<enum_class>(~static_cast<enum_type>(lhs));      \
   }
