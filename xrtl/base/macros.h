@@ -15,8 +15,10 @@
 #ifndef XRTL_BASE_MACROS_H_
 #define XRTL_BASE_MACROS_H_
 
+#include <array>
 #include <cstring>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 // Pulls in the XRTL_CONFIG_* defines.
@@ -68,11 +70,6 @@
 #define XRTL_PREDICT_FALSE(x) (x)
 #define XRTL_PREDICT_TRUE(x) (x)
 
-#if defined(XRTL_CONFIG_ASAN)
-#define XRTL_DISABLE_LEAK_CHECKS() __lsan_disable()
-#define XRTL_ENABLE_LEAK_CHECKS() __lsan_enable()
-#endif  // XRTL_CONFIG_ASAN
-
 #if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 // Define this to 1 if the code is compiled in C++11 mode.
 #define LANG_CXX11 1
@@ -115,6 +112,21 @@ inline constexpr std::size_t count_of(T const (&)[N]) noexcept {
   return N;
 }
 
+// Makes an std::array from a list of arguments.
+//
+// Usage:
+//  std::array<int, 3> value = make_array(1, 2, 3);
+//  (or, more commonly)
+//  DoSomething(make_array(1, 2, 3));
+template <typename... T>
+constexpr auto make_array(T&&... values) -> std::array<
+    typename std::decay<typename std::common_type<T...>::type>::type,
+    sizeof...(T)> {
+  return std::array<
+      typename std::decay<typename std::common_type<T...>::type>::type,
+      sizeof...(T)>{{std::forward<T>(values)...}};
+}
+
 // Casts the bits of one type to another of equal size without conversion.
 // Example:
 //   float f = 3.14159265358979;
@@ -127,6 +139,54 @@ inline Dest bit_cast(const Source& source) {
   std::memcpy(&dest, &source, sizeof(dest));
   return dest;
 }
+
+// Utility to enable bitmask operators on enum classes.
+// To use define an enum class with valid bitmask values and an underlying type
+// then use the macro to enable support:
+//  enum class MyBitmask : uint32_t {
+//    kFoo = 1 << 0,
+//    kBar = 1 << 1,
+//  };
+//  XRTL_BITMASK(MyBitmask);
+//  MyBitmask value = ~(MyBitmask::kFoo | MyBitmask::kBar);
+#define XRTL_BITMASK(enum_class)                                       \
+  enum_class operator|(enum_class lhs, enum_class rhs) {               \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    return static_cast<enum_class>(static_cast<enum_type>(lhs) |       \
+                                   static_cast<enum_type>(rhs));       \
+  }                                                                    \
+  enum_class& operator|=(enum_class& lhs, enum_class rhs) {            \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    lhs = static_cast<enum_class>(static_cast<enum_type>(lhs) |        \
+                                  static_cast<enum_type>(rhs));        \
+    return lhs;                                                        \
+  }                                                                    \
+  enum_class operator&(enum_class lhs, enum_class rhs) {               \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    return static_cast<enum_class>(static_cast<enum_type>(lhs) &       \
+                                   static_cast<enum_type>(rhs));       \
+  }                                                                    \
+  enum_class& operator&=(enum_class& lhs, enum_class rhs) {            \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    lhs = static_cast<enum_class>(static_cast<enum_type>(lhs) &        \
+                                  static_cast<enum_type>(rhs));        \
+    return lhs;                                                        \
+  }                                                                    \
+  enum_class operator^(enum_class lhs, enum_class rhs) {               \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    return static_cast<enum_class>(static_cast<enum_type>(lhs) ^       \
+                                   static_cast<enum_type>(rhs));       \
+  }                                                                    \
+  enum_class& operator^=(enum_class& lhs, enum_class rhs) {            \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    lhs = static_cast<enum_class>(static_cast<enum_type>(lhs) ^        \
+                                  static_cast<enum_type>(rhs));        \
+    return lhs;                                                        \
+  }                                                                    \
+  enum_class operator~(enum_class lhs) {                               \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    return static_cast<enum_class>(~static_cast<enum_type>(lhs));      \
+  }
 
 // A helper wrapper that moves the wrapped object on copy.
 // This is particularly handy for capturing unique_ptrs in lambdas.
