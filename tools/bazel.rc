@@ -25,7 +25,7 @@ test --test_output=errors
 
 # https://clang.llvm.org/docs/AddressSanitizer.html
 common:asan --config=clang
-common:asan --copt=-DASAN_OPTIONS=\"color=always:malloc_context_size=10\"
+common:asan --copt=-DASAN_OPTIONS=\"color=always:malloc_context_size=10:detect_odr_violation=0\"
 common:asan --copt=-DLSAN_OPTIONS=\"\"
 common:asan --strip=never
 common:asan --copt=-g
