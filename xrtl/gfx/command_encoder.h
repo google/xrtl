@@ -255,13 +255,13 @@ class TransferCommandEncoder : public CommandEncoder {
                             const void* source_data,
                             size_t source_data_length) = 0;
   void UpdateBuffer(ref_ptr<Buffer> target_buffer, size_t target_offset,
-                    std::vector<uint8_t> source_data) {
+                    const std::vector<uint8_t>& source_data) {
     return UpdateBuffer(std::move(target_buffer), target_offset,
                         source_data.data(), source_data.size());
   }
   void UpdateBuffer(ref_ptr<Buffer> target_buffer, size_t target_offset,
-                    std::vector<uint8_t> source_data, size_t source_data_offset,
-                    size_t source_data_length) {
+                    const std::vector<uint8_t>& source_data,
+                    size_t source_data_offset, size_t source_data_length) {
     return UpdateBuffer(std::move(target_buffer), target_offset,
                         source_data.data() + source_data_offset,
                         source_data_length);
@@ -409,7 +409,7 @@ class ComputeCommandEncoder : public TransferCommandEncoder {
   // Queue: compute.
   virtual void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,
                              ShaderStageFlag stage_mask, size_t offset,
-                             size_t length, const void* data) = 0;
+                             const void* data, size_t data_length) = 0;
 
   // Dispatches compute work items.
   // The maximum group counts are specified in Device::Limits.
@@ -572,7 +572,7 @@ class RenderPassCommandEncoder : public CommandEncoder {
   // Sets the dynamic scissor rectangles on a command buffer.
   //
   // Queue: render
-  virtual void SetScissor(int first_scissor, ArrayView<Rect2D> scissors) = 0;
+  virtual void SetScissors(int first_scissor, ArrayView<Rect2D> scissors) = 0;
 
   // Sets the viewports on a command buffer.
   //
@@ -651,9 +651,9 @@ class RenderPassCommandEncoder : public CommandEncoder {
   // Queue: render.
   virtual void BindVertexBuffers(int first_binding,
                                  ArrayView<ref_ptr<Buffer>> buffers) = 0;
-  virtual void BindVertexBuffers(
-      int first_binding,
-      ArrayView<std::pair<ref_ptr<Buffer>, size_t>> buffers) = 0;
+  virtual void BindVertexBuffers(int first_binding,
+                                 ArrayView<ref_ptr<Buffer>> buffers,
+                                 ArrayView<size_t> buffer_offsets) = 0;
 
   // Binds an index buffer to a command buffer.
   //

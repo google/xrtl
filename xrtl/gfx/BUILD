@@ -35,6 +35,7 @@ cc_test(
 
 cc_library(
     name = "command_buffer",
+    srcs = ["command_buffer.cc"],
     hdrs = ["command_buffer.h"],
     deps = [
         ":command_encoder",

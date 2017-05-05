@@ -118,6 +118,7 @@ XRTL_BITMASK(ShaderStageFlag);
 
 // A bitmask specifying pipeline dependencies.
 enum class PipelineDependencyFlag : uint32_t {
+  kNone = 0,
   // Dependencies will be framebuffer-local (as opposed to framebuffer-global).
   // Framebuffer local dependencies are significantly more performant on tiled
   // renderers as global barriers require a full flush back to main memory.
