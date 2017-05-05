@@ -15,6 +15,8 @@
 #ifndef XRTL_GFX_COMMAND_BUFFER_H_
 #define XRTL_GFX_COMMAND_BUFFER_H_
 
+#include <vector>
+
 #include "xrtl/base/macros.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/command_encoder.h"
@@ -65,7 +67,7 @@ XRTL_BITMASK(OperationQueueMask);
 //
 class CommandBuffer : public RefObject<CommandBuffer> {
  public:
-  virtual ~CommandBuffer() = default;
+  virtual ~CommandBuffer();
 
   // A bitmask indicating on which queue types this command buffer will execute
   // based on the commands that were encoded into it.
@@ -148,10 +150,43 @@ class CommandBuffer : public RefObject<CommandBuffer> {
       ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer) = 0;
   virtual void EndRenderPass(RenderPassCommandEncoderPtr encoder) = 0;
 
+  // Attaches a dependency to the command buffer that will be released when the
+  // command buffer has completed executing (or soon thereafter).
+  void AttachDependency(void (*release_fn)(void* value_ptr), void* value_ptr);
+  void AttachDependencies(void (*release_fn)(void* value_ptr),
+                          void* const* value_ptrs, size_t value_count);
+  template <typename T>
+  void AttachDependency(ref_ptr<T> value) {
+    value->AddReference();
+    AttachDependency(
+        [](void* value_ptr) { static_cast<T*>(value_ptr)->ReleaseReference(); },
+        value.get());
+  }
+  template <typename T>
+  void AttachDependencies(ArrayView<ref_ptr<T>> values) {
+    for (const auto& value : values) {
+      value->AddReference();
+    }
+    // TODO(benvanik): static asserts so that this is safer.
+    AttachDependencies(
+        [](void* value_ptr) { static_cast<T*>(value_ptr)->ReleaseReference(); },
+        reinterpret_cast<void* const*>(values.data()), values.size());
+  }
+
  protected:
   CommandBuffer();
 
+  // Releases all dependencies held by the command buffer.
+  void ReleaseDependencies();
+
   OperationQueueMask queue_mask_ = OperationQueueMask::kNone;
+
+  // A cache of all attached dependencies.
+  struct DependencyEntry {
+    void (*release_fn)(void* value_ptr);
+    void* value_ptr;
+  };
+  std::vector<DependencyEntry> dependencies_;
 };
 
 }  // namespace gfx
