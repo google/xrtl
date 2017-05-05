@@ -6,6 +6,27 @@ package(default_visibility = ["//xrtl:internal"])
 licenses(["notice"])  # Apache 2.0
 
 cc_library(
+    name = "arena",
+    srcs = ["arena.cc"],
+    hdrs = ["arena.h"],
+    deps = [
+        ":logging",
+        ":macros",
+        ":math",
+    ],
+)
+
+cc_test(
+    name = "arena_test",
+    srcs = ["arena_test.cc"],
+    deps = [
+        ":arena",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_library(
     name = "array_view",
     hdrs = ["array_view.h"],
     deps = [
