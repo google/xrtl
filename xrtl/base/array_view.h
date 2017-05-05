@@ -49,9 +49,9 @@ class ArrayView {
   template <size_t N>
   ArrayView(const std::array<T, N>& value)  // NOLINT
       : size_(N), data_(N ? value.data() : nullptr) {}
-  ArrayView(std::initializer_list<T> value)  // NOLINT
+  ArrayView(std::initializer_list<T> const& value)  // NOLINT
       : size_(value.size()), data_(value.size() ? value.begin() : nullptr) {}
-  ArrayView(const std::vector<T>& value)  // NOLINT
+  ArrayView(std::vector<T> const& value)  // NOLINT
       : size_(value.size()), data_(value.size() ? value.data() : nullptr) {}
 
   const_iterator begin() const noexcept { return data_; }
