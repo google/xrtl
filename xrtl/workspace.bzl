@@ -58,6 +58,25 @@ def xrtl_workspace():
       actual = "@com_github_gflags_gflags//:gflags_nothreads",
   )
 
+  # //third_party/glslang/
+  native.new_local_repository(
+      name = "com_github_KhronosGroup_glslang",
+      path = "third_party/glslang/",
+      build_file = "third_party/glslang.BUILD",
+  )
+  native.bind(
+      name = "glslang",
+      actual = "@com_github_KhronosGroup_glslang//:glslang",
+  )
+  native.bind(
+      name = "glslang_spirv",
+      actual = "@com_github_KhronosGroup_glslang//:SPIRV",
+  )
+  native.bind(
+      name = "glslang_spvremapper",
+      actual = "@com_github_KhronosGroup_glslang//:SPVRemapper",
+  )
+
   # //third_party/spirv_cross/
   native.new_local_repository(
       name = "com_github_KhronosGroup_SPIRV_Cross",
