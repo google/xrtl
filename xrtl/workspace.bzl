@@ -87,3 +87,18 @@ def xrtl_workspace():
       name = "spirv_cpp11_headers",
       actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_cpp11_headers",
   )
+
+  # //third_party/spirv_tools/
+  native.new_local_repository(
+      name = "com_github_KhronosGroup_SPIRV_Tools",
+      path = "third_party/spirv_tools/",
+      build_file = "third_party/spirv_tools.BUILD",
+  )
+  native.bind(
+      name = "spirv_tools",
+      actual = "@com_github_KhronosGroup_SPIRV_Tools//:spirv_tools",
+  )
+  native.bind(
+      name = "spirv_tools_opt",
+      actual = "@com_github_KhronosGroup_SPIRV_Tools//:spirv_tools_opt",
+  )

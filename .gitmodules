@@ -13,3 +13,6 @@
 [submodule "third_party/spirv_cross"]
 	path = third_party/spirv_cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+[submodule "third_party/spirv_tools"]
+	path = third_party/spirv_tools
+	url = https://github.com/KhronosGroup/SPIRV-Tools.git
