@@ -57,3 +57,22 @@ def xrtl_workspace():
       name = "gflags_nothreads",
       actual = "@com_github_gflags_gflags//:gflags_nothreads",
   )
+
+  # //third_party/spirv_headers/
+  native.new_local_repository(
+      name = "com_github_KhronosGroup_SPIRV_Headers",
+      path = "third_party/spirv_headers/",
+      build_file = "third_party/spirv_headers.BUILD",
+  )
+  native.bind(
+      name = "spirv_common_headers",
+      actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_common_headers",
+  )
+  native.bind(
+      name = "spirv_c_headers",
+      actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_c_headers",
+  )
+  native.bind(
+      name = "spirv_cpp11_headers",
+      actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_cpp11_headers",
+  )
