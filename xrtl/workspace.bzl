@@ -58,6 +58,17 @@ def xrtl_workspace():
       actual = "@com_github_gflags_gflags//:gflags_nothreads",
   )
 
+  # //third_party/spirv_cross/
+  native.new_local_repository(
+      name = "com_github_KhronosGroup_SPIRV_Cross",
+      path = "third_party/spirv_cross/",
+      build_file = "third_party/spirv_cross.BUILD",
+  )
+  native.bind(
+      name = "spirv_cross",
+      actual = "@com_github_KhronosGroup_SPIRV_Cross//:spirv_cross_lib",
+  )
+
   # //third_party/spirv_headers/
   native.new_local_repository(
       name = "com_github_KhronosGroup_SPIRV_Headers",
