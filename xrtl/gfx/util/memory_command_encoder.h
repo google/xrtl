@@ -148,10 +148,7 @@ class MemoryComputeCommandEncoder : public ComputeCommandEncoder {
   void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) override;
 
   void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                       float color_value[4],
-                       ArrayView<Image::LayerRange> ranges) override;
-  void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                       uint32_t color_value[4],
+                       ClearColor clear_color,
                        ArrayView<Image::LayerRange> ranges) override;
 
   void BindPipeline(ref_ptr<ComputePipeline> pipeline) override;
@@ -236,10 +233,7 @@ class MemoryRenderCommandEncoder : public RenderCommandEncoder {
   void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) override;
 
   void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                       float color_value[4],
-                       ArrayView<Image::LayerRange> ranges) override;
-  void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                       uint32_t color_value[4],
+                       ClearColor clear_color,
                        ArrayView<Image::LayerRange> ranges) override;
 
   void ClearDepthStencilImage(ref_ptr<Image> image, Image::Layout image_layout,
@@ -296,9 +290,7 @@ class MemoryRenderPassCommandEncoder : public RenderPassCommandEncoder {
 
   void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) override;
 
-  void ClearColorAttachment(int color_attachment_index, float color_value[4],
-                            ArrayView<ClearRect> clear_rects) override;
-  void ClearColorAttachment(int color_attachment_index, uint32_t color_value[4],
+  void ClearColorAttachment(int color_attachment_index, ClearColor clear_color,
                             ArrayView<ClearRect> clear_rects) override;
 
   void ClearDepthStencilAttachment(float depth_value, uint32_t stencil_value,

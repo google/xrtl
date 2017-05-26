@@ -289,31 +289,12 @@ void MemoryComputeCommandEncoder::WaitFences(
 }
 
 void MemoryComputeCommandEncoder::ClearColorImage(
-    ref_ptr<Image> image, Image::Layout image_layout, float color_value[4],
-    ArrayView<Image::LayerRange> ranges) {
-  command_buffer_->AttachDependency(image);
-  writer_->WriteCommand(
-      CommandType::kClearColorImage,
-      ClearColorImageCommand{image.get(),
-                             image_layout,
-                             {bit_cast<uint32_t>(color_value[0]),
-                              bit_cast<uint32_t>(color_value[1]),
-                              bit_cast<uint32_t>(color_value[2]),
-                              bit_cast<uint32_t>(color_value[3])},
-                             ranges.size()});
-  writer_->WriteArray(ranges);
-}
-
-void MemoryComputeCommandEncoder::ClearColorImage(
-    ref_ptr<Image> image, Image::Layout image_layout, uint32_t color_value[4],
+    ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
     ArrayView<Image::LayerRange> ranges) {
   command_buffer_->AttachDependency(image);
   writer_->WriteCommand(CommandType::kClearColorImage,
-                        ClearColorImageCommand{image.get(),
-                                               image_layout,
-                                               {color_value[0], color_value[1],
-                                                color_value[2], color_value[3]},
-                                               ranges.size()});
+                        ClearColorImageCommand{image.get(), image_layout,
+                                               clear_color, ranges.size()});
   writer_->WriteArray(ranges);
 }
 
@@ -504,31 +485,12 @@ void MemoryRenderCommandEncoder::WaitFences(
 }
 
 void MemoryRenderCommandEncoder::ClearColorImage(
-    ref_ptr<Image> image, Image::Layout image_layout, float color_value[4],
-    ArrayView<Image::LayerRange> ranges) {
-  command_buffer_->AttachDependency(image);
-  writer_->WriteCommand(
-      CommandType::kClearColorImage,
-      ClearColorImageCommand{image.get(),
-                             image_layout,
-                             {bit_cast<uint32_t>(color_value[0]),
-                              bit_cast<uint32_t>(color_value[1]),
-                              bit_cast<uint32_t>(color_value[2]),
-                              bit_cast<uint32_t>(color_value[3])},
-                             ranges.size()});
-  writer_->WriteArray(ranges);
-}
-
-void MemoryRenderCommandEncoder::ClearColorImage(
-    ref_ptr<Image> image, Image::Layout image_layout, uint32_t color_value[4],
+    ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
     ArrayView<Image::LayerRange> ranges) {
   command_buffer_->AttachDependency(image);
   writer_->WriteCommand(CommandType::kClearColorImage,
-                        ClearColorImageCommand{image.get(),
-                                               image_layout,
-                                               {color_value[0], color_value[1],
-                                                color_value[2], color_value[3]},
-                                               ranges.size()});
+                        ClearColorImageCommand{image.get(), image_layout,
+                                               clear_color, ranges.size()});
   writer_->WriteArray(ranges);
 }
 
@@ -642,28 +604,12 @@ void MemoryRenderPassCommandEncoder::WaitFences(
 }
 
 void MemoryRenderPassCommandEncoder::ClearColorAttachment(
-    int color_attachment_index, float color_value[4],
+    int color_attachment_index, ClearColor clear_color,
     ArrayView<ClearRect> clear_rects) {
   writer_->WriteCommand(
       CommandType::kClearColorAttachment,
-      ClearColorAttachmentCommand{color_attachment_index,
-                                  {bit_cast<uint32_t>(color_value[0]),
-                                   bit_cast<uint32_t>(color_value[1]),
-                                   bit_cast<uint32_t>(color_value[2]),
-                                   bit_cast<uint32_t>(color_value[3])},
+      ClearColorAttachmentCommand{color_attachment_index, clear_color,
                                   clear_rects.size()});
-  writer_->WriteArray(clear_rects);
-}
-
-void MemoryRenderPassCommandEncoder::ClearColorAttachment(
-    int color_attachment_index, uint32_t color_value[4],
-    ArrayView<ClearRect> clear_rects) {
-  writer_->WriteCommand(
-      CommandType::kClearColorAttachment,
-      ClearColorAttachmentCommand{
-          color_attachment_index,
-          {color_value[0], color_value[1], color_value[2], color_value[3]},
-          clear_rects.size()});
   writer_->WriteArray(clear_rects);
 }
 

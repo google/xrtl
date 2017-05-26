@@ -17,10 +17,13 @@
 #include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
 
-DEFINE_string(gfx,
+#if defined(XRTL_HAS_GFX_OPENGL_ES3)
+#include "xrtl/gfx/es3/es3_context_factory.h"
+#endif  // XRTL_HAS_GFX_OPENGL_ES3
+
+DEFINE_string(gfx, "",
               "Graphics backend used for rendering and compute: "
-              "[nop, es3, metal, vulkan]",
-              "");
+              "[nop, es3, metal, vulkan]");
 
 namespace xrtl {
 namespace gfx {
@@ -49,7 +52,11 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
 
   // Build a list of available context types sorted by platform priority.
   std::vector<std::string> available_types;
-  // TODO(benvanik): #if switch based on defines.
+#if defined(XRTL_HAS_GFX_OPENGL_ES3)
+  if (es3::ES3ContextFactory::IsSupported()) {
+    available_types.push_back("es3");
+  }
+#endif  // XRTL_HAS_GFX_OPENGL_ES3
 
   // Find the desired type.
   std::string desired_type;
@@ -70,7 +77,11 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
   }
 
   // Create the type.
-  // TODO(benvanik): #if switch based on defines.
+#if defined(XRTL_HAS_GFX_OPENGL_ES3)
+  if (desired_type == "es3") {
+    return make_ref<es3::ES3ContextFactory>();
+  }
+#endif  // XRTL_HAS_GFX_OPENGL_ES3
 
   return nullptr;
 }

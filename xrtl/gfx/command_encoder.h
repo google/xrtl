@@ -87,7 +87,28 @@ struct ClearRect {
   // Starting layer index to clear.
   int base_layer = 0;
   // Total number of layers to clear.
-  int layer_count = 0;
+  int layer_count = 1;
+
+  ClearRect(int x, int y, int width, int height) : rect(x, y, width, height) {}
+  explicit ClearRect(Rect2D rect) : rect(rect) {}
+  ClearRect(Rect2D rect, int base_layer, int layer_count)
+      : rect(rect), base_layer(base_layer), layer_count(layer_count) {}
+};
+
+// Defines a clear color value.
+// The type the value is interpreted as depends on the target buffer.
+union ClearColor {
+  float float_value[4];
+  int32_t sint_value[4];
+  uint32_t uint_value[4];
+
+  ClearColor() = default;
+  ClearColor(float r, float g, float b, float a) {
+    float_value[0] = r;
+    float_value[1] = g;
+    float_value[2] = b;
+    float_value[3] = a;
+  }
 };
 
 // Defines a fixed-function viewport.
@@ -102,6 +123,13 @@ struct Viewport {
   Viewport() = default;
   Viewport(float x, float y, float width, float height)
       : x(x), y(y), width(width), height(height) {}
+  Viewport(Point2D origin, Size2D size)
+      : x(origin.x), y(origin.y), width(size.width), height(size.height) {}
+  explicit Viewport(Rect2D rect)
+      : x(rect.origin.x),
+        y(rect.origin.y),
+        width(rect.size.width),
+        height(rect.size.height) {}
 };
 
 // Defines the index buffer element type size.
@@ -380,10 +408,7 @@ class ComputeCommandEncoder : public TransferCommandEncoder {
   // image must have Usage::kTransferTarget.
   // image_layout must be kGeneral or kTransferTargetOptimal.
   virtual void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                               float color_value[4],
-                               ArrayView<Image::LayerRange> ranges) = 0;
-  virtual void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                               uint32_t color_value[4],
+                               ClearColor clear_color,
                                ArrayView<Image::LayerRange> ranges) = 0;
 
   // Binds a pipeline object to a command buffer.
@@ -465,10 +490,7 @@ class RenderCommandEncoder : public TransferCommandEncoder {
   // image must have Usage::kTransferTarget.
   // image_layout must be kGeneral or kTransferTargetOptimal.
   virtual void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                               float color_value[4],
-                               ArrayView<Image::LayerRange> ranges) = 0;
-  virtual void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
-                               uint32_t color_value[4],
+                               ClearColor clear_color,
                                ArrayView<Image::LayerRange> ranges) = 0;
 
   // Fills regions of a combined depth/stencil image.
@@ -550,10 +572,7 @@ class RenderPassCommandEncoder : public CommandEncoder {
   //
   // Queue: render.
   virtual void ClearColorAttachment(int color_attachment_index,
-                                    float color_value[4],
-                                    ArrayView<ClearRect> clear_rects) = 0;
-  virtual void ClearColorAttachment(int color_attachment_index,
-                                    uint32_t color_value[4],
+                                    ClearColor clear_color,
                                     ArrayView<ClearRect> clear_rects) = 0;
 
   // Clears one or more regions of a depth/stencil attachment inside a render
@@ -580,6 +599,11 @@ class RenderPassCommandEncoder : public CommandEncoder {
   virtual void SetViewports(int first_viewport,
                             ArrayView<Viewport> viewports) = 0;
   void SetViewport(Viewport viewport) { SetViewports(0, {viewport}); }
+  void SetViewport(Point2D origin, Size2D size) {
+    SetViewport(Viewport{origin, size});
+  }
+  void SetViewport(Size2D size) { SetViewport(Viewport{{0, 0}, size}); }
+  void SetViewport(Rect2D rect) { SetViewport(Viewport{rect}); }
 
   // Sets the dynamic line width state.
   //

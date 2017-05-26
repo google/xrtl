@@ -85,13 +85,16 @@ void MemoryCommandBuffer::EndRenderCommands(RenderCommandEncoderPtr encoder) {
 }
 
 RenderPassCommandEncoderPtr MemoryCommandBuffer::BeginRenderPass(
-    ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer) {
+    ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
+    ArrayView<ClearColor> clear_colors) {
   queue_mask_ |= OperationQueueMask::kRender;
   AttachDependency(render_pass);
   AttachDependency(framebuffer);
   writer_.WriteCommand(
       CommandType::kBeginRenderPass,
-      BeginRenderPassCommand{render_pass.get(), framebuffer.get()});
+      BeginRenderPassCommand{render_pass.get(), framebuffer.get(),
+                             clear_colors.size()});
+  writer_.WriteArray(clear_colors);
   return {&render_pass_encoder_, [](RenderPassCommandEncoder* encoder) {
             encoder->command_buffer()->EndRenderPass(
                 {encoder, [](RenderPassCommandEncoder*) {}});

@@ -89,7 +89,8 @@ bool MemoryCommandDecoder::Decode(MemoryCommandBufferReader* reader,
             reader->ReadCommand<BeginRenderPassCommand>(command_header);
         render_pass_encoder = target_command_buffer->BeginRenderPass(
             ref_ptr<RenderPass>(command.render_pass),
-            ref_ptr<Framebuffer>(command.framebuffer));
+            ref_ptr<Framebuffer>(command.framebuffer),
+            reader->ReadArray<ClearColor>(command.clear_color_count));
         any_encoder = render_encoder.get();
         any_transfer_encoder = render_encoder.get();
         break;
@@ -262,11 +263,11 @@ bool MemoryCommandDecoder::Decode(MemoryCommandBufferReader* reader,
         if (compute_encoder) {
           compute_encoder->ClearColorImage(ref_ptr<Image>(command.image),
                                            command.image_layout,
-                                           command.color_value, ranges);
+                                           command.clear_color, ranges);
         } else {
           render_encoder->ClearColorImage(ref_ptr<Image>(command.image),
                                           command.image_layout,
-                                          command.color_value, ranges);
+                                          command.clear_color, ranges);
         }
         break;
       }
@@ -285,7 +286,7 @@ bool MemoryCommandDecoder::Decode(MemoryCommandBufferReader* reader,
         auto clear_rects =
             reader->ReadArray<ClearRect>(command.clear_rect_count);
         render_pass_encoder->ClearColorAttachment(
-            command.color_attachment_index, command.color_value, clear_rects);
+            command.color_attachment_index, command.clear_color, clear_rects);
         break;
       }
       case CommandType::kClearDepthStencilAttachment: {

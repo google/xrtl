@@ -17,7 +17,6 @@
 
 #include <chrono>
 #include <utility>
-#include <vector>
 
 #include "xrtl/base/geometry.h"
 #include "xrtl/base/ref_ptr.h"
@@ -98,7 +97,10 @@ class SwapChain : public RefObject<SwapChain> {
   // Maximum number of images in the swap chain queue.
   // This is almost always 2 (for double-buffering).
   int image_count() const { return image_count_; }
-
+  // Pixel format the swap chain is using.
+  // This may be different than one of the suggested formats if none of them
+  // were available for use.
+  PixelFormat pixel_format() const { return pixel_format_; }
   // Dimensions of the swap chain images in pixels.
   Size2D size() const { return size_; }
 
@@ -121,6 +123,10 @@ class SwapChain : public RefObject<SwapChain> {
   // This may fail if memory is not available for the new frame buffers or the
   // device is lost. If it fails the contents and validity of the swap chain are
   // both undefined and it's best to fail up.
+  //
+  // The provided size may be ignored if the target surface requires the swap
+  // chain to fill its contents. Always query the size() after a Resize to
+  // ensure the proper size is used.
   virtual ResizeResult Resize(Size2D new_size) = 0;
 
   // Defines the result of a dequeue image operation.
@@ -193,15 +199,12 @@ class SwapChain : public RefObject<SwapChain> {
   }
 
  protected:
-  SwapChain(PresentMode present_mode, int image_count,
-            ArrayView<PixelFormat> pixel_formats)
-      : present_mode_(present_mode),
-        image_count_(image_count),
-        pixel_formats_(pixel_formats) {}
+  SwapChain(PresentMode present_mode, int image_count)
+      : present_mode_(present_mode), image_count_(image_count) {}
 
   PresentMode present_mode_ = PresentMode::kLowLatency;
   int image_count_ = 0;
-  std::vector<PixelFormat> pixel_formats_;
+  PixelFormat pixel_format_;
   Size2D size_{0, 0};
 };
 

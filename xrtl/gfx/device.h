@@ -24,37 +24,29 @@
 namespace xrtl {
 namespace gfx {
 
+// The type of the device.
+enum class DeviceType : uint32_t {
+  // A CPU (either the primary CPU or some CPU-like accelerator).
+  kCpu = 1 << 0,
+  // A GPU of some kind.
+  kGpu = 1 << 1,
+  // A virtualized GPU (such as in a virtualization environment).
+  kGpuVirtual = kGpu | (1 << 2),
+  // A GPU embedded or tightly coupled with the primary CPU.
+  kGpuIntegrated = kGpu | (1 << 3),
+  // A GPU separate from from the CPU.
+  kGpuDiscrete = kGpu | (1 << 4),
+  // Something else or unknown.
+  kOther = 1 << 5,
+};
+XRTL_BITMASK(DeviceType);
+
 // A device available for use by the backend graphics API.
 // This may represent a physical device in the system or a logical device as
 // exposed by the API.
 class Device : public RefObject<Device> {
  public:
   virtual ~Device() = default;
-
-  // The type of the device.
-  enum class Type {
-    // A CPU (either the primary CPU or some CPU-like accelerator).
-    kCpu,
-    // A virtualized GPU (such as in a virtualization environment).
-    kGpuVirtual,
-    // A GPU embedded or tightly coupled with the primary CPU.
-    kGpuIntegrated,
-    // A GPU separate from from the CPU.
-    kGpuDiscrete,
-    // Something else or unknown.
-    kOther,
-  };
-
-  // TODO(benvanik): flesh this out (comparison operators, is_valid, etc).
-  struct PersistenceId {
-    uint8_t uuid[16];
-
-    // True if the ID is valid and pipelines can be persisted using it as a key.
-    bool is_valid() const {
-      // We don't support persistence yet so always say no.
-      return false;
-    }
-  };
 
   // Describes the limits of the device.
   //
@@ -98,7 +90,9 @@ class Device : public RefObject<Device> {
   };
 
   // The type of the device.
-  Type type() const { return type_; }
+  DeviceType type() const { return type_; }
+  // Whether the device is a GPU.
+  bool is_gpu() const { return (type_ & DeviceType::kGpu) == DeviceType::kGpu; }
   // A vendor-unique identifier (such as '123') or empty string.
   const std::string& vendor_id() const { return vendor_id_; }
   // A vendor name (such as 'NVIDIA') or empty string.
@@ -118,12 +112,6 @@ class Device : public RefObject<Device> {
   // they could be used together but a device C with ID 2 could not be.
   int multi_device_group_id() const { return multi_device_group_id_; }
 
-  // An ID unique to this device and driver version that can be used to match
-  // persisted pipeline caches. It will change when pipelines are not compatible
-  // between versions and must be rebuilt. May return all zeros if the device
-  // does not support caching.
-  const PersistenceId& persistence_id() const { return persistence_id_; }
-
   // Limits of the device. Attempting to use values out of these ranges will
   // result in failures that are difficult to detect so always check first.
   const Limits& limits() const { return limits_; }
@@ -136,17 +124,20 @@ class Device : public RefObject<Device> {
     return queue_families_;
   }
 
+  // Returns true if the set of required features is satisfiable from the set
+  // of available features on the device.
+  bool IsCompatible(const Features& requested_features) const;
+
  protected:
   Device() = default;
 
-  Type type_ = Type::kOther;
+  DeviceType type_ = DeviceType::kOther;
   std::string vendor_id_;
   std::string vendor_name_;
   std::string device_id_;
   std::string device_name_;
   std::string driver_version_;
   int multi_device_group_id_ = 0;
-  PersistenceId persistence_id_;
   Limits limits_;
   Features features_;
   std::vector<QueueFamily> queue_families_;

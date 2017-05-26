@@ -90,8 +90,8 @@ class MyCommandBuffer : public CommandBuffer {
   void EndRenderCommands(RenderCommandEncoderPtr encoder) override {}
 
   RenderPassCommandEncoderPtr BeginRenderPass(
-      ref_ptr<RenderPass> render_pass,
-      ref_ptr<Framebuffer> framebuffer) override {
+      ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
+      ArrayView<ClearColor> clear_colors) override {
     return {nullptr, nullptr};
   }
   void EndRenderPass(RenderPassCommandEncoderPtr encoder) override {}

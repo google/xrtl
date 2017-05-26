@@ -97,6 +97,10 @@ class Context : public RefObject<Context> {
                                            const std::vector<uint8_t>& data) {
     return CreateShaderModule(data_format, data.data(), data.size());
   }
+  ref_ptr<ShaderModule> CreateShaderModule(ShaderModule::DataFormat data_format,
+                                           const std::vector<uint32_t>& data) {
+    return CreateShaderModule(data_format, data.data(), data.size() * 4);
+  }
 
   // Creates a pipeline layout.
   virtual ref_ptr<PipelineLayout> CreatePipelineLayout(
@@ -106,7 +110,7 @@ class Context : public RefObject<Context> {
   // Creates a compute pipeline with the given shader.
   virtual ref_ptr<ComputePipeline> CreateComputePipeline(
       ref_ptr<PipelineLayout> pipeline_layout,
-      ref_ptr<ShaderModule> shader_module, std::string entry_point) = 0;
+      ref_ptr<ShaderModule> shader_module, const std::string& entry_point) = 0;
 
   // Creates a render pipeline with the given shaders and parameters.
   virtual ref_ptr<RenderPipeline> CreateRenderPipeline(
@@ -126,7 +130,9 @@ class Context : public RefObject<Context> {
   // the image_count determines how many images are available for
   // use. Note that images can be very large and very expensive so it is
   // a good idea to keep the total count at a minimum (usually 2 for
-  // double-buffering).
+  // double-buffering). The pixel formats are suggestions sorted priority order.
+  // If none of the provided pixel formats are available for use one will be
+  // chosen by the system and should be queried from the swap chain.
   // Returns nullptr if the given control does not support being a swap chain
   // target.
   virtual ref_ptr<SwapChain> CreateSwapChain(
@@ -147,16 +153,6 @@ class Context : public RefObject<Context> {
   // Returns nullptr if the memory type mask is invalid.
   virtual ref_ptr<MemoryPool> CreateMemoryPool(MemoryType memory_type_mask,
                                                size_t chunk_size) = 0;
-
-  // Creates a new image view referencing an existing image.
-  virtual ref_ptr<ImageView> CreateImageView(ref_ptr<Image> image,
-                                             Image::Type type,
-                                             PixelFormat format,
-                                             Image::LayerRange layer_range) = 0;
-  ref_ptr<ImageView> CreateImageView(ref_ptr<Image> image, Image::Type type,
-                                     PixelFormat format) {
-    return CreateImageView(image, type, format, image->entire_range());
-  }
 
   // Creates a new image sampler.
   virtual ref_ptr<Sampler> CreateSampler(Sampler::Params params) = 0;
