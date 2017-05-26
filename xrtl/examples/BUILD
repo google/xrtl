@@ -16,6 +16,7 @@ cc_binary(
         "//xrtl/base/threading:thread",
         "//xrtl/gfx:context",
         "//xrtl/gfx:context_factory",
+        "//xrtl/gfx/spirv:shader_compiler",
         "//xrtl/testing:demo_main",
         "//xrtl/ui:window",
     ],

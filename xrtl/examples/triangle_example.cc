@@ -17,6 +17,7 @@
 #include "xrtl/base/threading/thread.h"
 #include "xrtl/gfx/context.h"
 #include "xrtl/gfx/context_factory.h"
+#include "xrtl/gfx/spirv/shader_compiler.h"
 #include "xrtl/testing/demo_main.h"
 #include "xrtl/ui/window.h"
 
@@ -38,6 +39,7 @@ using gfx::RenderPipeline;
 using gfx::RenderState;
 using gfx::ShaderModule;
 using gfx::SwapChain;
+using gfx::spirv::ShaderCompiler;
 using ui::Control;
 using ui::Window;
 
@@ -59,18 +61,6 @@ class TriangleExample : private Control::Listener {
     control->set_size({640, 480});
     control->set_background_color({255, 0, 0, 255});
     Thread::Wait(window_->Open());
-
-    // Setup everything for rendering.
-    if (!CreateContext() || !CreateRenderPipeline() || !CreateGeometry()) {
-      LOG(FATAL) << "Failed to launch example";
-      done_event_->Set();
-      return done_event_;
-    }
-
-    // Queue a render.
-    // TODO(benvanik): vsync, timer, etc.
-    DrawFrame();
-
     return done_event_;
   }
 
@@ -81,7 +71,11 @@ class TriangleExample : private Control::Listener {
     // Get a context factory for the desired context type.
     // The chosen factory will be based on the --gfx= flag or the provided
     // value.
-    auto context_factory = ContextFactory::Create("nop");
+    auto context_factory = ContextFactory::Create();
+    if (!context_factory) {
+      LOG(ERROR) << "Unable to create context factory";
+      return false;
+    }
     if (!context_factory->default_device()) {
       LOG(ERROR) << "No compatible device available for use";
       return false;
@@ -138,27 +132,71 @@ class TriangleExample : private Control::Listener {
     // Prepare render state.
     RenderState render_state;
     render_state.vertex_input_state.vertex_bindings.push_back(
-        {0, sizeof(float) * 3});
+        {0, sizeof(float) * 6});
     render_state.vertex_input_state.vertex_attributes.push_back(
-        {0, 0, 0, gfx::PixelFormats::kR32G32B32SFloat});
+        {0, 0, 0, gfx::VertexFormats::kX32Y32Z32SFloat});
+    render_state.vertex_input_state.vertex_attributes.push_back(
+        {1, 0, sizeof(float) * 3, gfx::VertexFormats::kX32Y32Z32SFloat});
     render_state.input_assembly_state.set_primitive_topology(
         gfx::PrimitiveTopology::kTriangleList);
     render_state.viewport_state.set_count(1);
 
-    // Load the shader module binary.
-    auto shader_module =
-        context_->CreateShaderModule(ShaderModule::DataFormat::kSpirV, {});
-    if (!shader_module) {
-      LOG(ERROR) << "Unable to load shader module";
+    // Compile a shader module from GLSL. Real applications would want to do
+    // this offline.
+    auto vert_shader_compiler =
+        make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
+                                    ShaderCompiler::ShaderStage::kVertex);
+    vert_shader_compiler->AddSource(R"""(#version 310 es
+layout(location = 0) in vec4 a_position;
+layout(location = 1) in vec3 a_color;
+layout(location = 0) out vec4 v_color;
+void main() {
+  gl_Position = vec4(a_position.xyz, 1.0);
+  v_color = vec4(a_color, 1.0);
+}
+)""");
+    std::vector<uint32_t> vert_shader_data;
+    if (!vert_shader_compiler->Compile(&vert_shader_data)) {
+      LOG(FATAL) << "Could not compile vertex shader: " << std::endl
+                 << vert_shader_compiler->compile_log();
+    }
+    auto frag_shader_compiler =
+        make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
+                                    ShaderCompiler::ShaderStage::kFragment);
+    frag_shader_compiler->AddSource(R"""(#version 310 es
+precision highp float;
+layout(location = 0) in vec4 v_color;
+layout(location = 0) out vec4 out_color;
+void main() {
+  out_color = v_color;
+}
+)""");
+    std::vector<uint32_t> frag_shader_data;
+    if (!frag_shader_compiler->Compile(&frag_shader_data)) {
+      LOG(FATAL) << "Could not compile fragment shader: " << std::endl
+                 << frag_shader_compiler->compile_log();
+    }
+
+    // Load the shader module binaries.
+    auto vertex_shader_module = context_->CreateShaderModule(
+        ShaderModule::DataFormat::kSpirV, vert_shader_data);
+    if (!vertex_shader_module) {
+      LOG(ERROR) << "Unable to load vertex shader module";
+      return false;
+    }
+    auto fragment_shader_module = context_->CreateShaderModule(
+        ShaderModule::DataFormat::kSpirV, frag_shader_data);
+    if (!fragment_shader_module) {
+      LOG(ERROR) << "Unable to load fragment shader module";
       return false;
     }
 
     // Create shader modules.
     RenderPipeline::ShaderStages shader_stages;
-    shader_stages.vertex_shader_module = shader_module;
-    shader_stages.vertex_entry_point = "VertexShader";
-    shader_stages.fragment_shader_module = shader_module;
-    shader_stages.fragment_entry_point = "FragmentShader";
+    shader_stages.vertex_shader_module = vertex_shader_module;
+    shader_stages.vertex_entry_point = "main";
+    shader_stages.fragment_shader_module = fragment_shader_module;
+    shader_stages.fragment_entry_point = "main";
 
     // Pipeline layout (in this case, empty).
     auto pipeline_layout = context_->CreatePipelineLayout({}, {});
@@ -248,8 +286,10 @@ class TriangleExample : private Control::Listener {
     }
 
     // Draw triangle.
-    auto rpe = command_buffer->BeginRenderPass(render_pass_, framebuffer);
-    rpe->SetViewport({0, 0, 640, 480});  // TODO(benvanik): query.
+    auto rpe = command_buffer->BeginRenderPass(
+        render_pass_, framebuffer, {gfx::ClearColor(1.0f, 0.0f, 1.0f, 1.0f)});
+    rpe->SetViewport({framebuffer_image_view->size().width,
+                      framebuffer_image_view->size().height});
     rpe->BindPipeline(render_pipeline_);
     rpe->BindVertexBuffers(0, {triangle_buffer_});
     rpe->Draw(3);
@@ -276,7 +316,15 @@ class TriangleExample : private Control::Listener {
       case SwapChain::PresentResult::kSuccess:
         break;
       case SwapChain::PresentResult::kResizeRequired:
-        LOG(WARNING) << "Swap chain resize required";
+        LOG(WARNING) << "Swap chain resize required; resizing now";
+        context_->WaitUntilQueuesIdle();
+        if (swap_chain_->Resize(window_->root_control()->size()) !=
+            SwapChain::ResizeResult::kSuccess) {
+          LOG(ERROR) << "Failed to resize swap chain";
+          return false;
+        }
+        // TODO(benvanik): clearer way to force redraw.
+        redraw_required_ = true;
         break;
       default:
         LOG(ERROR) << "Failed to present framebuffer";
@@ -295,10 +343,24 @@ class TriangleExample : private Control::Listener {
     LOG(INFO) << "OnCreating";
   }
 
-  void OnCreated(ref_ptr<Control> target) override { LOG(INFO) << "OnCreated"; }
+  void OnCreated(ref_ptr<Control> target) override {
+    LOG(INFO) << "OnCreated";
+    // Setup everything for rendering.
+    if (!CreateContext() || !CreateRenderPipeline() || !CreateGeometry()) {
+      LOG(FATAL) << "Failed to launch example";
+      done_event_->Set();
+    }
+  }
 
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
+
+    triangle_buffer_.reset();
+    memory_pool_.reset();
+    render_pipeline_.reset();
+    render_pass_.reset();
+    swap_chain_.reset();
+    context_.reset();
   }
 
   void OnDestroyed(ref_ptr<Control> target) override {
@@ -321,11 +383,24 @@ class TriangleExample : private Control::Listener {
   void OnResized(ref_ptr<Control> target, Rect2D bounds) override {
     LOG(INFO) << "OnResized: " << bounds.origin.x << "," << bounds.origin.y
               << " " << bounds.size.width << "x" << bounds.size.height;
+
+    if (context_) {
+      DrawFrame();
+      if (redraw_required_) {
+        // Immediately redraw the frame if we actually resized the surface.
+        // This will prevent (most) flickering.
+        // TODO(benvanik): avoid this by instead requesting a redraw. This can
+        //                 cause window manager lag during resize.
+        redraw_required_ = false;
+        DrawFrame();
+      }
+    }
   }
 
   ref_ptr<MessageLoop> message_loop_;
   ref_ptr<Window> window_;
   ref_ptr<Event> done_event_;
+  bool redraw_required_ = true;
 
   ref_ptr<Context> context_;
   ref_ptr<SwapChain> swap_chain_;
