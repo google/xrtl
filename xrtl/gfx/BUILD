@@ -258,6 +258,7 @@ cc_library(
     hdrs = ["render_state.h"],
     deps = [
         ":pixel_format",
+        ":vertex_format",
         "//xrtl/base:fixed_vector",
     ],
 )
@@ -311,4 +312,24 @@ cc_library(
         "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
     ],
+)
+
+cc_library(
+    name = "vertex_format",
+    hdrs = ["vertex_format.h"],
+    deps = [
+        ":pixel_format",
+        "//xrtl/base:logging",
+        "//xrtl/base:macros",
+    ],
+)
+
+cc_test(
+    name = "vertex_format_test",
+    srcs = ["vertex_format_test.cc"],
+    deps = [
+        ":vertex_format",
+        "//xrtl/testing:gtest_main",
+    ],
+    size = "small",
 )

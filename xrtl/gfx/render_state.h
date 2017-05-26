@@ -19,6 +19,7 @@
 
 #include "xrtl/base/fixed_vector.h"
 #include "xrtl/gfx/pixel_format.h"
+#include "xrtl/gfx/vertex_format.h"
 
 namespace xrtl {
 namespace gfx {
@@ -225,11 +226,11 @@ struct VertexInputAttribute {
   // vertex input binding.
   size_t offset = 0;
   // The size and type of the vertex attribute data.
-  PixelFormat format = PixelFormats::kUndefined;
+  VertexFormat format = VertexFormats::kUndefined;
 
   VertexInputAttribute() = default;
   VertexInputAttribute(int location, int binding, size_t offset,
-                       PixelFormat format)
+                       VertexFormat format)
       : location(location), binding(binding), offset(offset), format(format) {}
 };
 
