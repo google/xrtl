@@ -138,6 +138,7 @@ cc_test(
 
 cc_library(
     name = "thread",
+    srcs = ["thread.cc"],
     hdrs = ["thread.h"],
     deps = [
         ":wait_handle",
