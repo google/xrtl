@@ -12,34 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_GFX_RESOURCE_H_
-#define XRTL_GFX_RESOURCE_H_
-
-#include <cstdint>
-
-#include "xrtl/base/ref_ptr.h"
+#ifndef XRTL_PORT_COMMON_GFX_ES3_EGL_STRINGS_H_
+#define XRTL_PORT_COMMON_GFX_ES3_EGL_STRINGS_H_
 
 namespace xrtl {
 namespace gfx {
+namespace es3 {
 
-// Base type for allocated resources.
-class Resource : public RefObject<Resource> {
- public:
-  virtual ~Resource() = default;
+// Returns a string representing the given EGL error enum value name.
+const char* GetEglErrorName(int error);
 
-  // Size of the resource memory allocation in bytes.
-  // This may be rounded up from the originally requested size or the ideal
-  // size for the resource based on device restrictions.
-  size_t allocation_size() const { return allocation_size_; }
+// Returns a string representing the given EGL error enum value description.
+const char* GetEglErrorDescription(int error);
 
- protected:
-  explicit Resource(size_t allocation_size)
-      : allocation_size_(allocation_size) {}
-
-  size_t allocation_size_ = 0;
-};
-
+}  // namespace es3
 }  // namespace gfx
 }  // namespace xrtl
 
-#endif  // XRTL_GFX_RESOURCE_H_
+#endif  // XRTL_PORT_COMMON_GFX_ES3_EGL_STRINGS_H_

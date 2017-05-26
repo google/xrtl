@@ -176,6 +176,20 @@ class Image : public Resource {
   virtual ref_ptr<ImageView> CreateView(Image::Type type,
                                         PixelFormat format) = 0;
 
+  // Reads a block of data from the resource at the given source layer range.
+  //
+  // Returns false if the read could not be performed; either the bounds are
+  // out of range or the memory type does not support reading in this way.
+  virtual bool ReadData(LayerRange source_range, void* data,
+                        size_t data_length) = 0;
+
+  // Writes a block of data into the image at the given target layer range.
+  //
+  // Returns false if the write could not be performed; either the bounds are
+  // out of range or the memory type does not support writing in this way.
+  virtual bool WriteData(LayerRange target_range, const void* data,
+                         size_t data_length) = 0;
+
  protected:
   Image(size_t allocation_size, CreateParams create_params)
       : Resource(allocation_size), create_params_(create_params) {}
