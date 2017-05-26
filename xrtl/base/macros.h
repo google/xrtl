@@ -186,6 +186,10 @@ inline Dest bit_cast(const Source& source) {
   inline enum_class operator~(enum_class lhs) {                        \
     typedef typename std::underlying_type<enum_class>::type enum_type; \
     return static_cast<enum_class>(~static_cast<enum_type>(lhs));      \
+  }                                                                    \
+  inline bool any(enum_class lhs) {                                    \
+    typedef typename std::underlying_type<enum_class>::type enum_type; \
+    return static_cast<enum_type>(lhs) != 0;                           \
   }
 
 // A helper wrapper that moves the wrapped object on copy.
