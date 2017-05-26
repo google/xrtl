@@ -18,7 +18,7 @@
 #include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
 
-DEFINE_string(display, ":0.0",
+DEFINE_string(display, "",
               "X11 display to use, otherwise the DISPLAY envvar is used");
 
 namespace xrtl {
@@ -57,6 +57,19 @@ Control::PlatformHandle X11Control::platform_handle() {
     case State::kCreated:
     case State::kDestroying:
       return window_handle_;
+  }
+}
+
+Control::PlatformHandle X11Control::platform_display_handle() {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  switch (state_) {
+    case State::kCreating:
+    case State::kDestroyed:
+      return 0;
+    default:
+    case State::kCreated:
+    case State::kDestroying:
+      return reinterpret_cast<PlatformHandle>(display_->display_handle());
   }
 }
 

@@ -122,6 +122,12 @@ class Control : public RefObject<Control> {
   //  X11: ::Window
   virtual PlatformHandle platform_handle() = 0;
 
+  // Platform display handle if the control is created.
+  // This may be nullptr on systems that have no display handle concept.
+  // Implementation:
+  //  X11: ::Display
+  virtual PlatformHandle platform_display_handle() = 0;
+
   // Sets a listener that will receive event notifications.
   // If the listener is passed as a naked pointer it must be kept alive for the
   // lifetime of the control.

@@ -37,6 +37,7 @@ class Win32Control : public Control {
 
   HWND hwnd() const;
   PlatformHandle platform_handle() override;
+  PlatformHandle platform_display_handle() override { return 0; }
 
   State state() override;
   bool is_active() override;
