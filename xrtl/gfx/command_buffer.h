@@ -147,7 +147,8 @@ class CommandBuffer : public RefObject<CommandBuffer> {
   //  encoder->Draw(...);
   //  command_buffer->EndRenderPass(std::move(encoder));
   virtual RenderPassCommandEncoderPtr BeginRenderPass(
-      ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer) = 0;
+      ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
+      ArrayView<ClearColor> clear_colors) = 0;
   virtual void EndRenderPass(RenderPassCommandEncoderPtr encoder) = 0;
 
   // Attaches a dependency to the command buffer that will be released when the

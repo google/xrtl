@@ -122,6 +122,7 @@ struct EndRenderCommandsCommand {};
 struct BeginRenderPassCommand {
   RenderPass* render_pass;
   Framebuffer* framebuffer;
+  size_t clear_color_count;
 };
 
 struct EndRenderPassCommand {};
@@ -250,7 +251,7 @@ struct GenerateMipmapsCommand {
 struct ClearColorImageCommand {
   Image* image;
   Image::Layout image_layout;
-  uint32_t color_value[4];
+  ClearColor clear_color;
   size_t range_count;
   // ArrayView<Image::LayerRange> ranges;
 };
@@ -266,7 +267,7 @@ struct ClearDepthStencilImageCommand {
 
 struct ClearColorAttachmentCommand {
   int color_attachment_index;
-  uint32_t color_value[4];
+  ClearColor clear_color;
   size_t clear_rect_count;
   // ArrayView<ClearRect> clear_rects;
 };

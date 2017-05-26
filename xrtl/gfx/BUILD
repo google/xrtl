@@ -140,6 +140,7 @@ cc_test(
 
 cc_library(
     name = "device",
+    srcs = ["device.cc"],
     hdrs = ["device.h"],
     deps = [
         "//xrtl/base:ref_ptr",

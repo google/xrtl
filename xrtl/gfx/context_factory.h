@@ -80,6 +80,8 @@ class ContextFactory : public RefObject<ContextFactory> {
     // The devices provided were not compatible with each other. All devices
     // must have the same multi-device compatibility group.
     kIncompatibleDevices,
+    // Too many contexts were allocated and no more are available.
+    kTooManyContexts,
     // Driver reported it was out of memory or unable to allocate system
     // resources.
     kOutOfMemory,

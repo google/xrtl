@@ -22,19 +22,19 @@
 namespace xrtl {
 namespace gfx {
 
+class ImageView;
+
 // An image resource.
 class Image : public Resource {
  public:
   // Defines the base type and dimensionality of an image.
   enum class Type {
-    // A one-dimensional image.
-    k1D,
-    // An array of one-dimensional images.
-    k1DArray,
     // A two-dimensional image.
-    k2D,
+    k2D = 0,
     // An array of two-dimensional images.
-    k2DArray,
+    k2DArray = 1,
+    // A three-dimensional image.
+    k3D = 2,
     // A cube image with six two-dimensional images.
     //
     // Layer mapping:
@@ -44,9 +44,7 @@ class Image : public Resource {
     //   3: -Y
     //   4: +Z
     //   5: -Z
-    kCube,
-    // A three-dimensional image.
-    k3D,
+    kCube = 3,
   };
 
   // Defines how an image is intended to be used.
@@ -171,6 +169,12 @@ class Image : public Resource {
                                                      : AspectFlag::kColor,
             0, 0, create_params_.array_layer_count};
   }
+
+  // Creates a new image view referencing an existing image.
+  virtual ref_ptr<ImageView> CreateView(Image::Type type, PixelFormat format,
+                                        Image::LayerRange layer_range) = 0;
+  virtual ref_ptr<ImageView> CreateView(Image::Type type,
+                                        PixelFormat format) = 0;
 
  protected:
   Image(size_t allocation_size, CreateParams create_params)
