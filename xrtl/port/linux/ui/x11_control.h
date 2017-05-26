@@ -39,6 +39,7 @@ class X11Control : public Control, private X11Display::Listener {
   ::Display* display_handle() const;
   ::Window window_handle() const;
   PlatformHandle platform_handle() override;
+  PlatformHandle platform_display_handle() override;
 
   State state() override;
   bool is_active() override;

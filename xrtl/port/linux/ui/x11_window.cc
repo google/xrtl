@@ -36,8 +36,10 @@ std::string X11Window::title() {
 }
 
 void X11Window::set_title(std::string title) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  title_ = title;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    title_ = title;
+  }
   if (control_ && control_->is_active()) {
     ::XStoreName(control_->display_handle(), control_->window_handle(),
                  title.c_str());
