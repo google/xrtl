@@ -52,14 +52,14 @@ class Win32Thread : public Win32WaitHandle<Thread> {
 
   // Performs one-time thread init before running the thread start routine.
   // This is called on the thread itself.
-  void OnEnter();
+  void OnEnter() override;
 
   // Performs one-time thread teardown after returning from the thread start
   // routine.
   // This is called on the thread itself after the thread start routine has
   // returned. Try not to do too much here, as the exact state of the thread
   // (especially with respect to other TLS values) is loosely defined.
-  void OnExit();
+  void OnExit() override;
 
   uintptr_t thread_id() override;
   bool is_current() const override;
@@ -452,11 +452,14 @@ void Win32Thread::OnEnter() {
   // Set initial name.
   Thread::set_name(name_);
 
-  // TODO(benvanik): WTF.
+  // Call base Thread enter handler.
+  // We need to do this before we signal that startup has completed.
+  Thread::OnEnter();
 }
 
 void Win32Thread::OnExit() {
-  // TODO(benvanik): WTF.
+  // Call base Thread exit handler.
+  Thread::OnExit();
 }
 
 uintptr_t Win32Thread::thread_id() {

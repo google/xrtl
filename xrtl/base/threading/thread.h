@@ -18,6 +18,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -226,7 +227,7 @@ class Thread : public WaitHandle {
     return WaitAll(wait_handles.data(), wait_handles.size(), timeout);
   }
 
-  virtual ~Thread() = default;
+  virtual ~Thread();
 
   // Returns a process-unique ID for the thread.
   virtual uintptr_t thread_id() = 0;
@@ -267,11 +268,27 @@ class Thread : public WaitHandle {
   // wait routine.
   bool Join() { return Wait(ref_ptr<Thread>(this)) == WaitResult::kSuccess; }
 
+  // Registers a function that will be called when the thread is exiting.
+  // Callbacks will be made in reverse order of registration.
+  // Note that if the thread is forcefully terminated the callbacks will not
+  // be called.
+  void RegisterExitCallback(std::function<void()> callback);
+
  protected:
-  Thread() = default;
+  Thread();
+
+  // Called by subclasses when the thread is entered.
+  virtual void OnEnter();
+  // Called by subclasses when the thread is exiting.
+  virtual void OnExit();
 
   // Name as specified by set_name, if any.
   std::string name_;
+
+  std::mutex exit_mutex_;
+  // A list of all registered exit callbacks in the order they were registered.
+  // They will be called in reverse order of registration.
+  std::vector<std::function<void()>> exit_callbacks_;
 };
 
 }  // namespace xrtl

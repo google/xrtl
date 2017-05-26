@@ -308,5 +308,83 @@ TEST_F(ThreadTest, JoinWait) {
   EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
 }
 
+// Tests thread exit callbacks.
+TEST_F(ThreadTest, ExitCallback) {
+  // Test registering from outside the thread.
+  auto fence_event = Event::CreateAutoResetEvent(false);
+  auto thread = Thread::Create({}, [&]() {
+    // Wait before exiting so the main thread has some control over the order.
+    EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(fence_event));
+    // Sleep for a bit to keep the main thread in suspense >_<
+    Thread::Sleep(std::chrono::milliseconds(50));
+  });
+  std::atomic<bool> did_call{false};
+  thread->RegisterExitCallback([&]() {
+    EXPECT_TRUE(thread->is_current());
+    EXPECT_FALSE(did_call);
+    did_call = true;
+  });
+  fence_event->Set();
+  EXPECT_TRUE(thread->Join());
+  EXPECT_TRUE(did_call);
+
+  // Test registering from inside the thread.
+  did_call = false;
+  thread = Thread::Create({}, [&]() {
+    Thread::current_thread()->RegisterExitCallback([&]() {
+      EXPECT_TRUE(thread->is_current());
+      EXPECT_FALSE(did_call);
+      did_call = true;
+    });
+    // Wait before exiting so the main thread has some control over the order.
+    EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(fence_event));
+    // Sleep for a bit to keep the main thread in suspense >_<
+    Thread::Sleep(std::chrono::milliseconds(50));
+  });
+  fence_event->Set();
+  EXPECT_TRUE(thread->Join());
+  EXPECT_TRUE(did_call);
+}
+
+// Tests the exit callback ordering (reverse of registration).
+TEST_F(ThreadTest, ExitCallbackOrdering) {
+  auto fence_event = Event::CreateAutoResetEvent(false);
+  auto thread = Thread::Create({}, [&]() {
+    // Wait before exiting so the main thread has some control over the order.
+    EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(fence_event));
+    // Sleep for a bit to keep the main thread in suspense >_<
+    Thread::Sleep(std::chrono::milliseconds(50));
+  });
+  std::atomic<bool> did_call_1{false};
+  std::atomic<bool> did_call_2{false};
+  std::atomic<bool> did_call_3{false};
+  thread->RegisterExitCallback([&]() {
+    EXPECT_TRUE(thread->is_current());
+    EXPECT_TRUE(did_call_1);
+    EXPECT_TRUE(did_call_2);
+    EXPECT_FALSE(did_call_3);
+    did_call_3 = true;
+  });
+  thread->RegisterExitCallback([&]() {
+    EXPECT_TRUE(thread->is_current());
+    EXPECT_TRUE(did_call_1);
+    EXPECT_FALSE(did_call_2);
+    EXPECT_FALSE(did_call_3);
+    did_call_2 = true;
+  });
+  thread->RegisterExitCallback([&]() {
+    EXPECT_TRUE(thread->is_current());
+    EXPECT_FALSE(did_call_1);
+    EXPECT_FALSE(did_call_2);
+    EXPECT_FALSE(did_call_3);
+    did_call_1 = true;
+  });
+  fence_event->Set();
+  EXPECT_TRUE(thread->Join());
+  EXPECT_TRUE(did_call_1);
+  EXPECT_TRUE(did_call_2);
+  EXPECT_TRUE(did_call_3);
+}
+
 }  // namespace
 }  // namespace xrtl
