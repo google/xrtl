@@ -361,6 +361,25 @@ void Thread::set_name(const std::string& name) {
 #endif  // XRTL_PLATFORM_APPLE
 }
 
+uintptr_t Thread::AllocateLocalStorageSlot(void (*release_callback)(void*)) {
+  pthread_key_t key = 0;
+  pthread_key_create(&key, release_callback);
+  return static_cast<uintptr_t>(key);
+}
+
+void Thread::DeallocateLocalStorageSlot(uintptr_t slot_id) {
+  // NOTE: no destructors will be called!
+  pthread_key_delete(static_cast<pthread_key_t>(slot_id));
+}
+
+void* Thread::GetLocalStorageSlotValue(uintptr_t slot_id) {
+  return pthread_getspecific(static_cast<pthread_key_t>(slot_id));
+}
+
+void Thread::SetLocalStorageSlotValue(uintptr_t slot_id, void* value) {
+  pthread_setspecific(static_cast<pthread_key_t>(slot_id), value);
+}
+
 void Thread::TryYield() {
 #if defined(XRTL_PLATFORM_APPLE)
   pthread_yield_np();

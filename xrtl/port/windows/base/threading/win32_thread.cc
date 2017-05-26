@@ -112,6 +112,23 @@ void InitializeCurrentThreadStorage() {
   });
 }
 
+uintptr_t Thread::AllocateLocalStorageSlot(void (*release_callback)(void*)) {
+  return static_cast<uintptr_t>(::FlsAlloc(release_callback));
+}
+
+void Thread::DeallocateLocalStorageSlot(uintptr_t slot_id) {
+  // NOTE: destructors will be called!
+  ::FlsFree(static_cast<DWORD>(slot_id));
+}
+
+void* Thread::GetLocalStorageSlotValue(uintptr_t slot_id) {
+  return ::FlsGetValue(static_cast<DWORD>(slot_id));
+}
+
+void Thread::SetLocalStorageSlotValue(uintptr_t slot_id, void* value) {
+  ::FlsSetValue(static_cast<DWORD>(slot_id), value);
+}
+
 // Sets the name of the current thread as seen in the debugger, if one is
 // attached. Unfortunately if a debugger is not attached at the time this is
 // called it will remain unnamed.
