@@ -109,6 +109,11 @@ TEST(MacrosTest, Bitmask) {
   // operator ~
   EXPECT_EQ(0b11111110, static_cast<uint32_t>(~MyBitmask::kFoo));
   EXPECT_EQ(0b11111100, static_cast<uint32_t>(~MyBitmask::kAll));
+
+  // any
+  EXPECT_FALSE(any(MyBitmask::kNone));
+  EXPECT_TRUE(any(MyBitmask::kFoo));
+  EXPECT_TRUE(any(MyBitmask::kAll));
 }
 
 class MoveableType : public RefObject<MoveableType> {
