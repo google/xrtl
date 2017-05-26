@@ -12,34 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_GFX_RESOURCE_H_
-#define XRTL_GFX_RESOURCE_H_
-
-#include <cstdint>
-
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/es3/es3_swap_chain.h"
 
 namespace xrtl {
 namespace gfx {
+namespace es3 {
 
-// Base type for allocated resources.
-class Resource : public RefObject<Resource> {
- public:
-  virtual ~Resource() = default;
+//
 
-  // Size of the resource memory allocation in bytes.
-  // This may be rounded up from the originally requested size or the ideal
-  // size for the resource based on device restrictions.
-  size_t allocation_size() const { return allocation_size_; }
-
- protected:
-  explicit Resource(size_t allocation_size)
-      : allocation_size_(allocation_size) {}
-
-  size_t allocation_size_ = 0;
-};
-
+}  // namespace es3
 }  // namespace gfx
 }  // namespace xrtl
-
-#endif  // XRTL_GFX_RESOURCE_H_

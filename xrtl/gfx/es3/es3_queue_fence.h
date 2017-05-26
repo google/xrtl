@@ -12,34 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_GFX_RESOURCE_H_
-#define XRTL_GFX_RESOURCE_H_
+#ifndef XRTL_GFX_ES3_ES3_QUEUE_FENCE_H_
+#define XRTL_GFX_ES3_ES3_QUEUE_FENCE_H_
 
-#include <cstdint>
-
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/base/threading/event.h"
+#include "xrtl/gfx/es3/es3_common.h"
+#include "xrtl/gfx/queue_fence.h"
 
 namespace xrtl {
 namespace gfx {
+namespace es3 {
 
-// Base type for allocated resources.
-class Resource : public RefObject<Resource> {
+class ES3QueueFence : public QueueFence {
  public:
-  virtual ~Resource() = default;
+  ES3QueueFence();
+  ~ES3QueueFence() override;
 
-  // Size of the resource memory allocation in bytes.
-  // This may be rounded up from the originally requested size or the ideal
-  // size for the resource based on device restrictions.
-  size_t allocation_size() const { return allocation_size_; }
+  ref_ptr<Event> event() const { return event_; }
 
- protected:
-  explicit Resource(size_t allocation_size)
-      : allocation_size_(allocation_size) {}
-
-  size_t allocation_size_ = 0;
+ private:
+  ref_ptr<Event> event_;
 };
 
+}  // namespace es3
 }  // namespace gfx
 }  // namespace xrtl
 
-#endif  // XRTL_GFX_RESOURCE_H_
+#endif  // XRTL_GFX_ES3_ES3_QUEUE_FENCE_H_

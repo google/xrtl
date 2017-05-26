@@ -12,34 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_GFX_RESOURCE_H_
-#define XRTL_GFX_RESOURCE_H_
-
-#include <cstdint>
-
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/es3/es3_shader_module.h"
 
 namespace xrtl {
 namespace gfx {
+namespace es3 {
 
-// Base type for allocated resources.
-class Resource : public RefObject<Resource> {
- public:
-  virtual ~Resource() = default;
+ES3ShaderModule::ES3ShaderModule(ref_ptr<ES3PlatformContext> platform_context)
+    : platform_context_(platform_context) {}
 
-  // Size of the resource memory allocation in bytes.
-  // This may be rounded up from the originally requested size or the ideal
-  // size for the resource based on device restrictions.
-  size_t allocation_size() const { return allocation_size_; }
+ES3ShaderModule::~ES3ShaderModule() { shaders_.clear(); }
 
- protected:
-  explicit Resource(size_t allocation_size)
-      : allocation_size_(allocation_size) {}
+void ES3ShaderModule::Register(ref_ptr<ES3Shader> shader) {
+  shaders_.push_back(shader);
+}
 
-  size_t allocation_size_ = 0;
-};
+ref_ptr<ES3Shader> ES3ShaderModule::Lookup(
+    const std::string& entry_point) const {
+  for (const auto& shader : shaders_) {
+    if (entry_point == shader->entry_point()) {
+      return shader;
+    }
+  }
+  return nullptr;
+}
 
+}  // namespace es3
 }  // namespace gfx
 }  // namespace xrtl
-
-#endif  // XRTL_GFX_RESOURCE_H_
