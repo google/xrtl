@@ -116,6 +116,81 @@ TEST_F(ThreadTest, ThreadName) {
   Thread::set_name(original_name);
 }
 
+// Tests thread-local storage.
+TEST_F(ThreadTest, LocalStorage) {
+  static std::atomic<int> live_count{0};
+  class TlsValue {
+   public:
+    TlsValue() { ++live_count; }
+    ~TlsValue() { --live_count; }
+  };
+
+  Thread::LocalStorageSlot<TlsValue> slot;
+  EXPECT_EQ(nullptr, slot.value());
+  EXPECT_EQ(0, live_count);
+
+  // Set the value on the main thread.
+  auto p0 = new TlsValue();
+  slot.set_value(p0);
+  EXPECT_EQ(p0, slot.value());
+  EXPECT_EQ(1, live_count);
+
+  // Set the value on another thread.
+  auto thread = Thread::Create({}, [&]() {
+    // Set value on the new thread.
+    auto p1 = new TlsValue();
+    slot.set_value(p1);
+    EXPECT_EQ(p1, slot.value());
+    EXPECT_EQ(2, live_count);
+
+    // Cleanup manually.
+    slot.set_value(nullptr);
+    delete p1;
+    EXPECT_EQ(1, live_count);
+  });
+  EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
+
+  // Main thread value should be the same.
+  EXPECT_EQ(p0, slot.value());
+  EXPECT_EQ(1, live_count);
+
+  // Cleanup value.
+  slot.set_value(nullptr);
+  EXPECT_EQ(nullptr, slot.value());
+  delete p0;
+  EXPECT_EQ(0, live_count);
+}
+
+// Tests thread-local storage release callbacks.
+TEST_F(ThreadTest, LocalStorageReleaseCallback) {
+  static std::atomic<int> live_count{0};
+  class TlsValue {
+   public:
+    TlsValue() { ++live_count; }
+    ~TlsValue() { --live_count; }
+  };
+
+  Thread::LocalStorageSlot<TlsValue> slot{
+      [](TlsValue* value) { delete value; }};
+  EXPECT_EQ(nullptr, slot.value());
+  EXPECT_EQ(0, live_count);
+
+  // Set the value on another thread.
+  auto thread = Thread::Create({}, [&]() {
+    // Set value on the new thread.
+    auto p1 = new TlsValue();
+    slot.set_value(p1);
+    EXPECT_EQ(p1, slot.value());
+    EXPECT_EQ(1, live_count);
+
+    // Attempt to allow destructor to clean up.
+  });
+  EXPECT_EQ(Thread::WaitResult::kSuccess, Thread::Wait(thread));
+
+  // Destructor should have cleaned up the thread value.
+  EXPECT_EQ(0, live_count);
+}
+
 // Tests nothing.
 TEST_F(ThreadTest, TryYield) {
   // Yield may do nothing on some platforms so there's no great way to test it.

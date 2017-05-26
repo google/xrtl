@@ -46,6 +46,7 @@ cc_library(
         ":win32_wait_handle",
         "//xrtl/base:logging",
         "//xrtl/base:stopwatch",
+        "//xrtl/base/threading:thread_base",
         "//xrtl/base/threading:threading_hdrs",
         "//xrtl/port/windows/base:windows_headers",
     ],

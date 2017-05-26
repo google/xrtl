@@ -126,6 +126,51 @@ class Thread : public WaitHandle {
   // Sets the name of the thread as it will appear in the debugger and logs.
   static void set_name(const std::string& name);
 
+  // A thread-local storage slot.
+  //
+  // Usage:
+  //  LocalStorageSlot<MyType> slot([](MyType* value) {
+  //    delete value;
+  //  });
+  //  slot.set_value(new MyType());
+  //  slot.value()->Foo();
+  template <typename T>
+  class LocalStorageSlot {
+   public:
+    using ReleaseCallback = void (*)(T*);
+
+    LocalStorageSlot() {
+      slot_id_ = Thread::AllocateLocalStorageSlot([](void* value) {});
+    }
+
+    // Allocates a local storage slot with a release callback.
+    // The callback will be issued only when threads with values stored in the
+    // slots are exited. It may not be called if the LocalStorageSlot is
+    // deallocated, and will not be called when new values are set with
+    // set_value.
+    explicit LocalStorageSlot(ReleaseCallback release_callback) {
+      slot_id_ = Thread::AllocateLocalStorageSlot(
+          reinterpret_cast<void (*)(void*)>(release_callback));
+    }
+
+    ~LocalStorageSlot() { Thread::DeallocateLocalStorageSlot(slot_id_); }
+
+    // Returns the value of the calling thread's local storage slot.
+    T* value() const {
+      return reinterpret_cast<T*>(Thread::GetLocalStorageSlotValue(slot_id_));
+    }
+
+    // Sets the value of the calling thread's local storage slot.
+    // The release callback will not be made for existing values, if any were
+    // set.
+    void set_value(T* value) {
+      Thread::SetLocalStorageSlotValue(slot_id_, value);
+    }
+
+   private:
+    uintptr_t slot_id_ = 0;
+  };
+
   // Yields execution back to the system thread scheduler.
   // This is just a hint and may have no effect. It should be used only when
   // very short sleeps are required (such as in a CAS loop), as otherwise it
@@ -276,6 +321,12 @@ class Thread : public WaitHandle {
 
  protected:
   Thread();
+
+  // Thread local storage support routines. Used by LocalStorageSlot.
+  static uintptr_t AllocateLocalStorageSlot(void (*release_callback)(void*));
+  static void DeallocateLocalStorageSlot(uintptr_t slot_id);
+  static void* GetLocalStorageSlotValue(uintptr_t slot_id);
+  static void SetLocalStorageSlotValue(uintptr_t slot_id, void* value);
 
   // Called by subclasses when the thread is entered.
   virtual void OnEnter();

@@ -138,9 +138,9 @@ cc_test(
 
 cc_library(
     name = "thread",
-    srcs = ["thread.cc"],
     hdrs = ["thread.h"],
     deps = [
+        ":thread_base",
         ":wait_handle",
         "//xrtl/base:macros",
     ] + select({
@@ -151,6 +151,17 @@ cc_library(
             "//xrtl/port/common/base/threading:pthreads_thread",
         ],
     }),
+)
+
+cc_library(
+    name = "thread_base",
+    srcs = ["thread.cc"],
+    hdrs = ["thread.h"],
+    deps = [
+        ":wait_handle",
+        "//xrtl/base:macros",
+    ],
+    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
