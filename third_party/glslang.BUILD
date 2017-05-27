@@ -53,16 +53,32 @@ cc_library(
     visibility = ["//visibility:private"],
 )
 
-# TODO(benvanik): Windows support.
+config_setting(
+    name = "windows",
+    values = {
+        "cpu": "x64_windows_msvc",
+    },
+)
+
 cc_library(
     name = "OSDependent",
-    srcs = ["glslang/OSDependent/Unix/ossource.cpp"],
+    srcs = select({
+        ":windows": [
+            "glslang/OSDependent/Windows/ossource.cpp",
+        ],
+        "//conditions:default": [
+            "glslang/OSDependent/Unix/ossource.cpp",
+        ],
+    }),
     hdrs = ["glslang/OSDependent/osinclude.h"],
     deps = [":glslang_headers"],
     copts = COMMON_COPTS,
-    linkopts = [
-        "-lpthread",
-    ],
+    linkopts = select({
+        ":windows": [],
+        "//conditions:default": [
+            "-lpthread",
+        ],
+    }),
     visibility = ["//visibility:private"],
 )
 
