@@ -20,6 +20,9 @@
 // the khronos headers.
 #include <glad/glad.h>
 
+// Windows #define's this, which messes with our implementation.
+#undef MemoryBarrier
+
 #include "xrtl/base/logging.h"
 
 // Uncomment the following line or manually define DEBUG_GL in command line to
