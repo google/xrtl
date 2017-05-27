@@ -19,22 +19,6 @@
 namespace xrtl {
 namespace {
 
-// Tests a zero-capacity fixed vector.
-// Don't know why you'd do this, but it should work. Note that std::array does
-// not compile at 0.
-TEST(FixedVectorTest, ZeroCapacity) {
-  FixedVector<int, 0> vector;
-  EXPECT_TRUE(vector.empty());
-  EXPECT_EQ(0, vector.size());
-  EXPECT_EQ(0, vector.max_size());
-  EXPECT_FALSE(vector.contains(0));
-  EXPECT_FALSE(vector.contains(1));
-  EXPECT_EQ(-1, vector.index_of(0));
-  EXPECT_EQ(-1, vector.index_of(1));
-  vector.clear();
-  EXPECT_EQ(vector.begin(), vector.end());
-}
-
 // Tests the behavior of an empty fixed vector.
 TEST(FixedVectorTest, Empty) {
   FixedVector<int, 2> vector;

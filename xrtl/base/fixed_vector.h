@@ -45,6 +45,9 @@ class FixedVector {
  public:
   static constexpr size_t npos = -1;
 
+  // Don't support zero capacity (neither does std::array).
+  static_assert(kMaxSize > 0, "Zero capacity vectors not supported");
+
   FixedVector() = default;
   FixedVector(const T* data, size_t data_size) : size_(data_size) {
     DCHECK_LE(data_size, kMaxSize);
