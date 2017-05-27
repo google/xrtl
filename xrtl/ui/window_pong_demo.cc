@@ -139,8 +139,10 @@ class WindowPongDemo : private Control::Listener {
     double dt = now - last_tick_time_;
 
     // Move the ball.
-    ball_x_position_ += ball_speed_ * ball_x_velocity_ * dt / 1000.0;
-    ball_y_position_ += ball_speed_ * ball_y_velocity_ * dt / 1000.0;
+    ball_x_position_ +=
+        static_cast<float>(ball_speed_ * ball_x_velocity_ * dt / 1000.0);
+    ball_y_position_ +=
+        static_cast<float>(ball_speed_ * ball_y_velocity_ * dt / 1000.0);
 
     // Move the paddles.
     // TODO(scotttodd): Player input to control paddles, beatable AI.
@@ -177,8 +179,8 @@ class WindowPongDemo : private Control::Listener {
       ball_x_velocity_ = -std::abs(ball_x_velocity_);
     }
 
-    ball_rect_.origin.x = ball_x_position_;
-    ball_rect_.origin.y = ball_y_position_;
+    ball_rect_.origin.x = static_cast<int>(ball_x_position_);
+    ball_rect_.origin.y = static_cast<int>(ball_y_position_);
     MoveWindowBall();
 
     last_tick_time_ = now;

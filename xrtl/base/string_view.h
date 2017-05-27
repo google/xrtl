@@ -34,6 +34,7 @@ class StringView {
  public:
   typedef const char* const_iterator;
 
+  // Equivalent to std::string::npos (but to keep it a constexpr we do this).
   static constexpr size_t npos = -1;  // NOLINT
 
   StringView() : data_(""), size_(0) {}

@@ -49,7 +49,9 @@ else:
 
 top_level_packages = [
     '//xrtl/base/...',
+    '//xrtl/examples/...',
     '//xrtl/gfx/...',
+    '//xrtl/testing/...',
     '//xrtl/tools/...',
     '//xrtl/ui/...',
     ]

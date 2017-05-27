@@ -176,6 +176,36 @@ EGLDisplayCache* shared_display_cache() {
   return shared_instance;
 }
 
+// Lookup a function within the dynamically loaded GLESv2 DLL.
+void* LookupGlesFunction(const char* name) {
+  static void* libglesv2 = nullptr;
+  static void* libglesv2_nvidia = nullptr;
+  static bool has_checked_nvidia = false;
+  if (!libglesv2) {
+    libglesv2 = dlopen("libGLESv2.so.2", RTLD_LOCAL | RTLD_LAZY);
+  }
+  if (!libglesv2) {
+    LOG(ERROR) << "Unable to load libGLESv2.so";
+    return static_cast<void*>(nullptr);
+  }
+  if (!has_checked_nvidia && glGetString) {
+    // Nvidia doesn't export glDispatchCompute and other 3.1/3.2 functions
+    // from libGLESv2.so for some reason. To work around this we directly
+    // probe into their libGLESv2_nvidia.so (which... ugh).
+    has_checked_nvidia = true;
+    if (std::strstr(reinterpret_cast<const char*>(glGetString(GL_VENDOR)),
+                    "NVIDIA") != nullptr) {
+      libglesv2_nvidia =
+          dlopen("libGLESv2_nvidia.so.2", RTLD_LOCAL | RTLD_LAZY);
+    }
+  }
+  void* proc = dlsym(libglesv2, name);
+  if (!proc && libglesv2_nvidia) {
+    proc = dlsym(libglesv2_nvidia, name);
+  }
+  return proc;
+}
+
 }  // namespace
 
 ref_ptr<ES3PlatformContext> ES3PlatformContext::Create(
@@ -342,34 +372,7 @@ bool EGLPlatformContext::InitializeContext(
   }
 
   // Setup GL functions.
-  if (!gladLoadGLES2Loader([](const char* name) {
-        static void* libglesv2 = nullptr;
-        static void* libglesv2_nvidia = nullptr;
-        static bool has_checked_nvidia = false;
-        if (!libglesv2) {
-          libglesv2 = dlopen("libGLESv2.so.2", RTLD_LOCAL | RTLD_LAZY);
-        }
-        if (!libglesv2) {
-          LOG(ERROR) << "Unable to load libGLESv2.so";
-          return static_cast<void*>(nullptr);
-        }
-        if (!has_checked_nvidia && glGetString) {
-          // Nvidia doesn't export glDispatchCompute and other 3.1/3.2 functions
-          // from libGLESv2.so for some reason. To work around this we directly
-          // probe into their libGLESv2_nvidia.so (which... ugh).
-          has_checked_nvidia = true;
-          if (std::strstr(reinterpret_cast<const char*>(glGetString(GL_VENDOR)),
-                          "NVIDIA") != nullptr) {
-            libglesv2_nvidia =
-                dlopen("libGLESv2_nvidia.so.2", RTLD_LOCAL | RTLD_LAZY);
-          }
-        }
-        void* proc = dlsym(libglesv2, name);
-        if (!proc && libglesv2_nvidia) {
-          proc = dlsym(libglesv2_nvidia, name);
-        }
-        return proc;
-      })) {
+  if (!gladLoadGLES2Loader(LookupGlesFunction)) {
     LOG(ERROR) << "Failed to load GL ES dynamic functions";
     return false;
   }
@@ -421,8 +424,8 @@ bool EGLPlatformContext::ChooseBestConfig(
 
   // Get all configs.
   std::vector<EGLConfig> all_configs(config_count);
-  if (!eglGetConfigs(egl_display, all_configs.data(), all_configs.size(),
-                     &config_count)) {
+  if (!eglGetConfigs(egl_display, all_configs.data(),
+                     static_cast<EGLint>(all_configs.size()), &config_count)) {
     EGLint error_code = eglGetError();
     LOG(ERROR) << "eglGetConfigs failed: unable to query all configs, "
                << GetEglErrorName(error_code) << ": "

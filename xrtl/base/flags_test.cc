@@ -35,7 +35,7 @@ TEST(FlagsTest, CommandLines) {
   std::vector<const char*> args = {
       "test", "--cmd_line_flag=true", "other",
   };
-  int argc = args.size();
+  int argc = static_cast<int>(args.size());
   char** argv = const_cast<char**>(args.data());
   uint32_t index = ParseCommandLineFlags(&argc, &argv, true);
   EXPECT_EQ(2, argc);

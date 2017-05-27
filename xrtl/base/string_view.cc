@@ -88,7 +88,7 @@ size_t StringView::find_first_of(char c, size_t pos) const noexcept {
 size_t StringView::find_last_of(char c, size_t pos) const noexcept {
   pos = pos == npos ? size_ - 1 : pos;
   pos = std::min(pos, size_);
-  for (int i = pos; i >= 0; --i) {
+  for (intptr_t i = pos; i >= 0; --i) {
     if (data_[i] == c) {
       return i;
     }
