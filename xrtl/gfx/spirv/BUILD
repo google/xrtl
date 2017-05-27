@@ -10,11 +10,11 @@ cc_library(
     srcs = ["shader_compiler.cc"],
     hdrs = ["shader_compiler.h"],
     deps = [
-        "//external:glslang",
-        "//external:glslang_spirv",
         "//xrtl/base:debugging",
         "//xrtl/base:string_view",
         "//xrtl/base:tracing",
+        "@com_github_KhronosGroup_glslang//:glslang",
+        "@com_github_KhronosGroup_glslang//:SPIRV",
     ],
 )
 
@@ -33,9 +33,9 @@ cc_library(
     srcs = ["spirv_optimizer.cc"],
     hdrs = ["spirv_optimizer.h"],
     deps = [
-        "//external:spirv_tools_opt",
         "//xrtl/base:logging",
         "//xrtl/base:tracing",
+        "@spirv_tools//:spirv_tools_opt",
     ],
 )
 

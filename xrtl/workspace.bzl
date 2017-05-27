@@ -49,32 +49,12 @@ def xrtl_workspace():
       path = "third_party/gflags/",
       build_file = "third_party/gflags.BUILD",
   )
-  native.bind(
-      name = "gflags",
-      actual = "@com_github_gflags_gflags//:gflags",
-  )
-  native.bind(
-      name = "gflags_nothreads",
-      actual = "@com_github_gflags_gflags//:gflags_nothreads",
-  )
 
   # //third_party/glslang/
   native.new_local_repository(
       name = "com_github_KhronosGroup_glslang",
       path = "third_party/glslang/",
       build_file = "third_party/glslang.BUILD",
-  )
-  native.bind(
-      name = "glslang",
-      actual = "@com_github_KhronosGroup_glslang//:glslang",
-  )
-  native.bind(
-      name = "glslang_spirv",
-      actual = "@com_github_KhronosGroup_glslang//:SPIRV",
-  )
-  native.bind(
-      name = "glslang_spvremapper",
-      actual = "@com_github_KhronosGroup_glslang//:SPVRemapper",
   )
 
   # //third_party/spirv_cross/
@@ -83,10 +63,6 @@ def xrtl_workspace():
       path = "third_party/spirv_cross/",
       build_file = "third_party/spirv_cross.BUILD",
   )
-  native.bind(
-      name = "spirv_cross",
-      actual = "@com_github_KhronosGroup_SPIRV_Cross//:spirv_cross_lib",
-  )
 
   # //third_party/spirv_headers/
   native.new_local_repository(
@@ -94,30 +70,12 @@ def xrtl_workspace():
       path = "third_party/spirv_headers/",
       build_file = "third_party/spirv_headers.BUILD",
   )
-  native.bind(
-      name = "spirv_common_headers",
-      actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_common_headers",
-  )
-  native.bind(
-      name = "spirv_c_headers",
-      actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_c_headers",
-  )
-  native.bind(
-      name = "spirv_cpp11_headers",
-      actual = "@com_github_KhronosGroup_SPIRV_Headers//:spirv_cpp11_headers",
-  )
 
   # //third_party/spirv_tools/
+  # NOTE: this would be com_github_KhronosGroup_SPIRV_Tools, but that causes
+  #       path limit issues on Windows.
   native.new_local_repository(
-      name = "com_github_KhronosGroup_SPIRV_Tools",
+      name = "spirv_tools",
       path = "third_party/spirv_tools/",
       build_file = "third_party/spirv_tools.BUILD",
-  )
-  native.bind(
-      name = "spirv_tools",
-      actual = "@com_github_KhronosGroup_SPIRV_Tools//:spirv_tools",
-  )
-  native.bind(
-      name = "spirv_tools_opt",
-      actual = "@com_github_KhronosGroup_SPIRV_Tools//:spirv_tools_opt",
   )
