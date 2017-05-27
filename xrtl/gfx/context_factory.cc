@@ -57,6 +57,9 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
     available_types.push_back("es3");
   }
 #endif  // XRTL_HAS_GFX_OPENGL_ES3
+  if (available_types.empty()) {
+    return nullptr;  // TODO(benvanik): nop.
+  }
 
   // Find the desired type.
   std::string desired_type;

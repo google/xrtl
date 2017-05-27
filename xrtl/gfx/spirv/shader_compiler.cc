@@ -209,7 +209,7 @@ bool ShaderCompiler::Compile(std::vector<uint32_t>* spirv_data) {
   }
   shader_->setStringsWithLengthsAndNames(
       source_strings.data(), source_lengths.data(), source_names.data(),
-      source_files_.size());
+      static_cast<int>(source_files_.size()));
 
   // TODO(benvanik): setPreamble to add some xrtl defines.
 

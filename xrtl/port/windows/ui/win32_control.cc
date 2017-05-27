@@ -14,8 +14,6 @@
 
 #include "xrtl/port/windows/ui/win32_control.h"
 
-#include "xrtl/base/logging.h"
-
 // TODO(benvanik): figure out why uxtheme.h chokes.
 #define MILCORE_KERNEL_COMPONENT
 typedef struct _MARGINS {
@@ -27,6 +25,8 @@ typedef struct _MARGINS {
 
 #include <dwmapi.h>   // DWM MMCSS/etc.
 #include <tpcshrd.h>  // Tablet defines.
+
+#include "xrtl/base/logging.h"
 
 namespace xrtl {
 namespace ui {
@@ -134,6 +134,7 @@ HWND Win32Control::hwnd() const {
 Control::PlatformHandle Win32Control::platform_handle() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   switch (state_) {
+    default:
     case State::kCreating:
     case State::kDestroyed:
       return 0;

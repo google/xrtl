@@ -72,7 +72,8 @@ EGLSwapChain::EGLSwapChain(ref_ptr<MemoryPool> memory_pool,
 
   // Allocate framebuffers we'll use for copying.
   framebuffers_.resize(image_count);
-  glGenFramebuffers(framebuffers_.size(), framebuffers_.data());
+  glGenFramebuffers(static_cast<GLsizei>(framebuffers_.size()),
+                    framebuffers_.data());
 
   // Allocate initial images.
   image_views_.resize(image_count);
@@ -82,7 +83,8 @@ EGLSwapChain::EGLSwapChain(ref_ptr<MemoryPool> memory_pool,
 EGLSwapChain::~EGLSwapChain() {
   ES3PlatformContext::ThreadLock context_lock(
       ES3PlatformContext::AcquireThreadContext(platform_context_));
-  glDeleteFramebuffers(framebuffers_.size(), framebuffers_.data());
+  glDeleteFramebuffers(static_cast<GLsizei>(framebuffers_.size()),
+                       framebuffers_.data());
 }
 
 SwapChain::ResizeResult EGLSwapChain::Resize(Size2D new_size) {

@@ -514,7 +514,8 @@ void ES3RenderPassCommandEncoder::PrepareSubpass() {
                            GL_TEXTURE_2D, image->texture_id(), 0);
     draw_buffers[i] = GL_COLOR_ATTACHMENT0 + i;
   }
-  glDrawBuffers(subpass.color_attachments.size(), draw_buffers);
+  glDrawBuffers(static_cast<GLsizei>(subpass.color_attachments.size()),
+                draw_buffers);
 
   // Setup depth/stencil (if present).
   // TODO(benvanik): depth_stencil_attachment
@@ -530,10 +531,10 @@ void ES3RenderPassCommandEncoder::PrepareSubpass() {
     if (attachment_ref.index == RenderPass::AttachmentReference::kUnused) {
       continue;
     }
-    if ((used_attachments_ & (1 << attachment_ref.index)) == 0) {
+    if ((used_attachments_ & (1ull << attachment_ref.index)) == 0) {
       // This attachment has not yet been used in this render pass; clear it if
       // needed.
-      used_attachments_ |= (1 << attachment_ref.index);
+      used_attachments_ |= (1ull << attachment_ref.index);
       const auto& attachment =
           render_pass_->attachments()[attachment_ref.index];
       if (attachment.load_op == RenderPass::LoadOp::kClear &&
@@ -830,12 +831,12 @@ void ES3RenderPassCommandEncoder::UpdateVertexInputs() {
     DCHECK_NE(type, GL_NONE);
     if (integer_format) {
       glVertexAttribIPointer(
-          i, size, type, binding_slot.stride,
+          i, size, type, static_cast<GLsizei>(binding_slot.stride),
           reinterpret_cast<void*>(binding_slot.buffer_offset +
                                   attrib_slot.offset));
     } else {
       glVertexAttribPointer(i, size, type, normalized ? GL_TRUE : GL_FALSE,
-                            binding_slot.stride,
+                            static_cast<GLsizei>(binding_slot.stride),
                             reinterpret_cast<void*>(binding_slot.buffer_offset +
                                                     attrib_slot.offset));
     }

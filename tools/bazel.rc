@@ -12,7 +12,6 @@ common:clang --copt=-Wno-invalid-offsetof
 common:objc --experimental_enable_objc_cc_deps
 
 # TODO(benvanik): find a way to make this only on dbg/fastbuild?
-common:msvc --copt=/Zi
 common:msvc --linkopt=/DEBUG:FULL
 
 test --test_output=errors

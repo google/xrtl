@@ -124,12 +124,15 @@ struct Viewport {
   Viewport(float x, float y, float width, float height)
       : x(x), y(y), width(width), height(height) {}
   Viewport(Point2D origin, Size2D size)
-      : x(origin.x), y(origin.y), width(size.width), height(size.height) {}
+      : x(static_cast<float>(origin.x)),
+        y(static_cast<float>(origin.y)),
+        width(static_cast<float>(size.width)),
+        height(static_cast<float>(size.height)) {}
   explicit Viewport(Rect2D rect)
-      : x(rect.origin.x),
-        y(rect.origin.y),
-        width(rect.size.width),
-        height(rect.size.height) {}
+      : x(static_cast<float>(rect.origin.x)),
+        y(static_cast<float>(rect.origin.y)),
+        width(static_cast<float>(rect.size.width)),
+        height(static_cast<float>(rect.size.height)) {}
 };
 
 // Defines the index buffer element type size.

@@ -81,10 +81,10 @@ bool ES3Shader::CompileSource(GLenum shader_type,
     source_lengths.reserve(sources.size());
     for (const auto& source : sources) {
       source_strings.push_back(source.data());
-      source_lengths.push_back(source.size());
+      source_lengths.push_back(static_cast<GLint>(source.size()));
     }
-    glShaderSource(shader_id_, source_strings.size(), source_strings.data(),
-                   source_lengths.data());
+    glShaderSource(shader_id_, static_cast<int>(source_strings.size()),
+                   source_strings.data(), source_lengths.data());
     glCompileShader(shader_id_);
   }
 

@@ -41,17 +41,17 @@ bool FromString(const char* string_value, rgba8_t* out_value) {
   char part[3] = {0};
   part[0] = string_value[0];
   part[1] = string_value[1];
-  out_value->r = strtoul(part, nullptr, 16);  // NOLINT
+  out_value->r = static_cast<uint8_t>(strtoul(part, nullptr, 16));  // NOLINT
   part[0] = string_value[2];
   part[1] = string_value[3];
-  out_value->g = strtoul(part, nullptr, 16);  // NOLINT
+  out_value->g = static_cast<uint8_t>(strtoul(part, nullptr, 16));  // NOLINT
   part[0] = string_value[4];
   part[1] = string_value[5];
-  out_value->b = strtoul(part, nullptr, 16);  // NOLINT
+  out_value->b = static_cast<uint8_t>(strtoul(part, nullptr, 16));  // NOLINT
   if (length == 8) {
     part[0] = string_value[6];
     part[1] = string_value[7];
-    out_value->a = strtoul(part, nullptr, 16);  // NOLINT
+    out_value->a = static_cast<uint8_t>(strtoul(part, nullptr, 16));  // NOLINT
   } else {
     out_value->a = 0xFF;
   }
