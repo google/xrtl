@@ -298,11 +298,11 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_platform_context",
-        "//external:spirv_cross",
         "//xrtl/base:array_view",
         "//xrtl/base:debugging",
         "//xrtl/base:string_view",
         "//xrtl/base:tracing",
+        "@com_github_KhronosGroup_SPIRV_Cross//:spirv_cross_lib",
     ],
 )
 

@@ -114,10 +114,10 @@ cc_library(
         ":macros",
     ] + select({
         "//xrtl/tools/target_platform:emscripten": [
-            "//external:gflags_nothreads",
+            "@com_github_gflags_gflags//:gflags_nothreads",
         ],
         "//conditions:default": [
-            "//external:gflags",
+            "@com_github_gflags_gflags//:gflags",
         ],
     }),
 )
