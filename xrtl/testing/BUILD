@@ -90,11 +90,23 @@ cc_library(
 )
 
 cc_library(
+    name = "file_paths_map",
+    testonly = 1,
+    srcs = ["file_paths_map.cc"],
+    hdrs = ["file_paths_map.h"],
+    deps = [
+        "//xrtl/base:logging",
+        "//xrtl/base:string_view",
+    ],
+)
+
+cc_library(
     name = "image_loader",
     testonly = 1,
     srcs = ["image_loader.cc"],
     hdrs = ["image_loader.h"],
     deps = [
+        ":file_paths_map",
         "//external:stb_image",
         "//xrtl/base:logging",
         "//xrtl/base:string_view",
