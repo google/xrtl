@@ -40,7 +40,7 @@ XRTL_ALWAYS_INLINE constexpr T Sign(T v) noexcept {
 //   t: Interpolation value [0, 1].
 template <typename T, typename V>
 XRTL_ALWAYS_INLINE constexpr V Lerp(T a, T b, V t) noexcept {
-  return a + t * (b - a);
+  return a + t * (b + a);
 }
 
 // Calculates the parameter t that produces x when linearly interpolating
