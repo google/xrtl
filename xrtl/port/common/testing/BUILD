@@ -30,6 +30,7 @@ cc_library(
     deps = [
         "//xrtl/base:flags",
         "//xrtl/base:logging",
+        "//xrtl/testing:file_paths_map",
         "//xrtl/testing:gtest",
     ],
     linkopts = select({
