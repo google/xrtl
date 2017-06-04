@@ -88,3 +88,40 @@ cc_library(
     }),
     visibility = ["//visibility:private"],
 )
+
+cc_library(
+    name = "image_loader",
+    testonly = 1,
+    srcs = ["image_loader.cc"],
+    hdrs = ["image_loader.h"],
+    deps = [
+        "//external:stb_image",
+        "//xrtl/base:logging",
+        "//xrtl/base:string_view",
+    ],
+)
+
+cc_library(
+    name = "image_comparison",
+    testonly = 1,
+    srcs = ["image_comparison.cc"],
+    hdrs = ["image_comparison.h"],
+    deps = [
+        ":gtest",
+        "//xrtl/base:logging",
+    ],
+)
+
+cc_test(
+    name = "image_comparison_test",
+    size = "small",
+    srcs = ["image_comparison_test.cc"],
+    data = [
+        "//xrtl/testing/testdata:test_images",
+    ],
+    deps = [
+        ":gtest_main",
+        ":image_comparison",
+        ":image_loader",
+    ],
+)
