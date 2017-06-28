@@ -12,22 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/testing/file_paths_map.h"
+#include "xrtl/testing/file_manifest.h"
 
 #include <fstream>
-
-#include "xrtl/base/logging.h"
 
 namespace xrtl {
 namespace testing {
 
-std::vector<std::pair<std::string, std::string>> FilePathsMap::file_paths_map;
-std::string FilePathsMap::workspace_name;
+std::vector<std::pair<std::string, std::string>> FileManifest::file_paths_map;
 
-void FilePathsMap::ParseFromManifest() {
+void FileManifest::ParseFromManifest() {
   file_paths_map.clear();
 
-  workspace_name = std::getenv("TEST_WORKSPACE");
   std::string manifest_path =
       std::getenv("TEST_SRCDIR") + std::string("/MANIFEST");
 
@@ -41,12 +37,13 @@ void FilePathsMap::ParseFromManifest() {
   manifest_file_stream.close();
 }
 
-StringView FilePathsMap::get_absolute_path(StringView relative_path) {
+StringView FileManifest::ResolveAbsolutePath(StringView relative_path) {
+  std::string target_path = std::string(std::getenv("TEST_WORKSPACE")) + "/" +
+                            std::string(relative_path);
   for (auto file_path_pair : file_paths_map) {
     // Prefix relative paths with the workspace name since that's how they
     // appear in the MANIFEST file.
-    if (file_path_pair.first ==
-        (workspace_name + "/" + std::string(relative_path))) {
+    if (file_path_pair.first == target_path) {
       return file_path_pair.second;
     }
   }

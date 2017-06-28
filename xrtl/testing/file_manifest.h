@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_TESTING_FILE_PATHS_MAP_H_
-#define XRTL_TESTING_FILE_PATHS_MAP_H_
+#ifndef XRTL_TESTING_FILE_MANIFEST_H_
+#define XRTL_TESTING_FILE_MANIFEST_H_
 
 #include <string>
 #include <utility>
@@ -26,7 +26,7 @@ namespace testing {
 
 // Mapping from test data relative paths to absolute paths.
 // If runfiles are fully supported, relative paths should work on their own.
-class FilePathsMap {
+class FileManifest {
  public:
   // Parses the file paths map from the runfiles MANIFEST file.
   // Call this during test setup.
@@ -35,7 +35,7 @@ class FilePathsMap {
   // Gets the absolute path for the provided test data relative path or empty
   // string if that exact relative path does not exist in the runfiles MANIFEST.
   // Only files specified in the "data" field of tests will be available here.
-  static StringView get_absolute_path(StringView relative_path);
+  static StringView ResolveAbsolutePath(StringView relative_path);
 
  private:
   static std::vector<std::pair<std::string, std::string>> file_paths_map;
@@ -45,4 +45,4 @@ class FilePathsMap {
 }  // namespace testing
 }  // namespace xrtl
 
-#endif  // XRTL_TESTING_FILE_PATHS_MAP_H_
+#endif  // XRTL_TESTING_FILE_MANIFEST_H_

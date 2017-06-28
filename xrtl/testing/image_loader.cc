@@ -24,7 +24,7 @@
 #include "third_party/stblib/stb_image.h"
 
 #include "xrtl/base/logging.h"
-#include "xrtl/testing/file_paths_map.h"
+#include "xrtl/testing/file_manifest.h"
 
 namespace xrtl {
 namespace testing {
@@ -32,7 +32,7 @@ namespace testing {
 Image ImageLoader::LoadImage(StringView path, int image_channels) {
   Image image;
   ImageDataPtr image_data = {
-      stbi_load(FilePathsMap::get_absolute_path(path).data(), &image.width,
+      stbi_load(FileManifest::ResolveAbsolutePath(path).data(), &image.width,
                 &image.height, &image.channels, image_channels),
       [](uint8_t* data) { stbi_image_free(data); }};
   image.data = std::move(image_data);
