@@ -44,6 +44,7 @@ cc_test(
         "//xrtl/tools/target_config",
     ],
     size = "small",
+    tags = ["requires_gui"],
 )
 
 cc_library(

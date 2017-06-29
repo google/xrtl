@@ -85,3 +85,18 @@ $ ./xtool fix
 ```
 $ ./xtool presubmit --fix
 ```
+
+## Testing
+
+### Test Tags
+
+Common `tags` that can be added to tests:
+
+* `exclusive`: no other tests should run while this test is executing.
+* `requires_gui`: test uses a GUI and requires a window manager (X11/etc).
+* `requires_gpu`: test requires a real hardware GPU to run.
+
+```
+# Run all tests except those that require a hardware GPU:
+$ ./xtool test --all --test_tag_filter=-requires_gpu
+```
