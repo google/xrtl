@@ -54,7 +54,7 @@ cc_test(
         "//xrtl/testing:gtest_main",
         "//xrtl/ui/testing:mock_control_listener",
     ],
-    tags = ["exclusive"],
+    tags = ["exclusive", "requires_gui"],
 )
 
 cc_library(
@@ -124,6 +124,20 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
 )
 
+cc_test(
+    name = "window_test",
+    srcs = ["window_test.cc"],
+    deps = [
+        ":window",
+        "//xrtl/base:debugging",
+        "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
+        "//xrtl/testing:gtest_main",
+        "//xrtl/ui/testing:mock_control_listener",
+    ],
+    tags = ["exclusive", "requires_gui"],
+)
+
 cc_binary(
     name = "window_demo",
     srcs = ["window_demo.cc"],
@@ -147,18 +161,4 @@ cc_binary(
         "//xrtl/base/threading:thread",
         "//xrtl/testing:demo_main",
     ],
-)
-
-cc_test(
-    name = "window_test",
-    srcs = ["window_test.cc"],
-    deps = [
-        ":window",
-        "//xrtl/base:debugging",
-        "//xrtl/base/threading:event",
-        "//xrtl/base/threading:thread",
-        "//xrtl/testing:gtest_main",
-        "//xrtl/ui/testing:mock_control_listener",
-    ],
-    tags = ["exclusive"],
 )
