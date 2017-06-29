@@ -33,7 +33,7 @@ bool AttachConsole() {
 bool is_debugger_attached() {
   // This works on both iOS and OSX.
   // https://developer.apple.com/library/mac/qa/qa1361/_index.html
-  kinfo_proc info = {0};
+  kinfo_proc info = {{{{0}}}};
   info.kp_proc.p_flag = 0;
   int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()};
   size_t size = sizeof(info);
