@@ -24,8 +24,8 @@ test --test_output=errors
 
 # https://clang.llvm.org/docs/AddressSanitizer.html
 common:asan --config=clang
-common:asan --copt=-DASAN_OPTIONS=\"color=always:malloc_context_size=10:detect_odr_violation=0\"
-common:asan --copt=-DLSAN_OPTIONS=\"\"
+common:asan --copt=-DASAN_OPTIONS=\"color=always:malloc_context_size=10:detect_odr_violation=0:detect_stack_use_after_return=1:strip_path_prefix=/proc/self/cwd/\"
+common:asan --copt=-DLSAN_OPTIONS=\"report_objects=1:print_suppressions=1:strip_path_prefix=/proc/self/cwd/\"
 common:asan --strip=never
 common:asan --copt=-g
 common:asan --copt=-O1

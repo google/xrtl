@@ -47,6 +47,7 @@ cc_library(
     srcs = ["posix_logging_sink.cc"],
     deps = [
         ":logging_macros_hdrs",
+        "//xrtl/base:flags",
         "//xrtl/base:logging_hdrs",
         "//xrtl/base:system_clock",
     ],

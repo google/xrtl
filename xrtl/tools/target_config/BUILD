@@ -44,6 +44,11 @@ cc_library(
         "//conditions:default": [
             "XRTL_CONFIG_LOGGING_VERBOSE=1",
         ],
+    }) + select({
+        "//xrtl/tools/target_config:swiftshader": [
+            "XRTL_CONFIG_SWIFTSHADER=1",
+        ],
+        "//conditions:default": [],
     }),
 )
 
@@ -99,5 +104,15 @@ config_setting(
     name = "minimal_logging",
     values = {
         "define": "MINIMAL_LOGGING=1",
+    },
+)
+
+# Use Swiftshader for GLES/EGL instead of system libraries.
+#
+# $ bazel build --define=SWIFTSHADER=1 ...
+config_setting(
+    name = "swiftshader",
+    values = {
+        "define": "SWIFTSHADER=1",
     },
 )

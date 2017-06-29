@@ -85,6 +85,16 @@ cc_library(
     deps = [
         "//xrtl/tools/target_platform",
     ],
+    linkopts = [
+        "-Wl,-u__asan_default_options",
+        "-Wl,-u__lsan_default_options",
+        "-Wl,-u__lsan_default_suppressions",
+        "-Wl,-u__msan_default_options",
+        "-Wl,-u__tsan_default_options",
+        "-Wl,-u__ubsan_default_options",
+    ],
+    alwayslink = 1,
+    visibility = ["//visibility:public"],
 )
 
 cc_library(

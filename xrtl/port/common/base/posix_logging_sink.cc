@@ -16,13 +16,16 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/system_clock.h"
 #include "xrtl/port/common/base/logging_macros.h"
 
+DEFINE_bool(logtostderr, false, "Logs to stderr instead of stdout");
+
 namespace xrtl {
 
-void FlushLog() { std::fflush(stderr); }
+void FlushLog() { std::fflush(FLAGS_logtostderr ? stderr : stdout); }
 
 namespace internal {
 
@@ -36,8 +39,9 @@ void LogMessage::EmitLogMessage() {
   strftime(time_buffer, kTimeBufferSize, "%Y-%m-%d %H:%M:%S",
            localtime(&now_seconds));
 
-  std::fprintf(stdout, "%s.%06d: %c %s:%d] %s\n", time_buffer, micros_remainder,
-               "IWEF"[severity_], file_name_, line_, str().c_str());
+  std::fprintf(FLAGS_logtostderr ? stderr : stdout, "%s.%06d: %c %s:%d] %s\n",
+               time_buffer, micros_remainder, "IWEF"[severity_], file_name_,
+               line_, str().c_str());
 }
 
 }  // namespace internal
