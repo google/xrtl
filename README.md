@@ -20,7 +20,11 @@ Pronounced 'zurtle'.
 * Install clang (and clang-tools-extra) from the [LLVM downloads page](http://releases.llvm.org/download.html)
 * Install bazel via [homebrew](https://brew.sh/) or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
-$ sudo brew install bazel
+$ brew install bazel
+```
+* Install protobuf:
+```
+$ sudo easy_install protobuf
 ```
 * Run initial setup with xtool:
 ```
