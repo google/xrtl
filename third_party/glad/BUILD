@@ -16,6 +16,9 @@ cc_library(
     deps = [
         "//third_party/GLES_khronos_headers:GLES3",
     ],
+    copts = [
+        "-x c++",
+    ],
     includes = ["include"],
 )
 
@@ -26,6 +29,9 @@ cc_library(
     deps = [
         ":glad",
         "//third_party/GLES_khronos_headers:EGL",
+    ],
+    copts = [
+        "-x c++",
     ],
     includes = ["include"],
 )

@@ -21,7 +21,7 @@
 #define STBI_NO_HDR     // no hdr conversion
 #define STBI_ONLY_PNG   // only .png support
 #define STB_IMAGE_IMPLEMENTATION
-#include "third_party/stblib/stb_image.h"
+#include <stb_image.h>
 
 #include "xrtl/base/logging.h"
 #include "xrtl/testing/file_manifest.h"

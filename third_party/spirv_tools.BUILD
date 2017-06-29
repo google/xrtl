@@ -103,6 +103,33 @@ genrule(
     visibility = ["//visibility:private"],
 )
 
+genrule(
+    name = "run_generate_grammar_tables_spv_amd_shader_ballot",
+    srcs = ["source/extinst.spv-amd-shader-ballot.grammar.json"],
+    outs = ["spv-amd-shader-ballot.insts.inc"],
+    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-ballot.grammar.json) --vendor-insts-output=$(location spv-amd-shader-ballot.insts.inc)",
+    tools = [":generate_grammar_tables"],
+    visibility = ["//visibility:private"],
+)
+
+genrule(
+    name = "run_generate_grammar_tables_spv_amd_shader_explicit_vertex_parameter",
+    srcs = ["source/extinst.spv-amd-shader-explicit-vertex-parameter.grammar.json"],
+    outs = ["spv-amd-shader-explicit-vertex-parameter.insts.inc"],
+    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-explicit-vertex-parameter.grammar.json) --vendor-insts-output=$(location spv-amd-shader-explicit-vertex-parameter.insts.inc)",
+    tools = [":generate_grammar_tables"],
+    visibility = ["//visibility:private"],
+)
+
+genrule(
+    name = "run_generate_grammar_tables_spv_amd_trinary_minmax",
+    srcs = ["source/extinst.spv-amd-shader-trinary-minmax.grammar.json"],
+    outs = ["spv-amd-shader-trinary-minmax.insts.inc"],
+    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-trinary-minmax.grammar.json) --vendor-insts-output=$(location spv-amd-shader-trinary-minmax.insts.inc)",
+    tools = [":generate_grammar_tables"],
+    visibility = ["//visibility:private"],
+)
+
 py_binary(
     name = "generate_registry_tables",
     srcs = ["utils/generate_registry_tables.py"],
@@ -147,6 +174,9 @@ cc_library(
         ":run_generate_grammar_tables_glsl_1.0",
         ":run_generate_grammar_tables_opencl_1.0",
         ":run_generate_grammar_tables_spv_amd_gcn_shader",
+        ":run_generate_grammar_tables_spv_amd_shader_ballot",
+        ":run_generate_grammar_tables_spv_amd_shader_explicit_vertex_parameter",
+        ":run_generate_grammar_tables_spv_amd_trinary_minmax",
         ":run_generate_registry_tables",
         ":run_update_build_version",
     ],
@@ -252,6 +282,8 @@ cc_library(
     srcs = [
         "source/opt/basic_block.cpp",
         "source/opt/basic_block.h",
+        "source/opt/block_merge_pass.cpp",
+        "source/opt/block_merge_pass.h",
         "source/opt/build_module.cpp",
         "source/opt/build_module.h",
         "source/opt/compact_ids_pass.cpp",
@@ -271,11 +303,19 @@ cc_library(
         "source/opt/function.h",
         "source/opt/inline_pass.cpp",
         "source/opt/inline_pass.h",
+        "source/opt/insert_extract_elim.cpp",
+        "source/opt/insert_extract_elim.h",
         "source/opt/instruction.cpp",
         "source/opt/instruction.h",
         "source/opt/ir_loader.cpp",
         "source/opt/ir_loader.h",
         "source/opt/iterator.h",
+        "source/opt/local_access_chain_convert_pass.cpp",
+        "source/opt/local_access_chain_convert_pass.h",
+        "source/opt/local_single_block_elim_pass.cpp",
+        "source/opt/local_single_block_elim_pass.h",
+        "source/opt/local_single_store_elim_pass.cpp",
+        "source/opt/local_single_store_elim_pass.h",
         "source/opt/log.h",
         "source/opt/make_unique.h",
         "source/opt/module.cpp",

@@ -11,6 +11,7 @@ cc_library(
         "stb_image.h",
         "stb_image_write.h",
     ],
+    includes = ["."],
     visibility = ["//visibility:public"],
 )
 
