@@ -90,3 +90,14 @@ def xrtl_workspace():
       name = "stb_image",
       actual = "@com_github_nothings_stb//:stb_image",
   )
+
+  # //third_party/swiftshader/
+  native.new_local_repository(
+      name = "com_github_google_swiftshader",
+      path = "third_party/swiftshader/",
+      build_file = "third_party/swiftshader.BUILD",
+  )
+  native.bind(
+      name = "swiftshader",
+      actual = "@com_github_google_swiftshader//:swiftshader",
+  )

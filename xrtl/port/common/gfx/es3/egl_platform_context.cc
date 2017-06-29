@@ -22,6 +22,7 @@
 #include "xrtl/base/debugging.h"
 #include "xrtl/base/tracing.h"
 #include "xrtl/port/common/gfx/es3/egl_strings.h"
+#include "xrtl/tools/target_config/target_config.h"
 
 namespace xrtl {
 namespace gfx {
@@ -169,8 +170,8 @@ EGLDisplayCache* shared_display_cache() {
   static std::once_flag create_flag;
   static EGLDisplayCache* shared_instance;
   std::call_once(create_flag, []() {
-    debugging::LeakCheckDisabler leak_check_disabler;
     shared_instance = new EGLDisplayCache();
+    atexit([]() { delete shared_instance; });
   });
   DCHECK(shared_instance);
   return shared_instance;
@@ -178,6 +179,18 @@ EGLDisplayCache* shared_display_cache() {
 
 // Lookup a function within the dynamically loaded GLESv2 DLL.
 void* LookupGlesFunction(const char* name) {
+#if defined(XRTL_CONFIG_SWIFTSHADER)
+  // This requires the so to be on the path.
+  static void* libglesv2 = nullptr;
+  if (!libglesv2) {
+    libglesv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
+  }
+  if (!libglesv2) {
+    LOG(ERROR) << "Unable to load libGLESv2.so";
+    return static_cast<void*>(nullptr);
+  }
+  return dlsym(libglesv2, name);
+#else
   static void* libglesv2 = nullptr;
   static void* libglesv2_nvidia = nullptr;
   static bool has_checked_nvidia = false;
@@ -204,6 +217,7 @@ void* LookupGlesFunction(const char* name) {
     proc = dlsym(libglesv2_nvidia, name);
   }
   return proc;
+#endif  // XRTL_CONFIG_SWIFTSHADER
 }
 
 }  // namespace
@@ -308,14 +322,6 @@ bool EGLPlatformContext::Initialize(EGLNativeDisplayType native_display,
   native_display_ = native_display;
   native_window_ = native_window;
 
-  // Initialize the target surface (if not offscreen).
-  if (native_window_ || !supports_surfaceless_context_) {
-    if (RecreateSurface({0, 0}) != RecreateSurfaceResult::kSuccess) {
-      LOG(ERROR) << "Unable to create window surface";
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -363,6 +369,15 @@ bool EGLPlatformContext::InitializeContext(
   }
   egl_context_ = egl_context;
 
+  // Initialize the target surface (if not offscreen).
+  // We must create a dummy surface before we try to make the context current.
+  if (native_window_ || !supports_surfaceless_context_) {
+    if (RecreateSurface({0, 0}) != RecreateSurfaceResult::kSuccess) {
+      LOG(ERROR) << "Unable to create window surface";
+      return false;
+    }
+  }
+
   // Try to make the context current as it may be invalid but we won't know
   // until the first attempt. Catching the error here makes it easier to find.
   ES3PlatformContext::ThreadLock context_lock(this);
@@ -371,8 +386,15 @@ bool EGLPlatformContext::InitializeContext(
     return false;
   }
 
-  // Setup GL functions.
-  if (!gladLoadGLES2Loader(LookupGlesFunction)) {
+  // Setup GL functions. We only need to do this once.
+  static std::once_flag load_gles2_flag;
+  static std::atomic<bool> loaded_gles2{false};
+  std::call_once(load_gles2_flag, []() {
+    if (gladLoadGLES2Loader(LookupGlesFunction)) {
+      loaded_gles2 = true;
+    }
+  });
+  if (!loaded_gles2) {
     LOG(ERROR) << "Failed to load GL ES dynamic functions";
     return false;
   }
@@ -838,14 +860,8 @@ EGLPlatformContext::RecreateSurfaceResult EGLPlatformContext::RecreateSurface(
     Size2D size_hint) {
   WTF_SCOPE0("EGLPlatformContext#RecreateSurface");
 
-  ES3PlatformContext::ThreadLock context_lock(this);
-  if (!context_lock.is_held()) {
-    return RecreateSurfaceResult::kDeviceLost;
-  }
-
   DCHECK_NE(egl_display_, EGL_NO_DISPLAY);
   DCHECK_NE(egl_context_, EGL_NO_CONTEXT);
-  DCHECK(IsCurrent());
 
   // The EGL standard says creating a new window surface when there is an
   // existing one will lead to EGL_BAD_ALLOC error, so we destroy the current
@@ -853,7 +869,9 @@ EGLPlatformContext::RecreateSurfaceResult EGLPlatformContext::RecreateSurface(
   // the new one, but that would have probably happened anyway.
   if (egl_surface_ != EGL_NO_SURFACE) {
     // To ensure the current window surface gets destroyed, we first detach it.
+#if !defined(XRTL_CONFIG_SWIFTSHADER)  // Swiftshader bug.
     eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context_);
+#endif  // !XRTL_CONFIG_SWIFTSHADER
     eglDestroySurface(egl_display_, egl_surface_);
     egl_surface_ = EGL_NO_SURFACE;
   }
@@ -931,7 +949,7 @@ Size2D EGLPlatformContext::QuerySize() {
   DCHECK_NE(egl_display_, EGL_NO_DISPLAY);
   DCHECK_NE(egl_context_, EGL_NO_CONTEXT);
 
-  if (egl_surface_ == EGL_NO_SURFACE) {
+  if (!native_window_) {
     // No-op.
     return {0, 0};
   }
@@ -953,7 +971,7 @@ Size2D EGLPlatformContext::QuerySize() {
 
 bool EGLPlatformContext::SwapBuffers(
     std::chrono::milliseconds present_time_utc_millis) {
-  if (egl_surface_ == EGL_NO_SURFACE) {
+  if (!native_window_) {
     // No-op.
     return true;
   }

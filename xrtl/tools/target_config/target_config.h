@@ -23,6 +23,7 @@
 // Additionally one or more of these may be defined:
 // XRTL_CONFIG_GOOGLE_INTERNAL
 // XRTL_CONFIG_LOGGING_VERBOSE
+// XRTL_CONFIG_SWIFTSHADER
 //
 // Depending on instrumentation mode, we set these dynamically:
 // XRTL_CONFIG_ASAN
