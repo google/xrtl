@@ -30,7 +30,7 @@ class FileManifest {
  public:
   // Parses the file paths map from the runfiles MANIFEST file.
   // Call this during test setup.
-  static void ParseFromManifest();
+  static void ParseFromManifest(const std::string& executable_path);
 
   // Gets the absolute path for the provided test data relative path or empty
   // string if that exact relative path does not exist in the runfiles MANIFEST.
