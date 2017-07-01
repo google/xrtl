@@ -14,6 +14,7 @@
 
 #include "xrtl/testing/file_manifest.h"
 
+#include <algorithm>
 #include <fstream>
 
 namespace xrtl {
@@ -49,7 +50,7 @@ void FileManifest::ParseFromManifest(const std::string& executable_path) {
   manifest_file_stream.close();
 }
 
-StringView FileManifest::ResolveAbsolutePath(StringView relative_path) {
+StringView FileManifest::ResolvePath(StringView relative_path) {
   std::string target_path = std::string(std::getenv("TEST_WORKSPACE")) + "/" +
                             std::string(relative_path);
   for (auto file_path_pair : file_paths_map) {
@@ -60,7 +61,7 @@ StringView FileManifest::ResolveAbsolutePath(StringView relative_path) {
     }
   }
 
-  return "";
+  return relative_path;
 }
 
 }  // namespace testing

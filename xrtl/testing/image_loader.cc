@@ -14,14 +14,14 @@
 
 #include "xrtl/testing/image_loader.h"
 
-#include <utility>
-
 // TODO(scotttodd): Move this to some build magic and/or a .cc file
 #define STBI_NO_LINEAR  // no loadf
 #define STBI_NO_HDR     // no hdr conversion
 #define STBI_ONLY_PNG   // only .png support
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+#include <utility>
 
 #include "xrtl/base/logging.h"
 #include "xrtl/testing/file_manifest.h"
@@ -32,7 +32,7 @@ namespace testing {
 Image ImageLoader::LoadImage(StringView path, int image_channels) {
   Image image;
   ImageDataPtr image_data = {
-      stbi_load(FileManifest::ResolveAbsolutePath(path).data(), &image.width,
+      stbi_load(FileManifest::ResolvePath(path).data(), &image.width,
                 &image.height, &image.channels, image_channels),
       [](uint8_t* data) { stbi_image_free(data); }};
   image.data = std::move(image_data);
