@@ -12,8 +12,8 @@ fi
 # Fetch a modern LLVM on osx. On linux travis.yml will apt install it.
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   echo "Fetching LLVM..."
-  brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/llvm@4.rb
-  brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/clang-format.rb
+  HOMEBREW_NO_AUTO_UPDATE=1 brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/llvm.rb
+  HOMEBREW_NO_AUTO_UPDATE=1 brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/clang-format.rb
 fi
 
 # Use CI-specific bazel configurations.
