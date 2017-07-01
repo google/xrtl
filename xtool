@@ -112,7 +112,7 @@ def main():
   # understand right to bazel.
   allow_unknown_args = False
   if len(command_args) and command_args[0] in ('clean', 'build', 'run', 'test',
-                                               'query', 'sln'):
+                                               'query', 'info', 'sln'):
     allow_unknown_args = True
 
   # Parse command name and dispatch.
@@ -528,6 +528,7 @@ def discover_commands(subparsers):
       'run': RunCommand(subparsers),
       'test': TestCommand(subparsers),
       'query': QueryCommand(subparsers),
+      'info': InfoCommand(subparsers),
       'lint': LintCommand(subparsers),
       'fix': FixCommand(subparsers),
       'tidy': TidyCommand(subparsers),
@@ -799,6 +800,21 @@ class QueryCommand(BazelCommand):
     result = super(QueryCommand, self).execute(args, 'query', pass_args, cwd)
     if not result:
       print('Success!')
+    return result
+
+
+class InfoCommand(BazelCommand):
+  """'info' command."""
+
+  def __init__(self, subparsers, *args, **kwargs):
+    super(InfoCommand, self).__init__(
+        subparsers,
+        name='info',
+        help_short='Issues a bazel info.',
+        *args, **kwargs)
+
+  def execute(self, args, pass_args, cwd):
+    result = super(InfoCommand, self).execute(args, 'info', pass_args, cwd)
     return result
 
 
