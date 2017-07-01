@@ -468,8 +468,6 @@ def get_clang_format_binary():
       'C:\\Program Files\\LLVM\\bin\\clang-format.exe',
       'C:\\Program Files (x86)\\LLVM\\bin\\clang-format.exe',
       'clang-format-4.0',
-      'clang-format-3.9',
-      'clang-format-3.8',
       'clang-format',
       ]
   for binary in attempts:
@@ -477,7 +475,7 @@ def get_clang_format_binary():
       return binary
   print 'ERROR: clang-format is not on PATH'
   print 'LLVM is available from http://llvm.org/releases/download.html'
-  print 'At least version 3.8 is required.'
+  print 'At least version 4.0 is required.'
   sys.exit(1)
 
 
@@ -491,8 +489,6 @@ def get_git_clang_format_py():
       'C:\\Program Files\\LLVM\\bin\\git-clang-format',
       'C:\\Program Files (x86)\\LLVM\\bin\\git-clang-format',
       'git-clang-format-4.0',
-      'git-clang-format-3.9',
-      'git-clang-format-3.8',
       'git-clang-format',
       ]
   for py_path in attempts:
@@ -500,7 +496,7 @@ def get_git_clang_format_py():
       return get_bin(py_path)
   print 'ERROR: git-clang-format is not on PATH'
   print 'LLVM is available from http://llvm.org/releases/download.html'
-  print 'At least version 3.8 is required.'
+  print 'At least version 4.0 is required.'
   sys.exit(1)
 
 
@@ -514,8 +510,6 @@ def get_clang_tidy_binary():
       'C:\\Program Files\\LLVM\\bin\\clang-tidy.exe',
       'C:\\Program Files (x86)\\LLVM\\bin\\clang-tidy.exe',
       'clang-tidy-4.0',
-      'clang-tidy-3.9',
-      'clang-tidy-3.8',
       'clang-tidy',
       ]
   for binary in attempts:
@@ -523,7 +517,7 @@ def get_clang_tidy_binary():
       return binary
   print 'ERROR: clang-tidy is not on PATH'
   print 'LLVM is available from http://llvm.org/releases/download.html'
-  print 'At least version 3.8 is required.'
+  print 'At least version 4.0 is required.'
   sys.exit(1)
 
 
