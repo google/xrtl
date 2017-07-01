@@ -52,26 +52,26 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='dbg|x64'">
-    <NMakeBuildCommandLine>$XTOOL build -c dbg --config=windows_x86_64 $TARGET_PACKAGE</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>$XTOOL build -c dbg --config=windows_x86_64 $BAZEL_ARGS $TARGET_PACKAGE</NMakeBuildCommandLine>
     <NMakeOutput>$TARGET_EXE_DBG</NMakeOutput>
     <NMakeCleanCommandLine>$XTOOL clean</NMakeCleanCommandLine>
-    <NMakeReBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine>$XTOOL build -c dbg --config=windows_x86_64 $BAZEL_ARGS $TARGET_PACKAGE</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$DEFINES;$$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>$INCLUDE_PATHS;$$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='fastbuild|x64'">
-    <NMakeBuildCommandLine>$XTOOL build -c fastbuild --config=windows_x86_64 $TARGET_PACKAGE</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>$XTOOL build -c fastbuild --config=windows_x86_64 $BAZEL_ARGS $TARGET_PACKAGE</NMakeBuildCommandLine>
     <NMakeOutput>$TARGET_EXE_FASTBUILD</NMakeOutput>
     <NMakeCleanCommandLine>$XTOOL clean</NMakeCleanCommandLine>
-    <NMakeReBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine>$XTOOL build -c fastbuild --config=windows_x86_64 $BAZEL_ARGS $TARGET_PACKAGE</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$DEFINES;$$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>$INCLUDE_PATHS;$$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$$(Configuration)|$$(Platform)'=='opt|x64'">
-    <NMakeBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>$XTOOL build -c opt --config=windows_x86_64 $BAZEL_ARGS $TARGET_PACKAGE</NMakeBuildCommandLine>
     <NMakeOutput>TARGET_EXE_OPT</NMakeOutput>
     <NMakeCleanCommandLine>$XTOOL clean</NMakeCleanCommandLine>
-    <NMakeReBuildCommandLine>$XTOOL build --config=windows_x86_64 $TARGET_PACKAGE</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine>$XTOOL build -c opt --config=windows_x86_64 $BAZEL_ARGS $TARGET_PACKAGE</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$DEFINES;$$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath>$INCLUDE_PATHS;$$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>

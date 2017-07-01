@@ -112,7 +112,7 @@ def main():
   # understand right to bazel.
   allow_unknown_args = False
   if len(command_args) and command_args[0] in ('clean', 'build', 'run', 'test',
-                                               'query'):
+                                               'query', 'sln'):
     allow_unknown_args = True
 
   # Parse command name and dispatch.
@@ -1104,11 +1104,12 @@ class FixCommand(Command):
     return return_code
 
 
-def generate_command_databases(config = default_config):
+def generate_command_databases(config = default_config, bazel_args = None):
   """
   Args:
     config: bazel --config= value used to generate the database.
             If none is provided the default for the host platform will be used.
+    bazel_args: additional arguments to pass to the bazel command.
 
   Returns:
     0 if the databases were created successfully.
@@ -1119,6 +1120,7 @@ def generate_command_databases(config = default_config):
   # Get bazel-bin path for our configuration.
   build_root = os.path.dirname(bazel_info('bazel-bin', config = config))
   execution_root = bazel_info('execution_root', config = config)
+  bazel_args = bazel_args if bazel_args else []
 
   # Remove all intermediate command files, as bazel won't clean them up for us.
   # There are probably good ways of avoiding this, but it's not so bad.
@@ -1147,7 +1149,7 @@ def generate_command_databases(config = default_config):
       'tools/actions:generate_compile_commands_listener',
       '--experimental_action_listener',
       'tools/actions:generate_link_targets_listener',
-      ] + top_level_packages)
+      ] + bazel_args + top_level_packages)
   if result:
     print('Error performing build with extra action')
     return result
@@ -1384,7 +1386,8 @@ class GenerateSlnCommand(Command):
   def execute(self, args, pass_args, cwd):
     # Generate a compile commands database.
     # This will let us get the defines used for all our files.
-    return_code = generate_command_databases(config = 'windows_x86_64')
+    return_code = generate_command_databases(config = 'windows_x86_64',
+                                             bazel_args = pass_args)
     if return_code:
       print('Error generating compile commands')
       return return_code
@@ -1501,6 +1504,7 @@ class GenerateSlnCommand(Command):
           cl_include_lines.append('<ClInclude Include="%s" />' % (source_file))
       vcxproj_file_contents = template_vcxproj.substitute({
           'XTOOL': xtool_path,
+          'BAZEL_ARGS': ' '.join(pass_args),
           'TARGET_PACKAGE': target_package,
           'TARGET_UUID': target_uuid,
           'TARGET_EXE_DBG': target_executable.replace('-fastbuild', '-dbg'),
