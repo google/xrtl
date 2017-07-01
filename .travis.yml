@@ -39,6 +39,9 @@ cache:
   pip: true
   directories:
   - /tmp/.cache/bazel_root
+  - /tmp/.cache/bazel_root_sanitize_msan
+  - /tmp/.cache/bazel_root_sanitize_tsan
+  - /tmp/.cache/bazel_root_sanitize_ubsan
   - /tmp/.cache/bazel_root_analyze
 
 install:
@@ -49,4 +52,8 @@ script:
   - ./tools/ci/travis/lint.sh
   - ./tools/ci/travis/build.sh
   - ./tools/ci/travis/test.sh
+  # TODO(benvanik): figure out how to get msan setup on travis.
+  # - ./tools/ci/travis/test_sanitize.sh msan
+  - ./tools/ci/travis/test_sanitize.sh tsan
+  - ./tools/ci/travis/test_sanitize.sh ubsan
   - ./tools/ci/travis/analyze.sh

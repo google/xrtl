@@ -170,7 +170,7 @@ class FixedVector {
 
   void pop_back() {
     DCHECK(size_);
-    data_[size_--] = {};
+    data_[--size_] = {};
   }
 
   // Erases the item at the given index.
