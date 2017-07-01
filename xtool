@@ -160,7 +160,7 @@ def import_vs_environment():
   # detection.
   if 'BAZEL_VS' in os.environ and not 'BAZEL_VC' in os.environ:
     os.environ['BAZEL_VC'] = os.environ['BAZEL_VS'] + "\\VC\\"
-  bazel_vc = os.environ['BAZEL_VC']
+  bazel_vc = os.environ.get('BAZEL_VC', '')
 
   if not bazel_vc:
     # Query first for VC++ tools, as we want to support non-VS installs. If it's
