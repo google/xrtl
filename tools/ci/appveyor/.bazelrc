@@ -25,3 +25,9 @@ test --worker_verbose
 test --strategy=Javac=worker
 test --strategy=Closure=worker
 test --keep_going
+
+# TODO(benvanik): figure out why appveyor needs these for third_party includes.
+build --strategy=CppCompile=standalone
+build --strategy=CppLink=standalone
+test --strategy=CppCompile=standalone
+test --strategy=CppLink=standalone
