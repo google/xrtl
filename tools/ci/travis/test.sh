@@ -13,8 +13,15 @@ fi
 cp tools/ci/travis/.bazelrc .
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-  # TODO(benvanik): figure out how to get x running correctly.
-  ./xtool test --all --keep_going --test_tag_filters=-requires_gui,-requires_gpu
+  CONFIG=asan
+  # TODO(benvanik): figure out how to get x running correctly so we can do
+  #                 requires_gui tests.
 else
-  ./xtool test --all --keep_going --test_tag_filters=-requires_gui,-requires_gpu
+  CONFIG=
 fi
+
+./xtool test \
+    --config=$CONFIG \
+    --keep_going \
+    --all \
+    --test_tag_filters=-requires_gui,-requires_gpu
