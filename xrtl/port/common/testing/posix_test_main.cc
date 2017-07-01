@@ -23,7 +23,7 @@ extern "C" int main(int argc, char** argv) {
 
   ::testing::InitGoogleTest(&argc, argv);
 
-  xrtl::testing::FileManifest::ParseFromManifest();
+  xrtl::testing::FileManifest::ParseFromManifest(std::string(argv[0]));
 
   int exit_code = RUN_ALL_TESTS();
 

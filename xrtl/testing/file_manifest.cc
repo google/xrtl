@@ -21,11 +21,23 @@ namespace testing {
 
 std::vector<std::pair<std::string, std::string>> FileManifest::file_paths_map;
 
-void FileManifest::ParseFromManifest() {
+void FileManifest::ParseFromManifest(const std::string& executable_path) {
   file_paths_map.clear();
 
-  std::string manifest_path =
-      std::getenv("TEST_SRCDIR") + std::string("/MANIFEST");
+  // TEST_SRCDIR will point to runfiles when running under bazel test.
+  const char* test_srcdir = std::getenv("TEST_SRCDIR");
+  std::string runfiles_path = test_srcdir ? test_srcdir : "";
+  if (runfiles_path.empty()) {
+    // Running outside of bazel test. Use module path to infer runfiles.
+    size_t last_slash =
+        std::min(executable_path.rfind('/'), executable_path.rfind('\\'));
+    if (last_slash != std::string::npos) {
+      std::string executable_parent = executable_path.substr(0, last_slash);
+      std::string executable_name = executable_path.substr(last_slash + 1);
+      runfiles_path = executable_parent + "/" + executable_name + ".runfiles";
+    }
+  }
+  std::string manifest_path = runfiles_path + std::string("/MANIFEST");
 
   // Parse relative path -> absolute path pairs line by line.
   std::ifstream manifest_file_stream(manifest_path);
