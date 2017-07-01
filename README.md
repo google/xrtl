@@ -46,7 +46,7 @@ $ ./xtool setup
 ### Windows
 
 * Install clang (and clang-tools-extra) from the [LLVM downloads page](http://releases.llvm.org/download.html)
-* Install Visual Studio 2015 or 2017 with the Windows SDK and C++ tools
+* Install Visual Studio 2017 with the Windows SDK and C++ tools
 * Install bazel via [chocolatey](https://chocolatey.org/) or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
 > choco install bazel

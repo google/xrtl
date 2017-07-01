@@ -79,10 +79,8 @@ def main():
   # Grab Visual Studio version and execute shell to set up environment.
   if sys.platform in ('cygwin', 'win32'):
     vs_version = import_vs_environment()
-    # TODO(benvanik): support 2017 as well.
-    if vs_version != 2015:
-      print('ERROR: Visual Studio 2015 not found!')
-      print('Ensure you have the VS140COMNTOOLS environment variable!')
+    if vs_version != 2017:
+      print('ERROR: Visual Studio 2017 not found!')
       return 1
 
   # Setup main argument parser and common arguments.
@@ -132,25 +130,61 @@ def main():
   return return_code
 
 
+def query_reg_sz(key, value):
+  reg_binary = 'reg.exe'
+  p = subprocess.Popen([
+      reg_binary,
+      'query',
+      key,
+      '/v',
+      value,
+      ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  (stdout, stderr) = p.communicate()
+  if not stderr:
+    for line in stdout.split('\n'):
+      line = line.strip()
+      if line.startswith(value) and line.find('REG_SZ') != -1:
+        return line[line.find('REG_SZ') + len('REG_SZ'):].strip()
+  return None
+
+
 def import_vs_environment():
   """Finds the installed Visual Studio version and imports
   interesting environment variables into os.environ.
 
   Returns:
-    A version such as 2015 or None if no VS is found.
+    A version such as 2017 or None if no VS is found.
   """
-  version = 0
-  tools_path = ''
-  if 'VS140COMNTOOLS' in os.environ:
-    version = 2015
-    tools_path = os.environ['VS140COMNTOOLS']
-  if version == 0:
+
+  # Pull the current paths, if specified. We'll use this to override our
+  # detection.
+  if 'BAZEL_VS' in os.environ and not 'BAZEL_VC' in os.environ:
+    os.environ['BAZEL_VC'] = os.environ['BAZEL_VS'] + "\\VC\\"
+  bazel_vc = os.environ['BAZEL_VC']
+
+  if not bazel_vc:
+    # Query first for VC++ tools, as we want to support non-VS installs. If it's
+    # not found we'll fall back to the VS directory.
+    vc7_dir = query_reg_sz(
+        'HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\SxS\\VC7',
+        '15.0')
+    vs7_dir = query_reg_sz(
+        'HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\SxS\\VS7',
+        '15.0')
+    if vc7_dir and os.path.exists(vc7_dir):
+      bazel_vc = vc7_dir
+    elif vs7_dir and os.path.exists(vs7_dir):
+      bazel_vc = os.path.join(vs7_dir, 'VC')
+    os.environ['BAZEL_VC'] = bazel_vc
+
+  if not bazel_vc:
+    # Couldn't find any kind of VC++/VS install.
     return None
-  vcvarsqueryregistry_path = os.path.join(tools_path, 'vcvarsqueryregistry.bat')
-  if os.path.exists(vcvarsqueryregistry_path):
-    tools_path = vcvarsqueryregistry_path
-  else:
-    tools_path = os.path.join(tools_path, '..\\..\\vc\\vcvarsall.bat')
+
+  vcvarsall_path = os.path.join(bazel_vc, 'Auxiliary\\Build\\vcvarsall.bat')
+  if not os.path.exists(vcvarsall_path):
+    print('ERROR: BAZEL_VC set to %s but no vcvarsall.bat found' % (bazel_vc))
+    return None
 
   if sys.platform == 'cygwin':
     args = ['tools\\/utils\\/echo_vcvarsall.bat']
@@ -165,7 +199,7 @@ def import_vs_environment():
         'windowssdkdir',
         )
   else:
-    args = [tools_path, '&&', 'set']
+    args = [vcvarsall_path, 'x64', '&&', 'set']
     envvars_to_save = (
         'devenvdir',
         'include',
@@ -177,6 +211,7 @@ def import_vs_environment():
         'temp',
         'tmp',
         'vcinstalldir',
+        'visualstudioversion',
         'windowssdkdir',
         )
   popen = subprocess.Popen(
@@ -190,6 +225,10 @@ def import_vs_environment():
           setting = os.path.dirname(sys.executable) + os.pathsep + setting
         os.environ[var.upper()] = setting
         break
+
+  version = 0
+  if os.environ.get('VISUALSTUDIOVERSION', '') == '15.0':
+    version = 2017
 
   os.environ['VSVERSION'] = str(version)
   return version
