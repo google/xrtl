@@ -1,6 +1,10 @@
 Cross-platform Real-Time Rendering Library
 ==========================================
 
+| **`Linux/Mac CPU`** | **`Windows CPU`** |
+|---------------------|-------------------|
+| [![Build Status](https://travis-ci.org/google/xrtl.svg?branch=master)](https://travis-ci.org/google/xrtl) | [![Build status](https://ci.appveyor.com/api/projects/status/wp1p760x93tw1p1d/branch/master?svg=true)](https://ci.appveyor.com/project/benvanik/xrtl/branch/master) |
+
 **Status**: currently bringing up the foundations of the library and massaging code from previous internal projects to something acceptable for public release. Please be patient!
 
 A lightweight framework for writing efficient cross-platform rendering code in
