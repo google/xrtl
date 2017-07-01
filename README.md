@@ -56,11 +56,23 @@ $ ./xtool setup
 ```
 > xtool setup
 ```
+
+## IDE Setup
+
+### Visual Studio 2017
+
 * Generate a Visual Studio solution; do this each time you change BUILD files:
 ```
 > xtool sln
 ```
 * Open `.vs\xrtl.sln`, select a project, and press `F5`!
+
+### CLion
+
+* Install the 'CLion with Bazel' plugin from the repository.
+* Import the bazel project from the root git folder.
+* Set the bazel binary to `xtool` (or `xtool.bat` on Windows).
+* Import the project view from the workspace `.bazelproject` file.
 
 ## Developing
 
