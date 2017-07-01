@@ -49,7 +49,10 @@ cc_library(
             "-ldl",
         ],
         "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
+        "//xrtl/tools/target_platform:windows": [
+            "-Wl,libEGL.lib",
+            "-Wl,libGLESv2.lib",
+        ],
     }),
 )
 

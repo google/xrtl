@@ -14,7 +14,9 @@
 
 #include "xrtl/port/common/gfx/es3/egl_platform_context.h"
 
+#if !defined(XRTL_PLATFORM_WINDOWS)
 #include <dlfcn.h>
+#endif  // !XRTL_PLATFORM_WINDOWS
 
 #include <algorithm>
 #include <utility>
@@ -179,7 +181,17 @@ EGLDisplayCache* shared_display_cache() {
 
 // Lookup a function within the dynamically loaded GLESv2 DLL.
 void* LookupGlesFunction(const char* name) {
-#if defined(XRTL_CONFIG_SWIFTSHADER)
+#if defined(XRTL_CONFIG_SWIFTSHADER) && defined(XRTL_PLATFORM_WINDOWS)
+  static HMODULE libglesv2 = nullptr;
+  if (!libglesv2) {
+    libglesv2 = ::LoadLibraryW(L"libGLESv2.dll");
+  }
+  if (!libglesv2) {
+    LOG(ERROR) << "Unable to load libGLESv2.dll";
+    return static_cast<void*>(nullptr);
+  }
+  return ::GetProcAddress(libglesv2, name);
+#elif defined(XRTL_CONFIG_SWIFTSHADER)
   // This requires the so to be on the path.
   static void* libglesv2 = nullptr;
   if (!libglesv2) {
@@ -486,7 +498,7 @@ bool EGLPlatformContext::ChooseBestConfig(
 // Toggle on tons of config selection debug logging.
 // Useful if no matching configs are found and you want to know why.
 // #define LOG_CONFIG_BAIL_OUT(...)
-#define LOG_CONFIG_BAIL_OUT() VLOG(1)
+#define LOG_CONFIG_BAIL_OUT() VLOG(3)
 #define LOG_CONFIG_MISMATCH_BAIL_OUT(attr) \
   LOG_CONFIG_BAIL_OUT() << "  Skipped: mismatch " #attr " "
 #define LOG_CONFIG_GET_BAIL_OUT(attr) \
