@@ -14,25 +14,22 @@ addons:
       - llvm-toolchain-trusty-4.0
     packages:
       - clang-4.0
+      - clang-format-4.0
       - clang-tidy-4.0
 
 env:
   global:
     - BAZEL_VERSION=0.5.2
-    - PATH=$PATH:$HOME/bin/
+    - PATH=/usr/local/opt/llvm/bin:$HOME/bin/:$PATH
     - DISPLAY=:0.0
 
 matrix:
   fast_finish: true
   include:
     - os: linux
-      env:
-        - BAZEL_PLATFORM=linux-x86_64
-        - BAZEL_INSTALLER=bazel-$BAZEL_VERSION-jdk7-installer-linux-x86_64.sh
     - os: osx
-      env:
-        - BAZEL_PLATFORM=darwin-x86_64
-        - BAZEL_INSTALLER=bazel-$BAZEL_VERSION-installer-darwin-x86_64.sh
+  allow_failures:
+    - os: osx
 
 language: cpp
 compiler:
@@ -42,12 +39,14 @@ cache:
   pip: true
   directories:
   - /tmp/.cache/bazel_root
+  - /tmp/.cache/bazel_root_analyze
 
 install:
+  - git fetch https://github.com/google/xrtl.git master:refs/remotes/origin/master
   - ./tools/ci/travis/install.sh
 
 script:
-  - ./tools/ci/travis/presubmit.sh
+  - ./tools/ci/travis/lint.sh
   - ./tools/ci/travis/build.sh
   - ./tools/ci/travis/test.sh
   - ./tools/ci/travis/analyze.sh

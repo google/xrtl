@@ -12,4 +12,4 @@ fi
 # Use CI-specific bazel configurations.
 cp tools/ci/travis/.bazelrc .
 
-./xtool lint
+./xtool lint --origin

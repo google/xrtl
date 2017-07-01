@@ -10,7 +10,7 @@ else
 fi
 
 # Use CI-specific bazel configurations.
-cp tools/ci/travis/.bazelrc .
+cp tools/ci/travis/analyze.bazelrc .bazelrc
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   # TODO(benvanik): setup xtool to use output_base for tidy
