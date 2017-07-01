@@ -174,7 +174,10 @@ cc_library(
         "SPIRV/spvIR.h",
     ],
     deps = [":glslang"],
-    copts = COMMON_COPTS + ["-Wno-gnu-redeclared-enum"],
+    copts = COMMON_COPTS + select({
+        ":windows": [],
+        "//conditions:default": ["-Wno-gnu-redeclared-enum"],
+    }),
 )
 
 cc_library(
