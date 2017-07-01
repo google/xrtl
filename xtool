@@ -326,12 +326,13 @@ def invoke_bazel(command, args, output_base = None):
   return subprocess.call(run_args, shell=False)
 
 
-def bazel_info(key, config = default_config):
+def bazel_info(key, config = default_config, output_base = None):
   """Gets a bazel info value.
 
   Args:
     key: bazel info key.
     config: --config value (or platform default is unspecified).
+    output_base: absolute path to dump bazel outputs.
 
   Returns:
     Key value.
@@ -344,9 +345,13 @@ def bazel_info(key, config = default_config):
     return bazel_info.cache[cache_key]
 
   _prepare_bazel_environ()
-  value = subprocess.check_output(
-      ('bazel', 'info', '--config=%s' % (config), key),
-      cwd=self_path).decode('utf-8').rstrip()
+  value = subprocess.check_output([
+      'bazel',
+      ] + (['--output_base=%s' % (output_base),] if output_base else []) + [
+      'info',
+      '--config=%s' % (config),
+      key,
+      ], cwd=self_path).decode('utf-8').rstrip()
 
   # Add to cache.
   bazel_info.cache[cache_key] = value
@@ -1104,11 +1109,13 @@ class FixCommand(Command):
     return return_code
 
 
-def generate_command_databases(config = default_config, bazel_args = None):
+def generate_command_databases(config = default_config, output_base = None,
+                               bazel_args = None):
   """
   Args:
     config: bazel --config= value used to generate the database.
             If none is provided the default for the host platform will be used.
+    output_base: absolute path to dump bazel outputs.
     bazel_args: additional arguments to pass to the bazel command.
 
   Returns:
@@ -1118,8 +1125,10 @@ def generate_command_databases(config = default_config, bazel_args = None):
       `bazel-out/link_commands.json`
   """
   # Get bazel-bin path for our configuration.
-  build_root = os.path.dirname(bazel_info('bazel-bin', config = config))
-  execution_root = bazel_info('execution_root', config = config)
+  build_root = os.path.dirname(bazel_info('bazel-bin', config = config,
+                               output_base = output_base))
+  execution_root = bazel_info('execution_root', config = config,
+                              output_base = output_base)
   bazel_args = bazel_args if bazel_args else []
 
   # Remove all intermediate command files, as bazel won't clean them up for us.
@@ -1141,6 +1150,16 @@ def generate_command_databases(config = default_config, bazel_args = None):
       os.chmod(file_path, 0777)
       os.remove(file_path)
 
+  # Perform a bazel clean, which is required to ensure we get headers. If bazel
+  # doesn't build a target it won't have them in VS, which is lame.
+  result = invoke_bazel('clean', [
+      '--config=%s' % (config),
+      ] + bazel_args,
+      output_base = output_base)
+  if result:
+    print('Error performing clean before build with extra action')
+    return result
+
   # Invoke bazel with the action listener and our build commands.
   # TODO(benvanik): multiple platforms, many roots, etc.
   result = invoke_bazel('build', [
@@ -1149,7 +1168,8 @@ def generate_command_databases(config = default_config, bazel_args = None):
       'tools/actions:generate_compile_commands_listener',
       '--experimental_action_listener',
       'tools/actions:generate_link_targets_listener',
-      ] + bazel_args + top_level_packages)
+      ] + bazel_args + top_level_packages,
+      output_base = output_base)
   if result:
     print('Error performing build with extra action')
     return result
@@ -1387,6 +1407,7 @@ class GenerateSlnCommand(Command):
     # Generate a compile commands database.
     # This will let us get the defines used for all our files.
     return_code = generate_command_databases(config = 'windows_x86_64',
+                                             output_base = '.vs/bzlgen/',
                                              bazel_args = pass_args)
     if return_code:
       print('Error generating compile commands')
