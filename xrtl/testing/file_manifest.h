@@ -32,10 +32,11 @@ class FileManifest {
   // Call this during test setup.
   static void ParseFromManifest(const std::string& executable_path);
 
-  // Gets the absolute path for the provided test data relative path or empty
-  // string if that exact relative path does not exist in the runfiles MANIFEST.
+  // Gets the path for the provided test data relative path.
+  // Returns the input relative path without modifications if the exact relative
+  // path is not found in the runfiles MANIFEST.
   // Only files specified in the "data" field of tests will be available here.
-  static StringView ResolveAbsolutePath(StringView relative_path);
+  static StringView ResolvePath(StringView relative_path);
 
  private:
   static std::vector<std::pair<std::string, std::string>> file_paths_map;
