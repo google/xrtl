@@ -11,6 +11,7 @@ cc_library(
     deps = [
         ":windows_headers",
         "//xrtl/base:debugging_hdrs",
+        "//xrtl/base:logging",
     ],
 )
 

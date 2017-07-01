@@ -1,0 +1,43 @@
+version: "{build}"
+
+clone_folder: c:\xrtl\
+cache:
+  - C:\bazel_root\execroot\xrtl\bazel-out\ -> .appveyor.yml
+  #- c:\install_cache\ -> .appveyor.yml
+
+skip_tags: true
+skip_commits:
+  files:
+    - docs/*
+    - README.md
+
+environment:
+  global:
+    WORKSPACE: c:\xrtl\
+    BAZEL_ROOT: c:\bazel_root\
+    INSTALL_CACHE: c:\install_cache\
+    APPVEYOR_SAVE_CACHE_ON_ERROR: true
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+install:
+  - set PATH=%PATH%;%INSTALL_CACHE%
+  - cmd: tools\ci\appveyor\install.bat
+
+build_script:
+  - cmd: tools\ci\appveyor\build.bat
+
+test_script:
+  - ps: Add-AppveyorTest "Unit Tests" -Outcome Running
+  - cmd: tools\ci\appveyor\test.bat
+  - ps: Update-AppveyorTest "Unit Tests" -Outcome Passed
+
+# Enable to debug issues:
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+# TODO(benvanik): upload gtest logs, golden diffs, etc.
+#after_test:
+#- ps: Push-AppveyorArtifact some_artifact.txt
+
+deploy: off
