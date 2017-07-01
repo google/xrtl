@@ -100,14 +100,8 @@ cc_library(
 )
 
 cc_library(
-    name = "context_factory",
-    srcs = ["context_factory.cc"],
-    hdrs = ["context_factory.h"],
-    deps = [
-        ":context_factory_hdrs",
-        "//xrtl/base:flags",
-        "//xrtl/base:logging",
-    ] + select({
+    name = "port_context_factory",
+    deps = select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
         "//xrtl/tools/target_platform:ios": [],
@@ -116,6 +110,27 @@ cc_library(
         ],
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [],
+    }),
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "context_factory",
+    srcs = ["context_factory.cc"],
+    hdrs = ["context_factory.h"],
+    deps = [
+        ":context_factory_hdrs",
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+    ] + select({
+        # Always use EGL when targeting swiftshader, and otherwise use the
+        # port's default implementation.
+        "//xrtl/tools/target_config:swiftshader": [
+            "//xrtl/gfx/es3:es3_context_factory",
+        ],
+        "//conditions:default": [
+            ":port_context_factory",
+        ],
     }),
 )
 

@@ -10,45 +10,12 @@ licenses(["notice"])  # Apache 2.0
 exports_files(["LICENSE.txt"])
 
 COMMON_COPTS = [
-    # non-win:
-    "-Wno-sign-compare",
-    "-Wno-inconsistent-missing-override",
-    "-Wno-unneeded-internal-declaration",
-    "-Wno-undefined-var-template",
-    # win:
-    #"/wd4201",  # nameless struct/union
-    #"/wd4065",  # switch statement contains 'default' but no 'case' labels
-    #"/wd4324",  # structure was padded due to alignment specifier
-    #"/wd5030",  # attribute is not recognized
-
-    "-x", "c++",
-
     "-Iexternal/com_github_google_swiftshader/include/",
     "-Iexternal/com_github_google_swiftshader/src/",
     "-Iexternal/com_github_google_swiftshader/src/Common/",
 
     "-Iexternal/com_github_google_swiftshader/third_party/subzero/pnacl-llvm/include/",
     "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/include/",
-
-    # android:
-    #"-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Android/include/",
-    #"-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
-    # linux:
-    "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Linux/include/",
-    "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
-    # mac:
-    #"-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/MacOS/include/",
-    #"-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
-    # windows:
-    #"-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Windows/include/",
-    #"-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Windows/",
-
-    "-ffunction-sections",
-    "-fdata-sections",
-    "-fomit-frame-pointer",
-    "-fno-operator-names",
-    "-fno-exceptions",
-    "-fvisibility=protected",
 
     # Subzero:
     "-DALLOW_DUMP=0",
@@ -66,10 +33,77 @@ COMMON_COPTS = [
     # "-DSZTARGET=X8632",
     # x64:
     "-DSZTARGET=X8664",
+] + select({
+    "@//xrtl/tools/target_platform:windows": [
+        "/wd4141",  # inline used more than once
+        "/wd4201",  # nameless struct/union
+        "/wd4065",  # switch statement contains 'default' but no 'case' labels
+        "/wd4324",  # structure was padded due to alignment specifier
+        "/wd5030",  # attribute is not recognized
+        "/wd4005",
+        "/wd4018",  # signed/unsigned mismatch (llvm)
+        "/wd4146",
+        "/wd4245",  # conversion from int to unsigned int (llvm)
+        "/wd4267",
+        "/wd4310",  # cast truncates constant value (llvm)
+        "/wd4334",
+        "/wd4389",
+        "/wd4701",
+        "/wd4702",
+        "/wd4703",
+        "/wd4706",
+        "/wd4800",
+        "/wd4718",
+        "/wd4838",
 
-    # win:
-    # "-DSUBZERO_USE_MICROSOFT_ABI",
-]
+        "-DSTRICT",
+        "-D_WINDLL",
+
+        "/GS",  # Detects some buffer overruns
+        "/Zc:wchar_t",
+        "/EHsc",
+        "/nologo",
+        "/Gd",  # Default calling convention
+    ],
+    "//conditions:default": [
+        "-x", "c++",
+
+        "-Wno-sign-compare",
+        "-Wno-inconsistent-missing-override",
+        "-Wno-unneeded-internal-declaration",
+        "-Wno-undefined-var-template",
+
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-fomit-frame-pointer",
+        "-fno-operator-names",
+        "-fno-exceptions",
+        "-fvisibility=protected",
+    ]
+}) + select({
+    "@//xrtl/tools/target_platform:android": [
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Android/include/",
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
+    ],
+    "@//xrtl/tools/target_platform:linux": [
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Linux/include/",
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
+    ],
+    "@//xrtl/tools/target_platform:macos": [
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/MacOS/include/",
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
+     ],
+    "@//xrtl/tools/target_platform:windows": [
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Windows/include/",
+        "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Windows/",
+        "-DSUBZERO_USE_MICROSOFT_ABI",
+    ],
+}) + select({
+    "@//xrtl/tools/target_platform:windows": [
+        "/UNOGDI",
+    ],
+    "//conditions:default": [],
+})
 
 COMMON_DEFINES = [
     "ANGLE_DISABLE_TRACE",
@@ -130,7 +164,15 @@ cc_library(
         "-DLOG_TAG=\"swiftshader_common\"",
     ],
     defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS,
+    linkopts = COMMON_LINKOPTS + select({
+        "@//xrtl/tools/target_platform:linux": [
+        ],
+        "@//xrtl/tools/target_platform:macos": [
+        ],
+        "@//xrtl/tools/target_platform:windows": [
+            "-Wl,ws2_32.lib",
+        ],
+    }),
 )
 
 cc_library(
@@ -160,42 +202,44 @@ cc_library(
         "src/Main/SwiftConfig.cpp",
         "src/Renderer/Color.hpp",
         "src/Renderer/Surface.hpp",
-
-        # android:
-        # "src/Main/FrameBufferAndroid.cpp",
-
-        # win:
-        # "src/Main/FrameBufferDD.cpp",
-        # "src/Main/FrameBufferGDI.cpp",
-        # "src/Main/FrameBufferWin.cpp",
-
-        # osx:
-        # "src/Main/FrameBufferOSX.mm",
-
-        # linux:
-        "src/Main/FrameBufferX11.cpp",
-        "src/Main/libX11.cpp",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:android": [
+            "src/Main/FrameBufferAndroid.cpp",
+        ],
+        "@//xrtl/tools/target_platform:linux": [
+            "src/Main/FrameBufferX11.cpp",
+            "src/Main/libX11.cpp",
+        ],
+        "@//xrtl/tools/target_platform:macos": [
+            "src/Main/FrameBufferOSX.mm",
+        ],
+        "@//xrtl/tools/target_platform:windows": [
+            "src/Main/FrameBufferDD.cpp",
+            "src/Main/FrameBufferGDI.cpp",
+            "src/Main/FrameBufferWin.cpp",
+        ],
+    }),
     hdrs = [
         "src/Main/Config.hpp",
         "src/Main/FrameBuffer.hpp",
         "src/Main/SwiftConfig.hpp",
-
-        # android:
-        # "src/Main/FrameBufferAndroid.hpp",
-
-        # win:
-        # "src/Main/FrameBufferDD.hpp",
-        # "src/Main/FrameBufferGDI.hpp",
-        # "src/Main/FrameBufferWin.hpp",
-
-        # osx:
-        # "src/Main/FrameBufferOSX.hpp",
-
-        # linux:
-        "src/Main/FrameBufferX11.hpp",
-        "src/Main/libX11.hpp",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:android": [
+            "src/Main/FrameBufferAndroid.hpp",
+        ],
+        "@//xrtl/tools/target_platform:linux": [
+            "src/Main/FrameBufferX11.hpp",
+            "src/Main/libX11.hpp",
+        ],
+        "@//xrtl/tools/target_platform:macos": [
+            "src/Main/FrameBufferOSX.hpp",
+        ],
+        "@//xrtl/tools/target_platform:windows": [
+            "src/Main/FrameBufferDD.hpp",
+            "src/Main/FrameBufferGDI.hpp",
+            "src/Main/FrameBufferWin.hpp",
+        ],
+    }),
     deps = [
         ":common",
         ":main_config",
@@ -207,13 +251,18 @@ cc_library(
         "-Iexternal/com_github_google_swiftshader/src/Common/",
     ],
     defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS + [
-        # win:
-        # dxguid.lib  # For FrameBufferDD
-
-        # osx:
-        # Quartz.framework, Cocoa.framework
-    ],
+    linkopts = COMMON_LINKOPTS + select({
+        "@//xrtl/tools/target_platform:linux": [
+        ],
+        "@//xrtl/tools/target_platform:macos": [
+            # Quartz.framework, Cocoa.framework
+        ],
+        "@//xrtl/tools/target_platform:windows": [
+            "-Wl,dxguid.lib",  # For FrameBufferDD
+            "-Wl,gdi32.lib",
+            "-Wl,user32.lib",
+        ],
+    }),
 )
 
 cc_library(
@@ -307,7 +356,13 @@ cc_library(
         "third_party/llvm-subzero/lib/Support/regex_impl.h",
         "third_party/llvm-subzero/lib/Support/regfree.c",
         "third_party/llvm-subzero/lib/Support/regstrlcpy.c",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:windows": [
+            "third_party/llvm-subzero/lib/Support/regcomp.c",
+            "third_party/llvm-subzero/lib/Support/regexec.c",
+        ],
+        "//conditions:default": [],
+    }),
     hdrs = [
         "third_party/subzero/pnacl-llvm/include/llvm/Bitcode/NaCl/NaClBitcodeDefs.h",
         "third_party/subzero/pnacl-llvm/include/llvm/Bitcode/NaCl/NaClBitcodeHeader.h",
@@ -447,39 +502,57 @@ cc_library(
         "third_party/llvm-subzero/lib/Support/regcname.h",
         "third_party/llvm-subzero/lib/Support/regex2.h",
         "third_party/llvm-subzero/lib/Support/regutils.h",
-
-        # non-win:
-        "third_party/llvm-subzero/lib/Support/Unix/Host.inc",
-        "third_party/llvm-subzero/lib/Support/Unix/Path.inc",
-        "third_party/llvm-subzero/lib/Support/Unix/Process.inc",
-        "third_party/llvm-subzero/lib/Support/Unix/Program.inc",
-        "third_party/llvm-subzero/lib/Support/Unix/Signals.inc",
-        "third_party/llvm-subzero/lib/Support/Unix/Unix.h",
-
-        # win:
-        #"third_party/llvm-subzero/lib/Support/Windows/Path.inc",
-
-        # android:
-        #"third_party/llvm-subzero/build/Android/include/llvm/Config/abi-breaking.h",
-        #"third_party/llvm-subzero/build/Android/include/llvm/Config/config.h",
-        #"third_party/llvm-subzero/build/Android/include/llvm/Config/llvm-config.h",
-        #"third_party/llvm-subzero/build/Android/include/llvm/Support/DataTypes.h",
-        # linux:
-        "third_party/llvm-subzero/build/Linux/include/llvm/Config/abi-breaking.h",
-        "third_party/llvm-subzero/build/Linux/include/llvm/Config/config.h",
-        "third_party/llvm-subzero/build/Linux/include/llvm/Config/llvm-config.h",
-        "third_party/llvm-subzero/build/Linux/include/llvm/Support/DataTypes.h",
-        # mac:
-        #"third_party/llvm-subzero/build/MacOS/include/llvm/Config/abi-breaking.h",
-        #"third_party/llvm-subzero/build/MacOS/include/llvm/Config/config.h",
-        #"third_party/llvm-subzero/build/MacOS/include/llvm/Config/llvm-config.h",
-        #"third_party/llvm-subzero/build/MacOS/include/llvm/Support/DataTypes.h",
-        # windows:
-        #"third_party/llvm-subzero/build/Windows/include/llvm/Config/abi-breaking.h",
-        #"third_party/llvm-subzero/build/Windows/include/llvm/Config/config.h",
-        #"third_party/llvm-subzero/build/Windows/include/llvm/Config/llvm-config.h",
-        #"third_party/llvm-subzero/build/Windows/include/llvm/Support/DataTypes.h",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:windows": [
+            "third_party/llvm-subzero/lib/Support/Windows/Host.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/Mutex.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/Path.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/Process.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/Program.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/Signals.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/TimeValue.inc",
+            "third_party/llvm-subzero/lib/Support/Windows/WindowsSupport.h",
+        ],
+        "//conditions:default": [
+            "third_party/llvm-subzero/lib/Support/Unix/COM.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Host.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Memory.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Mutex.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Path.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Process.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Program.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/RWMutex.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Signals.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/ThreadLocal.inc",
+            "third_party/llvm-subzero/lib/Support/Unix/Unix.h",
+            "third_party/llvm-subzero/lib/Support/Unix/Watchdog.inc",
+        ],
+    }) + select({
+        "@//xrtl/tools/target_platform:android": [
+            "third_party/llvm-subzero/build/Android/include/llvm/Config/abi-breaking.h",
+            "third_party/llvm-subzero/build/Android/include/llvm/Config/config.h",
+            "third_party/llvm-subzero/build/Android/include/llvm/Config/llvm-config.h",
+            "third_party/llvm-subzero/build/Android/include/llvm/Support/DataTypes.h",
+        ],
+        "@//xrtl/tools/target_platform:linux": [
+            "third_party/llvm-subzero/build/Linux/include/llvm/Config/abi-breaking.h",
+            "third_party/llvm-subzero/build/Linux/include/llvm/Config/config.h",
+            "third_party/llvm-subzero/build/Linux/include/llvm/Config/llvm-config.h",
+            "third_party/llvm-subzero/build/Linux/include/llvm/Support/DataTypes.h",
+        ],
+        "@//xrtl/tools/target_platform:macos": [
+            "third_party/llvm-subzero/build/MacOS/include/llvm/Config/abi-breaking.h",
+            "third_party/llvm-subzero/build/MacOS/include/llvm/Config/config.h",
+            "third_party/llvm-subzero/build/MacOS/include/llvm/Config/llvm-config.h",
+            "third_party/llvm-subzero/build/MacOS/include/llvm/Support/DataTypes.h",
+        ],
+        "@//xrtl/tools/target_platform:windows": [
+            "third_party/llvm-subzero/build/Windows/include/llvm/Config/abi-breaking.h",
+            "third_party/llvm-subzero/build/Windows/include/llvm/Config/config.h",
+            "third_party/llvm-subzero/build/Windows/include/llvm/Config/llvm-config.h",
+            "third_party/llvm-subzero/build/Windows/include/llvm/Support/DataTypes.h",
+        ],
+    }),
     textual_hdrs = [
         "third_party/llvm-subzero/include/llvm/IR/Attributes.inc",
         "third_party/llvm-subzero/include/llvm/IR/Instruction.def",
@@ -504,10 +577,25 @@ cc_library(
         "third_party/llvm-subzero/include/llvm/Support/ELFRelocs/WebAssembly.def",
         "third_party/llvm-subzero/include/llvm/Support/ELFRelocs/i386.def",
         "third_party/llvm-subzero/include/llvm/Support/ELFRelocs/x86_64.def",
-        "third_party/llvm-subzero/build/Linux/include/llvm/IR/Attributes.gen",
-        "third_party/llvm-subzero/build/Linux/include/llvm/IR/Intrinsics.gen",
         "third_party/llvm-subzero/lib/Support/regengine.inc",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:android": [
+            "third_party/llvm-subzero/build/Android/include/llvm/IR/Attributes.gen",
+            "third_party/llvm-subzero/build/Android/include/llvm/IR/Intrinsics.gen",
+        ],
+        "@//xrtl/tools/target_platform:linux": [
+            "third_party/llvm-subzero/build/Linux/include/llvm/IR/Attributes.gen",
+            "third_party/llvm-subzero/build/Linux/include/llvm/IR/Intrinsics.gen",
+        ],
+        "@//xrtl/tools/target_platform:macos": [
+            "third_party/llvm-subzero/build/MacOS/include/llvm/IR/Attributes.gen",
+            "third_party/llvm-subzero/build/MacOS/include/llvm/IR/Intrinsics.gen",
+        ],
+        "@//xrtl/tools/target_platform:windows": [
+            "third_party/llvm-subzero/build/Windows/include/llvm/IR/Attributes.gen",
+            "third_party/llvm-subzero/build/Windows/include/llvm/IR/Intrinsics.gen",
+        ],
+    }),
     copts = COMMON_COPTS,
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
@@ -546,6 +634,7 @@ cc_library(
         "third_party/subzero/src/IceTypes.cpp",
         "third_party/subzero/src/IceVariableSplitting.cpp",
 
+        # TODO(benvanik): select on platform or always include them all?
         # arm:
         #"third_party/subzero/src/IceInstARM32.cpp",
         #"third_party/subzero/src/IceTargetLoweringARM32.cpp",
@@ -593,9 +682,6 @@ cc_library(
         "third_party/subzero/src/IceSwitchLowering.h",
         "third_party/subzero/src/IceTLS.h",
         "third_party/subzero/src/IceTargetLowering.h",
-        "third_party/subzero/src/IceTargetLoweringX86Base.h",
-        "third_party/subzero/src/IceTargetLoweringX86BaseImpl.h",
-        "third_party/subzero/src/IceTargetLoweringX86RegClass.h",
         "third_party/subzero/src/IceThreading.h",
         "third_party/subzero/src/IceTimerTree.h",
         "third_party/subzero/src/IceTypes.h",
@@ -603,27 +689,27 @@ cc_library(
         "third_party/subzero/src/IceVariableSplitting.h",
 
         # arm:
-        #"third_party/subzero/src/IceAssemblerARM32.h",
-        #"third_party/subzero/src/IceConditionCodesARM32.h",
-        #"third_party/subzero/src/IceInstARM32.h",
-        #"third_party/subzero/src/IceTargetLoweringARM32.h",
-        # x32:
-        #"third_party/subzero/src/IceAssemblerX86Base.h",
-        #"third_party/subzero/src/IceAssemblerX86BaseImpl.h",
-        #"third_party/subzero/src/IceAssemblerX8632.h",
-        #"third_party/subzero/src/IceConditionCodesX8632.h",
-        #"third_party/subzero/src/IceInstX8632.h",
-        #"third_party/subzero/src/IceInstX86Base.h",
-        #"third_party/subzero/src/IceInstX86BaseImpl.h",
-        #"third_party/subzero/src/IceTargetLoweringX8632.h",
-        #"third_party/subzero/src/IceTargetLoweringX8632Traits.h",
-        # x64:
+        "third_party/subzero/src/IceAssemblerARM32.h",
+        "third_party/subzero/src/IceConditionCodesARM32.h",
+        "third_party/subzero/src/IceInstARM32.h",
+        "third_party/subzero/src/IceTargetLoweringARM32.h",
+        # x86 shared:
         "third_party/subzero/src/IceAssemblerX86Base.h",
         "third_party/subzero/src/IceAssemblerX86BaseImpl.h",
-        "third_party/subzero/src/IceAssemblerX8664.h",
-        "third_party/subzero/src/IceConditionCodesX8664.h",
         "third_party/subzero/src/IceInstX86Base.h",
         "third_party/subzero/src/IceInstX86BaseImpl.h",
+        "third_party/subzero/src/IceTargetLoweringX86Base.h",
+        "third_party/subzero/src/IceTargetLoweringX86BaseImpl.h",
+        "third_party/subzero/src/IceTargetLoweringX86RegClass.h",
+        # x32:
+        "third_party/subzero/src/IceAssemblerX8632.h",
+        "third_party/subzero/src/IceConditionCodesX8632.h",
+        "third_party/subzero/src/IceInstX8632.h",
+        "third_party/subzero/src/IceTargetLoweringX8632.h",
+        "third_party/subzero/src/IceTargetLoweringX8632Traits.h",
+        # x64:
+        "third_party/subzero/src/IceAssemblerX8664.h",
+        "third_party/subzero/src/IceConditionCodesX8664.h",
         "third_party/subzero/src/IceInstX8664.h",
         "third_party/subzero/src/IceTargetLoweringX8664.h",
         "third_party/subzero/src/IceTargetLoweringX8664Traits.h",
@@ -631,21 +717,17 @@ cc_library(
     textual_hdrs = [
         "third_party/subzero/src/IceClFlags.def",
         "third_party/subzero/src/IceInst.def",
+        "third_party/subzero/src/IceInstARM32.def",
+        "third_party/subzero/src/IceRegistersARM32.def",
         "third_party/subzero/src/IceTargetLowering.def",
+        "third_party/subzero/src/IceTargetLoweringARM32.def",
+        "third_party/subzero/src/IceTargetLoweringX8632.def",
+        "third_party/subzero/src/IceTargetLoweringX8664.def",
         "third_party/subzero/src/IceTimerTree.def",
         "third_party/subzero/src/IceTypes.def",
         "third_party/subzero/src/SZTargets.def",
-
-        # arm:
-        #"third_party/subzero/src/IceInstARM32.def",
-        #"third_party/subzero/src/IceRegistersARM32.def",
-        #"third_party/subzero/src/IceTargetLoweringARM32.def",
-        # x32:
-        #"third_party/subzero/src/IceInstX8632.def",
-        #"third_party/subzero/src/IceTargetLoweringX8632.def",
-        # x64:
+        "third_party/subzero/src/IceInstX8632.def",
         "third_party/subzero/src/IceInstX8664.def",
-        "third_party/subzero/src/IceTargetLoweringX8664.def",
     ],
     deps = [
         ":llvm_subzero",
@@ -862,14 +944,16 @@ cc_library(
         "src/OpenGL/compiler/preprocessor/Token.cpp",
         "src/OpenGL/compiler/preprocessor/Tokenizer.cpp",
 
-        # win:
-        #"src/OpenGL/compiler/ossource_win.cpp",
-        # non-win:
-        "src/OpenGL/compiler/ossource_posix.cpp",
-
         "src/OpenGL/libGLESv2/ResourceManager.h",
         "src/OpenGL/libGLESv2/Shader.h",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:windows": [
+            "src/OpenGL/compiler/ossource_win.cpp",
+        ],
+        "//conditions:default": [
+            "src/OpenGL/compiler/ossource_posix.cpp",
+        ],
+    }),
     hdrs = [
         "src/OpenGL/compiler/AnalyzeCallDepth.h",
         "src/OpenGL/compiler/BaseTypes.h",
@@ -1010,15 +1094,16 @@ cc_binary(
     ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libGLESv2\"",
-        "-DGL_API=",
+        "-DGL_API=__declspec(dllexport)",
+        "-DGL_APIENTRYP=",
         "-DGL_GLEXT_PROTOTYPES",
-        "-DGL_APICALL=",
+        "-DGL_APICALL=__declspec(dllexport)",
         "-DLIBGLESV2_EXPORTS",
         "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS + [
-        "/DEF:libGLESv2.def",
+        #"/DEF:libGLESv2.def",
     ],
     linkshared = 1,
     visibility = ["//visibility:public"],
@@ -1099,13 +1184,13 @@ cc_binary(
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libEGL\"",
         "-DEGL_EGLEXT_PROTOTYPES",
-        "-DEGLAPI=",
+        "-DEGLAPI=__declspec(dllexport)",
         "-DLIBEGL_EXPORTS",
         "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS + [
-        "/DEF:libEGL.def",
+        #"/DEF:libEGL.def",
     ],
     linkshared = 1,
     visibility = ["//visibility:public"],
@@ -1147,6 +1232,17 @@ cc_binary(
 cc_library(
     name = "swiftshader",
     srcs = select({
+        "@//xrtl/tools/target_platform:linux": [
+            ":libGLESv2.so",
+            ":libEGL.so",
+        ],
+        "@//xrtl/tools/target_platform:macos": [],
+        "@//xrtl/tools/target_platform:windows": [
+            ":libGLESv2.dll",
+            ":libEGL.dll",
+        ],
+    }),
+    data = select({
         "@//xrtl/tools/target_platform:linux": [
             ":libGLESv2.so",
             ":libEGL.so",

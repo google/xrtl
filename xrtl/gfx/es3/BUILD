@@ -208,14 +208,8 @@ cc_library(
 )
 
 cc_library(
-    name = "es3_platform_context",
-    srcs = ["es3_platform_context.cc"],
-    hdrs = ["es3_platform_context.h"],
-    deps = [
-        ":es3_common",
-        "//xrtl/base:ref_ptr",
-        "//xrtl/base/threading:thread",
-    ] + select({
+    name = "port_platform_context",
+    deps = select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
         "//xrtl/tools/target_platform:ios": [],
@@ -224,6 +218,27 @@ cc_library(
         ],
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [],
+    }),
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
+    name = "es3_platform_context",
+    srcs = ["es3_platform_context.cc"],
+    hdrs = ["es3_platform_context.h"],
+    deps = [
+        ":es3_common",
+        "//xrtl/base:ref_ptr",
+        "//xrtl/base/threading:thread",
+    ] + select({
+        # Always use EGL when targeting swiftshader, and otherwise use the
+        # port's default implementation.
+        "//xrtl/tools/target_config:swiftshader": [
+            "//xrtl/port/common/gfx/es3:egl_platform_context",
+        ],
+        "//conditions:default": [
+            ":port_platform_context",
+        ],
     }),
 )
 
@@ -319,6 +334,21 @@ cc_library(
 )
 
 cc_library(
+    name = "port_swap_chain",
+    deps = select({
+        "//xrtl/tools/target_platform:android": [],
+        "//xrtl/tools/target_platform:emscripten": [],
+        "//xrtl/tools/target_platform:ios": [],
+        "//xrtl/tools/target_platform:linux": [
+            "//xrtl/port/common/gfx/es3:egl_swap_chain",
+        ],
+        "//xrtl/tools/target_platform:macos": [],
+        "//xrtl/tools/target_platform:windows": [],
+    }),
+    visibility = ["//visibility:private"],
+)
+
+cc_library(
     name = "es3_swap_chain",
     srcs = ["es3_swap_chain.cc"],
     hdrs = ["es3_swap_chain.h"],
@@ -329,14 +359,14 @@ cc_library(
         "//xrtl/gfx:swap_chain",
         "//xrtl/ui:control",
     ] + select({
-        "//xrtl/tools/target_platform:android": [],
-        "//xrtl/tools/target_platform:emscripten": [],
-        "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:linux": [
+        # Always use EGL when targeting swiftshader, and otherwise use the
+        # port's default implementation.
+        "//xrtl/tools/target_config:swiftshader": [
             "//xrtl/port/common/gfx/es3:egl_swap_chain",
         ],
-        "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
+        "//conditions:default": [
+            ":port_swap_chain",
+        ],
     }),
 )
 
