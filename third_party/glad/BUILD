@@ -9,6 +9,15 @@ licenses(["notice"])  # MIT
 
 exports_files(["LICENSE"])
 
+COMMON_COPTS = select({
+    "@//xrtl/tools/target_platform:windows": [
+        "/TP",  # Compile as C++.
+    ],
+    "//conditions:default": [
+        "-x", "c++",
+    ],
+})
+
 cc_library(
     name = "glad",
     srcs = ["src/glad.c"],
@@ -16,9 +25,7 @@ cc_library(
     deps = [
         "//third_party/GLES_khronos_headers:GLES3",
     ],
-    copts = [
-        "-x", "c++",
-    ],
+    copts = COMMON_COPTS,
     includes = ["include"],
 )
 
@@ -30,8 +37,6 @@ cc_library(
         ":glad",
         "//third_party/GLES_khronos_headers:EGL",
     ],
-    copts = [
-        "-x", "c++",
-    ],
+    copts = COMMON_COPTS,
     includes = ["include"],
 )
