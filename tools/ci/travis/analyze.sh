@@ -10,13 +10,8 @@ else
 fi
 
 # Use CI-specific bazel configurations.
-cp tools/ci/travis/analyze.bazelrc .bazelrc
+cp tools/ci/travis/.bazelrc .
 
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-  # TODO(benvanik): setup xtool to use output_base for tidy
-  # echo "Running tidy and writing to $WORKSPACE/tidy/"
-  # ./xtool tidy --output_base=$WORKSPACE/tidy/ --origin
-  ./xtool tidy --origin
-else
-  echo "(skipping analysis on osx)"
-fi
+./xtool tidy \
+    --output_base=/tmp/.cache/bazel_root_analyze/ \
+    --origin

@@ -12,15 +12,8 @@ fi
 # Use CI-specific bazel configurations.
 cp tools/ci/travis/.bazelrc .
 
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-  CONFIG=asan
-  # TODO(benvanik): figure out how to get x running correctly so we can do
-  #                 requires_gui tests.
-else
-  CONFIG=
-fi
-
 ./xtool test \
+    --output_base=/tmp/.cache/bazel_root_$CONFIG/ \
     --config=$CONFIG \
     --keep_going \
     --all \

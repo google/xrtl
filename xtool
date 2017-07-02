@@ -1253,12 +1253,13 @@ def generate_command_databases(config = default_config, output_base = None,
 
 
 def clang_tidy_files(check_all_files = False, diff_origin = False,
-                     apply_fixes = False):
+                     apply_fixes = False, output_base = None):
   """
   Args:
     check_all_files: True to run on all files, not just the git changes.
     diff_origin: git diff against origin/master, not HEAD.
     apply_fixes: automatically apply fixes suggested by clang-tidy.
+    output_base: absolute path to dump bazel outputs.
 
   Returns:
     0 if tidy check completed without errors.
@@ -1277,15 +1278,6 @@ def clang_tidy_files(check_all_files = False, diff_origin = False,
     source_files = find_all_source_files()
   else:
     source_files = find_changed_source_files(diff_origin = diff_origin)
-  if not source_files:
-    print('No source file changes found to tidy')
-    return 0
-
-  # Build a command database.
-  result = generate_command_databases()
-  if result:
-    print('Error generating compile commands database')
-    return result
 
   # Remove _test.cc files.
   source_files = [source_file for source_file in source_files
@@ -1295,6 +1287,17 @@ def clang_tidy_files(check_all_files = False, diff_origin = False,
   # INCLUDE_ALL_HEADERS in generate_compile_command.py.
   source_files = [source_file for source_file in source_files
                   if not source_file.endswith('.h')]
+
+  # Avoid running if not needed.
+  if not source_files:
+    print('No source file changes found to tidy')
+    return 0
+
+  # Build a command database.
+  result = generate_command_databases(output_base = output_base)
+  if result:
+    print('Error generating compile commands database')
+    return result
 
   # Run clang-tidy.
   result = shell_call([
@@ -1332,13 +1335,17 @@ class TidyCommand(Command):
     self.parser.add_argument(
         '--fix', action='store_true',
         help='Applies suggested fixes, where possible.')
+    self.parser.add_argument(
+        '--output_base',
+        help='Write bazel outputs to the given path.')
 
   def execute(self, args, pass_args, cwd):
     # Tidy.
     return_code = clang_tidy_files(
         check_all_files = args['all'],
         diff_origin = args['origin'],
-        apply_fixes = args['fix'])
+        apply_fixes = args['fix'],
+        output_base = args['output_base'])
     return return_code
 
 
