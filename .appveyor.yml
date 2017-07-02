@@ -1,15 +1,16 @@
 version: "{build}"
 
 clone_folder: c:\xrtl\
-cache:
-  - C:\bazel_root\execroot\xrtl\bazel-out\host -> .appveyor.yml
-  - C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-dbg\bin -> .appveyor.yml
-  - C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-dbg\genfiles -> .appveyor.yml
-  - C:\bazel_root\execroot\xrtl\bazel-out\stable-status.txt -> .appveyor.yml
-  - C:\bazel_root\execroot\xrtl\bazel-out\volatile-status.txt -> .appveyor.yml
+#cache:
+  #- C:\bazel_root\execroot\xrtl\bazel-out\host -> .appveyor.yml
+  #- C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-dbg\bin -> .appveyor.yml
+  #- C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-dbg\genfiles -> .appveyor.yml
+  #- C:\bazel_root\execroot\xrtl\bazel-out\stable-status.txt -> .appveyor.yml
+  #- C:\bazel_root\execroot\xrtl\bazel-out\volatile-status.txt -> .appveyor.yml
   #- c:\install_cache\ -> .appveyor.yml
 
 skip_tags: true
+skip_branch_with_pr: true
 skip_commits:
   files:
     - docs/*
