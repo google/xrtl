@@ -1,6 +1,5 @@
 # Default bazel configuration when running under Travis.
 
-startup --output_base=/tmp/.cache/bazel_root
 startup --host_jvm_args=-Xmx500m
 startup --host_jvm_args=-Xmx500m
 startup --batch
@@ -8,7 +7,7 @@ startup --batch
 build --define=SWIFTSHADER=1
 build --ignore_unsupported_sandboxing
 build --verbose_failures
-build --local_resources=400,2,1.0
+build --progress_report_interval=10
 build --spawn_strategy=standalone
 build --genrule_strategy=standalone
 build --keep_going
@@ -16,7 +15,7 @@ build --keep_going
 test --define=SWIFTSHADER=1
 test --ignore_unsupported_sandboxing
 test --verbose_failures
-test --local_resources=400,2,1.0
+test --progress_report_interval=10
 test --spawn_strategy=standalone
 test --genrule_strategy=standalone
 test --test_output=errors

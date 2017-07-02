@@ -5,7 +5,6 @@ git:
 
 dist: trusty
 sudo: false
-osx_image: xcode8.3
 
 addons:
   apt:
@@ -23,14 +22,6 @@ env:
     - PATH=/usr/local/opt/llvm/bin:$HOME/bin/:$PATH
     - DISPLAY=:0.0
 
-matrix:
-  fast_finish: true
-  include:
-    - os: linux
-    - os: osx
-  allow_failures:
-    - os: osx
-
 language: cpp
 compiler:
   - clang
@@ -38,22 +29,60 @@ compiler:
 cache:
   pip: true
   directories:
-  - /tmp/.cache/bazel_root
-  - /tmp/.cache/bazel_root_sanitize_msan
-  - /tmp/.cache/bazel_root_sanitize_tsan
-  - /tmp/.cache/bazel_root_sanitize_ubsan
+  - /tmp/.cache/bazel_root_
+  - /tmp/.cache/bazel_root_asan
+  - /tmp/.cache/bazel_root_msan
+  - /tmp/.cache/bazel_root_tsan
+  - /tmp/.cache/bazel_root_ubsan
   - /tmp/.cache/bazel_root_analyze
 
 install:
-  - git fetch https://github.com/google/xrtl.git master:refs/remotes/origin/master
   - ./tools/ci/travis/install.sh
 
-script:
-  - ./tools/ci/travis/lint.sh
-  - ./tools/ci/travis/build.sh
-  - ./tools/ci/travis/test.sh
-  # TODO(benvanik): figure out how to get msan setup on travis.
-  # - ./tools/ci/travis/test_sanitize.sh msan
-  - ./tools/ci/travis/test_sanitize.sh tsan
-  - ./tools/ci/travis/test_sanitize.sh ubsan
-  - ./tools/ci/travis/analyze.sh
+jobs:
+  fast_finish: true
+  include:
+    # Run linting and a linux build first, as it's most likely to fail.
+    - stage: lint and build
+      os: linux
+      env:
+        - CONFIG=asan
+      script:
+        - ./tools/ci/travis/lint.sh
+        - ./tools/ci/travis/build.sh
+
+    # Test Linux for asan,tsan,ubsan.
+    - &test-linux
+      stage: test
+      os: linux
+      script: ./tools/ci/travis/test.sh
+      env: CONFIG=asan
+    # TODO(benvanik): figure out how to get msan setup on travis.
+    #- <<: *test-linux
+    #  env: CONFIG=msan
+    - <<: *test-linux
+      env: CONFIG=tsan
+    - <<: *test-linux
+      env: CONFIG=ubsan
+
+    # Test MacOS for default config.
+    # We also build here to avoid double cost of MacOS VM startup.
+    - &test-macos
+      stage: test
+      os: osx
+      osx_image: xcode8.3
+      script:
+        - ./tools/ci/travis/build.sh
+        - ./tools/ci/travis/test.sh
+      env: CONFIG=
+
+    # Run clang-tidy analysis.
+    # We do this during the test phase to parallelize a bit more.
+    - stage: test
+      os: linux
+      script: ./tools/ci/travis/analyze.sh
+      env: CONFIG=analyze
+
+  allow_failures:
+    # MacOS is flaky right now so we allow it to fail.
+    - <<: *test-macos

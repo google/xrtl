@@ -9,6 +9,9 @@ else
   export CXX=clang
 fi
 
+# Ensure we have origin/master, which our diff tools use.
+git fetch https://github.com/google/xrtl.git master:refs/remotes/origin/master
+
 # Fetch a modern LLVM on osx. On linux travis.yml will apt install it.
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   echo "Fetching LLVM..."
