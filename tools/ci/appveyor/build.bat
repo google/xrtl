@@ -21,7 +21,7 @@ REM ============================================================================
 REM Run Build
 REM ============================================================================
 
-CMD /C xtool.bat build --all
+CMD /C xtool.bat build --all -c dbg
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 
 EXIT /b 0

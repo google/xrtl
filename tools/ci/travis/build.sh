@@ -14,6 +14,7 @@ cp tools/ci/travis/.bazelrc .
 
 ./xtool build \
     --output_base=/tmp/.cache/bazel_root_$CONFIG/ \
+    -c dbg \
     --config=$CONFIG \
     --keep_going \
     --all

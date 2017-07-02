@@ -45,6 +45,9 @@ REM ============================================================================
 
 COPY tools\ci\appveyor\.bazelrc .
 
+REM Fix permissions on bazel folders.
+CACLS c:\bazel_root\ /t /e /g Everyone:f
+
 CMD /C xtool.bat setup
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 

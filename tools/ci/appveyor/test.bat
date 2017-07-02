@@ -21,7 +21,7 @@ REM ============================================================================
 REM Run Tests
 REM ============================================================================
 
-CMD /C xtool.bat test --all --keep_going --test_tag_filters=-requires_gpu
+CMD /C xtool.bat test --all -c dbg --keep_going --test_tag_filters=-requires_gpu
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 
 EXIT /b 0

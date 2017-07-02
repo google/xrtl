@@ -3,8 +3,8 @@ version: "{build}"
 clone_folder: c:\xrtl\
 cache:
   - C:\bazel_root\execroot\xrtl\bazel-out\host -> .appveyor.yml
-  - C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-fastbuild\bin -> .appveyor.yml
-  - C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-fastbuild\genfiles -> .appveyor.yml
+  - C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-dbg\bin -> .appveyor.yml
+  - C:\bazel_root\execroot\xrtl\bazel-out\msvc_x64-dbg\genfiles -> .appveyor.yml
   - C:\bazel_root\execroot\xrtl\bazel-out\stable-status.txt -> .appveyor.yml
   - C:\bazel_root\execroot\xrtl\bazel-out\volatile-status.txt -> .appveyor.yml
   #- c:\install_cache\ -> .appveyor.yml
