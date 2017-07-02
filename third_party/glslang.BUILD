@@ -138,7 +138,7 @@ cc_library(
     ],
     copts = COMMON_COPTS + [
         # for glslang_tab.cc
-        "-Iexternal/com_github_KhronosGroup_glslang/glslang/MachineIndependent",
+        "-Iexternal/com_github_khronosgroup_glslang/glslang/MachineIndependent",
     ],
     deps = [
         ":HLSL",

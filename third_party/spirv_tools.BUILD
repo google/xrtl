@@ -24,48 +24,48 @@ py_binary(
 
 genrule(
     name = "run_generate_grammar_tables_core_1.0",
-    srcs = ["@com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.0"],
+    srcs = ["@com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0"],
     outs = [
         "core.insts-1.0.inc",
         "operand.kinds-1.0.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.0) --core-insts-output=$(location core.insts-1.0.inc) --operand-kinds-output=$(location operand.kinds-1.0.inc)",
+    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --core-insts-output=$(location core.insts-1.0.inc) --operand-kinds-output=$(location operand.kinds-1.0.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
 
 genrule(
     name = "run_generate_grammar_tables_core_1.1",
-    srcs = ["@com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.1"],
+    srcs = ["@com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.1"],
     outs = [
         "core.insts-1.1.inc",
         "operand.kinds-1.1.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.1) --core-insts-output=$(location core.insts-1.1.inc) --operand-kinds-output=$(location operand.kinds-1.1.inc)",
+    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.1) --core-insts-output=$(location core.insts-1.1.inc) --operand-kinds-output=$(location operand.kinds-1.1.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
 
 genrule(
     name = "run_generate_grammar_tables_core_1.2",
-    srcs = ["@com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.2"],
+    srcs = ["@com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2"],
     outs = [
         "core.insts-1.2.inc",
         "operand.kinds-1.2.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.2) --core-insts-output=$(location core.insts-1.2.inc) --operand-kinds-output=$(location operand.kinds-1.2.inc)",
+    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2) --core-insts-output=$(location core.insts-1.2.inc) --operand-kinds-output=$(location operand.kinds-1.2.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
 
 genrule(
     name = "run_generate_grammar_tables_enum_string_mapping_1.2",
-    srcs = ["@com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.2"],
+    srcs = ["@com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2"],
     outs = [
         "extension_enum.inc",
         "enum_string_mapping.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.2) --extension-enum-output=$(location extension_enum.inc) --enum-string-mapping-output=$(location enum_string_mapping.inc)",
+    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2) --extension-enum-output=$(location extension_enum.inc) --enum-string-mapping-output=$(location enum_string_mapping.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -73,11 +73,11 @@ genrule(
 genrule(
     name = "run_generate_grammar_tables_opencl_1.0",
     srcs = [
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.0",
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_opencl_grammar_1.0",
+        "@com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0",
+        "@com_github_khronosgroup_spirv_headers//:spirv_opencl_grammar_1.0",
     ],
     outs = ["opencl.std.insts-1.0.inc"],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.0) --extinst-opencl-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_opencl_grammar_1.0) --opencl-insts-output=$(location opencl.std.insts-1.0.inc)",
+    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --extinst-opencl-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_opencl_grammar_1.0) --opencl-insts-output=$(location opencl.std.insts-1.0.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -85,11 +85,11 @@ genrule(
 genrule(
     name = "run_generate_grammar_tables_glsl_1.0",
     srcs = [
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.0",
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_glsl_grammar_1.0",
+        "@com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0",
+        "@com_github_khronosgroup_spirv_headers//:spirv_glsl_grammar_1.0",
     ],
     outs = ["glsl.std.450.insts-1.0.inc"],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_core_grammar_1.0) --extinst-glsl-grammar=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_glsl_grammar_1.0) --glsl-insts-output=$(location glsl.std.450.insts-1.0.inc)",
+    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --extinst-glsl-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_glsl_grammar_1.0) --glsl-insts-output=$(location glsl.std.450.insts-1.0.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -139,10 +139,10 @@ py_binary(
 genrule(
     name = "run_generate_registry_tables",
     srcs = [
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_xml_registry",
+        "@com_github_khronosgroup_spirv_headers//:spirv_xml_registry",
     ],
     outs = ["generators.inc"],
-    cmd = "python $(location :generate_registry_tables) --xml=$(location @com_github_KhronosGroup_SPIRV_Headers//:spirv_xml_registry) --generator-output=$(location generators.inc)",
+    cmd = "python $(location :generate_registry_tables) --xml=$(location @com_github_khronosgroup_spirv_headers//:spirv_xml_registry) --generator-output=$(location generators.inc)",
     tools = [":generate_registry_tables"],
     visibility = ["//visibility:private"],
 )
@@ -271,8 +271,8 @@ cc_library(
     copts = COMMON_COPTS,
     deps = [
         ":generated_headers",
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_c_headers",
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_common_headers",
+        "@com_github_khronosgroup_spirv_headers//:spirv_c_headers",
+        "@com_github_khronosgroup_spirv_headers//:spirv_common_headers",
     ],
     includes = ["include"],
 )
@@ -344,7 +344,7 @@ cc_library(
     copts = COMMON_COPTS,
     deps = [
         ":spirv_tools",
-        "@com_github_KhronosGroup_SPIRV_Headers//:spirv_common_headers",
+        "@com_github_khronosgroup_spirv_headers//:spirv_common_headers",
     ],
     includes = ["include"],
 )

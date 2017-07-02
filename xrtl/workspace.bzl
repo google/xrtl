@@ -52,21 +52,21 @@ def xrtl_workspace():
 
   # //third_party/glslang/
   native.new_local_repository(
-      name = "com_github_KhronosGroup_glslang",
+      name = "com_github_khronosgroup_glslang",
       path = "third_party/glslang/",
       build_file = "third_party/glslang.BUILD",
   )
 
   # //third_party/spirv_cross/
   native.new_local_repository(
-      name = "com_github_KhronosGroup_SPIRV_Cross",
+      name = "com_github_khronosgroup_spirv_cross",
       path = "third_party/spirv_cross/",
       build_file = "third_party/spirv_cross.BUILD",
   )
 
   # //third_party/spirv_headers/
   native.new_local_repository(
-      name = "com_github_KhronosGroup_SPIRV_Headers",
+      name = "com_github_khronosgroup_spirv_headers",
       path = "third_party/spirv_headers/",
       build_file = "third_party/spirv_headers.BUILD",
   )

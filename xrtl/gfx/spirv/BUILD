@@ -13,8 +13,8 @@ cc_library(
         "//xrtl/base:debugging",
         "//xrtl/base:string_view",
         "//xrtl/base:tracing",
-        "@com_github_KhronosGroup_glslang//:glslang",
-        "@com_github_KhronosGroup_glslang//:SPIRV",
+        "@com_github_khronosgroup_glslang//:glslang",
+        "@com_github_khronosgroup_glslang//:SPIRV",
     ],
 )
 
