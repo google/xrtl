@@ -24,7 +24,7 @@ Pronounced 'zurtle'.
 * Install clang (and clang-tools-extra) from the [LLVM downloads page](http://releases.llvm.org/download.html)
 * Install bazel via [homebrew](https://brew.sh/) or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
-$ brew install bazel
+$ brew install bazel go
 ```
 * Install protobuf:
 ```
@@ -40,7 +40,7 @@ $ ./xtool setup
 * Install clang (and clang-tools-extra) from the [LLVM downloads page](http://releases.llvm.org/download.html)
 * Install bazel via your package manager or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
-$ sudo apt-get install bazel
+$ sudo apt-get install bazel golang-go
 ```
 * Run initial setup with xtool:
 ```
@@ -53,7 +53,7 @@ $ ./xtool setup
 * Install Visual Studio 2017 with the Windows SDK and C++ tools
 * Install bazel via [chocolatey](https://chocolatey.org/) or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
-> choco install bazel
+> choco install bazel golang
 ```
 * Follow the [bazel on Windows](https://bazel.build/versions/master/docs/windows.html) instructions (set `BAZEL_SH`, etc)
 * Run initial setup with xtool:
@@ -67,7 +67,7 @@ $ ./xtool setup
 
 * Generate a Visual Studio solution; do this each time you change BUILD files:
 ```
-> xtool sln
+> xtool sln -c dbg
 ```
 * Open `.vs\xrtl.sln`, select a project, and press `F5`!
 

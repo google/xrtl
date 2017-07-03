@@ -657,6 +657,27 @@ class SetupCommand(Command):
         return return_code
       print('')
 
+    # Install required go dependencies.
+    go_packages = [
+        'github.com/bazelbuild/buildtools/buildifier',
+        ]
+    if go_packages:
+      if has_bin('go'):
+        print('- go get %s' % (' '.join(go_packages)))
+        return_code = shell_call([
+            'go',
+            'get',
+            ] + go_packages)
+      else:
+        return_code = 1
+      if return_code:
+        print('ERROR: go not found or an error occurred!')
+        print('Ensure you have go installed and on your path.')
+        print('You\'ll need to install the following go packages:')
+        for go_package in go_packages:
+          print('  %s' % (go_package))
+        return 1
+
     return 0
 
 
@@ -851,6 +872,20 @@ class InfoCommand(BazelCommand):
     return result
 
 
+def is_bazel_file(file_path):
+  """
+  Args:
+    file_path: file path (like '.../foo.bzl').
+
+  Returns:
+    True if the file is considered a bazel BUILD/etc file.
+  """
+  return file_path.endswith((
+      'BUILD',
+      '.bzl',
+      ))
+
+
 def is_source_file(file_path):
   """
   Args:
@@ -871,8 +906,11 @@ def is_source_file(file_path):
       ))
 
 
-def find_xrtl_source_files():
+def find_xrtl_source_files(file_filter = is_source_file):
   """Gets all XRTL source files in the project.
+
+  Args:
+    file_filter: function that returns true if the file should be included.
 
   Returns:
     A list of file paths.
@@ -880,23 +918,27 @@ def find_xrtl_source_files():
   return [os.path.join(root, name)
       for root, dirs, files in os.walk('xrtl')
       for name in files
-      if is_source_file(name)]
+      if file_filter(name)]
 
 
-def find_all_source_files():
+def find_all_source_files(file_filter = is_source_file):
   """Gets all interesting source files in the project.
+
+  Args:
+    file_filter: function that returns true if the file should be included.
 
   Returns:
     A list of file paths.
   """
-  return find_xrtl_source_files()
+  return find_xrtl_source_files(file_filter)
 
 
-def find_changed_source_files(diff_origin = False):
+def find_changed_source_files(file_filter = is_source_file, diff_origin = False):
   """Gets all changed source files from the origin.
 
   Args:
     diff_origin: git diff against origin/master, not HEAD.
+    file_filter: function that returns true if the file should be included.
 
   Returns:
     A list of file paths.
@@ -911,7 +953,7 @@ def find_changed_source_files(diff_origin = False):
   changed_files = stdout.strip().split('\n')
   changed_files = [file_path
                    for file_path in changed_files
-                   if is_source_file(file_path)]
+                   if file_filter(file_path)]
   return changed_files
 
 
@@ -1091,6 +1133,48 @@ def style_check_files(check_all_files = False, diff_origin = False):
   return return_code
 
 
+def buildifier_check_files(check_all_files = False, diff_origin = False,
+                           fix = False):
+  """
+  Args:
+    check_all_files: True to run on all files, not just the git changes.
+    diff_origin: git diff against origin/master, not HEAD.
+    fix: True to fix files in place.
+
+  Returns:
+    0 if buildifier check completed without errors.
+  """
+  # Select source files for style checking.
+  source_files = []
+  if check_all_files:
+    source_files = find_all_source_files(file_filter = is_bazel_file)
+  else:
+    source_files = find_changed_source_files(file_filter = is_bazel_file,
+                                             diff_origin = diff_origin)
+  if not source_files:
+    print('No source file changes found to check with buildifier')
+    return 0
+
+  # Run buildifier.
+  # NOTE: buildifier does not provide valid return codes, so we need to check
+  #       the output to see if it changed anything.
+  print('- buildifier [%d files]' % (len(source_files)))
+  p = subprocess.Popen([
+      get_bin('buildifier'),
+      # '-path='  # TODO(benvanik): needed?
+      '-mode=%s' % ('fix' if fix else 'check'),
+      ] + source_files, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  (stdout, stderr) = p.communicate()
+  print('')
+  if len(stdout.strip()) > 0:
+    print('ERROR: buildifier found one or more diffs:')
+    print(stdout)
+    return 1
+  else:
+    print('Buildifier checking completed successfully.')
+    return 0
+
+
 class LintCommand(Command):
   """'lint' command."""
 
@@ -1121,10 +1205,17 @@ class LintCommand(Command):
         check_all_files = args['all'],
         diff_origin = args['origin'])
 
+    # buildifier check.
+    buildifier_return_code = buildifier_check_files(
+        check_all_files = args['all'],
+        diff_origin = args['origin'])
+
     if lint_return_code:
       return lint_return_code
     if style_return_code:
       return style_return_code
+    if buildifier_return_code:
+      return buildifier_return_code
 
     return 0
 
@@ -1151,11 +1242,19 @@ class FixCommand(Command):
 
   def execute(self, args, pass_args, cwd):
     # fix.
-    return_code = lint_fix_files(
+    lint_return_code = lint_fix_files(
         check_all_files = args['all'],
         diff_origin = args['origin'],
         force = args['force'])
-    return return_code
+    buildifier_return_code = buildifier_check_files(
+        check_all_files = args['all'],
+        diff_origin = args['origin'],
+        fix = True)
+    if lint_return_code:
+      return lint_return_code
+    if buildifier_return_code:
+      return buildifier_return_code
+    return 0
 
 
 def generate_command_databases(config = default_config, output_base = None,
@@ -1463,7 +1562,6 @@ class GenerateSlnCommand(Command):
     # Generate a compile commands database.
     # This will let us get the defines used for all our files.
     return_code = generate_command_databases(config = 'windows_x86_64',
-                                             output_base = '.vs/bzlgen/',
                                              bazel_args = pass_args)
     if return_code:
       print('Error generating compile commands')
