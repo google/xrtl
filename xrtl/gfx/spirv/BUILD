@@ -13,19 +13,19 @@ cc_library(
         "//xrtl/base:debugging",
         "//xrtl/base:string_view",
         "//xrtl/base:tracing",
-        "@com_github_khronosgroup_glslang//:glslang",
         "@com_github_khronosgroup_glslang//:SPIRV",
+        "@com_github_khronosgroup_glslang//:glslang",
     ],
 )
 
 cc_test(
     name = "shader_compiler_test",
+    size = "small",
     srcs = ["shader_compiler_test.cc"],
     deps = [
         ":shader_compiler",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -41,10 +41,10 @@ cc_library(
 
 cc_test(
     name = "spirv_optimizer_test",
+    size = "small",
     srcs = ["spirv_optimizer_test.cc"],
     deps = [
         ":spirv_optimizer",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )

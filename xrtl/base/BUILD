@@ -18,12 +18,12 @@ cc_library(
 
 cc_test(
     name = "arena_test",
+    size = "small",
     srcs = ["arena_test.cc"],
     deps = [
         ":arena",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -37,12 +37,12 @@ cc_library(
 
 cc_test(
     name = "array_view_test",
+    size = "small",
     srcs = ["array_view_test.cc"],
     deps = [
         ":array_view",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -71,20 +71,17 @@ cc_library(
 cc_library(
     name = "debugging_hdrs",
     hdrs = ["debugging.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":macros",
         "//xrtl/tools/target_platform",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_library(
     name = "debugging_settings",
     srcs = ["debugging_settings.cc"],
     hdrs = ["debugging_settings.h"],
-    deps = [
-        "//xrtl/tools/target_platform",
-    ],
     linkopts = select({
         # TODO(benvanik): figure out if something similar is needed on macos.
         "//xrtl/tools/target_platform:linux": [
@@ -97,8 +94,11 @@ cc_library(
         ],
         "//conditions:default": [],
     }),
-    alwayslink = 1,
     visibility = ["//visibility:public"],
+    deps = [
+        "//xrtl/tools/target_platform",
+    ],
+    alwayslink = 1,
 )
 
 cc_library(
@@ -112,12 +112,12 @@ cc_library(
 
 cc_test(
     name = "fixed_vector_test",
+    size = "small",
     srcs = ["fixed_vector_test.cc"],
     deps = [
         ":fixed_vector",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -138,12 +138,12 @@ cc_library(
 
 cc_test(
     name = "flags_test",
+    size = "small",
     srcs = ["flags_test.cc"],
     deps = [
         ":flags",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -153,12 +153,12 @@ cc_library(
 
 cc_test(
     name = "geometry_test",
+    size = "small",
     srcs = ["geometry_test.cc"],
     deps = [
         ":geometry",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -173,12 +173,12 @@ cc_library(
 
 cc_test(
     name = "intrusive_list_test",
+    size = "small",
     srcs = ["intrusive_list_test.cc"],
     deps = [
         ":intrusive_list",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -193,12 +193,12 @@ cc_library(
 
 cc_test(
     name = "intrusive_pool_test",
+    size = "small",
     srcs = ["intrusive_pool_test.cc"],
     deps = [
         ":intrusive_pool",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -221,6 +221,7 @@ cc_library(
 cc_library(
     name = "logging_hdrs",
     hdrs = ["logging.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":macros",
     ] + select({
@@ -231,17 +232,16 @@ cc_library(
             "//xrtl/port/common/base:logging_macros_hdrs",
         ],
     }),
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
     name = "logging_test",
+    size = "small",
     srcs = ["logging_test.cc"],
     deps = [
         ":logging",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -259,13 +259,13 @@ cc_library(
 
 cc_test(
     name = "macros_test",
+    size = "small",
     srcs = ["macros_test.cc"],
     deps = [
         ":macros",
         ":ref_ptr",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -278,12 +278,12 @@ cc_library(
 
 cc_test(
     name = "math_test",
+    size = "small",
     srcs = ["math_test.cc"],
     deps = [
         ":math",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -297,12 +297,12 @@ cc_library(
 
 cc_test(
     name = "ref_ptr_test",
+    size = "small",
     srcs = ["ref_ptr_test.cc"],
     deps = [
         ":ref_ptr",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -313,12 +313,12 @@ cc_library(
 
 cc_test(
     name = "stopwatch_test",
+    size = "small",
     srcs = ["stopwatch_test.cc"],
     deps = [
         ":stopwatch",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -330,12 +330,12 @@ cc_library(
 
 cc_test(
     name = "string_view_test",
+    size = "small",
     srcs = ["string_view_test.cc"],
     deps = [
         ":string_view",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -368,12 +368,12 @@ cc_library(
 
 cc_test(
     name = "system_clock_test",
+    size = "small",
     srcs = ["system_clock_test.cc"],
     deps = [
         ":system_clock",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -396,10 +396,10 @@ cc_library(
 
 cc_test(
     name = "uri_test",
+    size = "small",
     srcs = ["uri_test.cc"],
     deps = [
         ":uri",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )

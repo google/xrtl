@@ -18,14 +18,14 @@ cc_library(
 cc_library(
     name = "win32_message_loop",
     srcs = ["win32_message_loop.cc"],
+    linkopts = [
+        "-Wl,user32.lib",
+    ],
     deps = [
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
         "//xrtl/base/threading:threading_hdrs",
         "//xrtl/port/windows/base:windows_headers",
-    ],
-    linkopts = [
-        "-Wl,user32.lib",
     ],
 )
 
@@ -42,6 +42,9 @@ cc_library(
 cc_library(
     name = "win32_thread",
     srcs = ["win32_thread.cc"],
+    linkopts = [
+        "-Wl,winmm.lib",
+    ],
     deps = [
         ":win32_wait_handle",
         "//xrtl/base:logging",
@@ -49,9 +52,6 @@ cc_library(
         "//xrtl/base/threading:thread_base",
         "//xrtl/base/threading:threading_hdrs",
         "//xrtl/port/windows/base:windows_headers",
-    ],
-    linkopts = [
-        "-Wl,winmm.lib",
     ],
 )
 

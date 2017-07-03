@@ -14,7 +14,8 @@ COMMON_COPTS = select({
         "/TP",  # Compile as C++.
     ],
     "//conditions:default": [
-        "-x", "c++",
+        "-x",
+        "c++",
     ],
 })
 
@@ -22,21 +23,21 @@ cc_library(
     name = "glad",
     srcs = ["src/glad.c"],
     hdrs = ["include/glad/glad.h"],
+    copts = COMMON_COPTS,
+    includes = ["include"],
     deps = [
         "//third_party/GLES_khronos_headers:GLES3",
     ],
-    copts = COMMON_COPTS,
-    includes = ["include"],
 )
 
 cc_library(
     name = "glad_egl",
     srcs = ["src/glad_egl.c"],
     hdrs = ["include/glad/glad_egl.h"],
+    copts = COMMON_COPTS,
+    includes = ["include"],
     deps = [
         ":glad",
         "//third_party/GLES_khronos_headers:EGL",
     ],
-    copts = COMMON_COPTS,
-    includes = ["include"],
 )

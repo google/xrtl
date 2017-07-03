@@ -21,4 +21,3 @@ cc_binary(
         "//xrtl/ui:window",
     ],
 )
-

@@ -105,6 +105,9 @@ cc_library(
     name = "es3_context_factory",
     srcs = ["es3_context_factory.cc"],
     hdrs = ["es3_context_factory.h"],
+    defines = [
+        "XRTL_HAS_GFX_OPENGL_ES3=1",
+    ],
     deps = [
         ":es3_common",
         ":es3_context",
@@ -112,9 +115,6 @@ cc_library(
         ":es3_platform_context",
         "//xrtl/base:logging",
         "//xrtl/gfx:context_factory_hdrs",
-    ],
-    defines = [
-        "XRTL_HAS_GFX_OPENGL_ES3=1",
     ],
 )
 
@@ -209,6 +209,7 @@ cc_library(
 
 cc_library(
     name = "port_platform_context",
+    visibility = ["//visibility:private"],
     deps = select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
@@ -219,7 +220,6 @@ cc_library(
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [],
     }),
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
@@ -245,11 +245,11 @@ cc_library(
 cc_library(
     name = "es3_platform_context_hdrs",
     hdrs = ["es3_platform_context.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":es3_common",
         "//xrtl/base:ref_ptr",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_library(
@@ -335,6 +335,7 @@ cc_library(
 
 cc_library(
     name = "port_swap_chain",
+    visibility = ["//visibility:private"],
     deps = select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
@@ -345,7 +346,6 @@ cc_library(
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [],
     }),
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
@@ -373,6 +373,7 @@ cc_library(
 cc_library(
     name = "es3_swap_chain_hdrs",
     hdrs = ["es3_swap_chain.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":es3_common",
         ":es3_platform_context",
@@ -380,5 +381,4 @@ cc_library(
         "//xrtl/gfx:swap_chain",
         "//xrtl/ui:control",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )

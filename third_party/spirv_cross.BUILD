@@ -43,6 +43,6 @@ cc_binary(
     name = "spirv_cross",
     srcs = ["main.cpp"],
     copts = COMMON_COPTS,
-    deps = [":spirv_cross_lib"],
     visibility = ["//visibility:public"],
+    deps = [":spirv_cross_lib"],
 )

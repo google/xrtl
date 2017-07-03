@@ -24,6 +24,19 @@ cc_library(
     name = "egl_platform_context",
     srcs = ["egl_platform_context.cc"],
     hdrs = ["egl_platform_context.h"],
+    linkopts = select({
+        "//xrtl/tools/target_platform:android": [],
+        "//xrtl/tools/target_platform:emscripten": [],
+        "//xrtl/tools/target_platform:ios": [],
+        "//xrtl/tools/target_platform:linux": [
+            "-ldl",
+        ],
+        "//xrtl/tools/target_platform:macos": [],
+        "//xrtl/tools/target_platform:windows": [
+            "-Wl,libEGL.lib",
+            "-Wl,libGLESv2.lib",
+        ],
+    }),
     deps = [
         ":egl_strings",
         "//third_party/glad:glad_egl",
@@ -39,19 +52,6 @@ cc_library(
         ],
         "//conditions:default": [
             ":platform_egl",
-        ],
-    }),
-    linkopts = select({
-        "//xrtl/tools/target_platform:android": [],
-        "//xrtl/tools/target_platform:emscripten": [],
-        "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:linux": [
-            "-ldl",
-        ],
-        "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [
-            "-Wl,libEGL.lib",
-            "-Wl,libGLESv2.lib",
         ],
     }),
 )
@@ -72,8 +72,8 @@ cc_library(
     deps = [
         ":egl_platform_context",
         ":egl_strings",
-        "//xrtl/base/threading:thread",
         "//xrtl/base:tracing",
+        "//xrtl/base/threading:thread",
         "//xrtl/gfx/es3:es3_image",
         "//xrtl/gfx/es3:es3_queue_fence",
         "//xrtl/gfx/es3:es3_swap_chain_hdrs",

@@ -32,6 +32,7 @@ cc_library(
 cc_library(
     name = "control_hdrs",
     hdrs = ["control.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         "//xrtl/base:geometry",
         "//xrtl/base:macros",
@@ -39,12 +40,15 @@ cc_library(
         "//xrtl/base/threading:message_loop",
         "//xrtl/gfx:color",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
     name = "control_test",
     srcs = ["control_test.cc"],
+    tags = [
+        "exclusive",
+        "requires_gui",
+    ],
     deps = [
         ":control",
         "//xrtl/base:debugging",
@@ -54,7 +58,6 @@ cc_test(
         "//xrtl/testing:gtest_main",
         "//xrtl/ui/testing:mock_control_listener",
     ],
-    tags = ["exclusive", "requires_gui"],
 )
 
 cc_library(
@@ -76,10 +79,10 @@ cc_library(
 cc_library(
     name = "system_theme_hdrs",
     hdrs = ["system_theme.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         "//xrtl/base:macros",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
@@ -114,6 +117,7 @@ cc_library(
 cc_library(
     name = "window_hdrs",
     hdrs = ["window.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":control",
         "//xrtl/base:macros",
@@ -121,12 +125,15 @@ cc_library(
         "//xrtl/base/threading:message_loop",
         "//xrtl/base/threading:wait_handle",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
     name = "window_test",
     srcs = ["window_test.cc"],
+    tags = [
+        "exclusive",
+        "requires_gui",
+    ],
     deps = [
         ":window",
         "//xrtl/base:debugging",
@@ -135,7 +142,6 @@ cc_test(
         "//xrtl/testing:gtest_main",
         "//xrtl/ui/testing:mock_control_listener",
     ],
-    tags = ["exclusive", "requires_gui"],
 )
 
 cc_binary(

@@ -20,6 +20,7 @@ cc_library(
 
 cc_test(
     name = "memory_command_buffer_test",
+    size = "small",
     srcs = ["memory_command_buffer_test.cc"],
     deps = [
         ":memory_command_buffer",
@@ -27,7 +28,6 @@ cc_test(
         "//xrtl/gfx/testing:partial_command_encoder",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -59,13 +59,13 @@ cc_library(
 
 cc_test(
     name = "memory_command_buffer_reader_writer_test",
+    size = "small",
     srcs = ["memory_command_buffer_reader_writer_test.cc"],
     deps = [
         ":memory_command_buffer_reader",
         ":memory_command_buffer_writer",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(

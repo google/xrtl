@@ -48,9 +48,9 @@ cc_library(
         "glslang/MachineIndependent/preprocessor/PpContext.h",
         "glslang/MachineIndependent/preprocessor/PpTokens.h",
     ],
-    deps = ["glslang_headers"],
     copts = COMMON_COPTS,
     visibility = ["//visibility:private"],
+    deps = ["glslang_headers"],
 )
 
 config_setting(
@@ -71,7 +71,6 @@ cc_library(
         ],
     }),
     hdrs = ["glslang/OSDependent/osinclude.h"],
-    deps = [":glslang_headers"],
     copts = COMMON_COPTS,
     linkopts = select({
         ":windows": [],
@@ -80,17 +79,18 @@ cc_library(
         ],
     }),
     visibility = ["//visibility:private"],
+    deps = [":glslang_headers"],
 )
 
 cc_library(
     name = "OGLCompiler",
     srcs = ["OGLCompilersDLL/InitializeDll.cpp"],
+    copts = COMMON_COPTS,
+    visibility = ["//visibility:private"],
     deps = [
         ":OSDependent",
         ":glslang_headers",
     ],
-    copts = COMMON_COPTS,
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
@@ -173,11 +173,11 @@ cc_library(
         "SPIRV/spirv.hpp",
         "SPIRV/spvIR.h",
     ],
-    deps = [":glslang"],
     copts = COMMON_COPTS + select({
         ":windows": [],
         "//conditions:default": ["-Wno-gnu-redeclared-enum"],
     }),
+    deps = [":glslang"],
 )
 
 cc_library(
@@ -211,26 +211,26 @@ cc_library(
         "hlsl/hlslTokenStream.h",
         "hlsl/hlslTokens.h",
     ],
+    copts = COMMON_COPTS,
+    visibility = ["//visibility:private"],
     deps = [
         ":OSDependent",
         ":glslang_internal_headers",
     ],
-    copts = COMMON_COPTS,
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
     name = "glslang-default-resource-limits",
     srcs = ["StandAlone/ResourceLimits.cpp"],
     hdrs = ["StandAlone/ResourceLimits.h"],
-    deps = [
-        ":glslang",
-        ":glslang_headers",
-    ],
     copts = COMMON_COPTS + [
         "-Ithird_party/glslang",  # for glslang/Include/ResourceLimits.h
     ],
     visibility = ["//visibility:private"],
+    deps = [
+        ":glslang",
+        ":glslang_headers",
+    ],
 )
 
 cc_binary(
@@ -239,6 +239,9 @@ cc_binary(
         "StandAlone/StandAlone.cpp",
         "StandAlone/Worklist.h",
     ],
+    copts = COMMON_COPTS + [
+        "-Ithird_party/glslang",  # for glslang/Include/ResourceLimits.h
+    ],
     deps = [
         ":HLSL",
         ":OGLCompiler",
@@ -248,9 +251,6 @@ cc_binary(
         ":glslang",
         ":glslang-default-resource-limits",
         ":glslang_headers",
-    ],
-    copts = COMMON_COPTS + [
-        "-Ithird_party/glslang",  # for glslang/Include/ResourceLimits.h
     ],
 )
 
@@ -259,6 +259,7 @@ cc_binary(
     srcs = [
         "StandAlone/spirv-remap.cpp",
     ],
+    copts = COMMON_COPTS,
     deps = [
         ":HLSL",
         ":OGLCompiler",
@@ -269,5 +270,4 @@ cc_binary(
         ":glslang-default-resource-limits",
         ":glslang_headers",
     ],
-    copts = COMMON_COPTS,
 )

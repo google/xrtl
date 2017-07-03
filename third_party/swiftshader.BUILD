@@ -13,7 +13,6 @@ COMMON_COPTS = [
     "-Iexternal/com_github_google_swiftshader/include/",
     "-Iexternal/com_github_google_swiftshader/src/",
     "-Iexternal/com_github_google_swiftshader/src/Common/",
-
     "-Iexternal/com_github_google_swiftshader/third_party/subzero/pnacl-llvm/include/",
     "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/include/",
 
@@ -55,10 +54,8 @@ COMMON_COPTS = [
         "/wd4800",
         "/wd4718",
         "/wd4838",
-
         "-DSTRICT",
         "-D_WINDLL",
-
         "/GS",  # Detects some buffer overruns
         "/Zc:wchar_t",
         "/EHsc",
@@ -66,20 +63,19 @@ COMMON_COPTS = [
         "/Gd",  # Default calling convention
     ],
     "//conditions:default": [
-        "-x", "c++",
-
+        "-x",
+        "c++",
         "-Wno-sign-compare",
         "-Wno-inconsistent-missing-override",
         "-Wno-unneeded-internal-declaration",
         "-Wno-undefined-var-template",
-
         "-ffunction-sections",
         "-fdata-sections",
         "-fomit-frame-pointer",
         "-fno-operator-names",
         "-fno-exceptions",
         "-fvisibility=protected",
-    ]
+    ],
 }) + select({
     "@//xrtl/tools/target_platform:android": [
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Android/include/",
@@ -92,7 +88,7 @@ COMMON_COPTS = [
     "@//xrtl/tools/target_platform:macos": [
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/MacOS/include/",
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
-     ],
+    ],
     "@//xrtl/tools/target_platform:windows": [
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Windows/include/",
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Windows/",
@@ -183,16 +179,15 @@ cc_library(
     hdrs = [
         "src/Main/Config.hpp",
     ],
-    deps = [
-        ":common",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_main\"",
-
         "-Iexternal/com_github_google_swiftshader/src/Common/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
+    deps = [
+        ":common",
+    ],
 )
 
 cc_library(
@@ -240,14 +235,8 @@ cc_library(
             "src/Main/FrameBufferWin.hpp",
         ],
     }),
-    deps = [
-        ":common",
-        ":main_config",
-        ":reactor",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_main\"",
-
         "-Iexternal/com_github_google_swiftshader/src/Common/",
     ],
     defines = COMMON_DEFINES,
@@ -263,6 +252,11 @@ cc_library(
             "-Wl,user32.lib",
         ],
     }),
+    deps = [
+        ":common",
+        ":main_config",
+        ":reactor",
+    ],
 )
 
 cc_library(
@@ -297,21 +291,20 @@ cc_library(
         "src/Shader/VertexRoutine.hpp",
         "src/Shader/VertexShader.hpp",
     ],
-    deps = [
-        ":common",
-        ":main",
-        ":main_config",
-        ":renderer_hdrs",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_shader\"",
-
         "-Iexternal/com_github_google_swiftshader/src/Main/",
         "-Iexternal/com_github_google_swiftshader/src/Renderer/",
         "-Iexternal/com_github_google_swiftshader/src/Shader/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
+    deps = [
+        ":common",
+        ":main",
+        ":main_config",
+        ":renderer_hdrs",
+    ],
 )
 
 cc_library(
@@ -553,6 +546,10 @@ cc_library(
             "third_party/llvm-subzero/build/Windows/include/llvm/Support/DataTypes.h",
         ],
     }),
+    copts = COMMON_COPTS,
+    defines = COMMON_DEFINES,
+    linkopts = COMMON_LINKOPTS,
+    linkstatic = 1,
     textual_hdrs = [
         "third_party/llvm-subzero/include/llvm/IR/Attributes.inc",
         "third_party/llvm-subzero/include/llvm/IR/Instruction.def",
@@ -596,10 +593,6 @@ cc_library(
             "third_party/llvm-subzero/build/Windows/include/llvm/IR/Intrinsics.gen",
         ],
     }),
-    copts = COMMON_COPTS,
-    defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS,
-    linkstatic = 1,
 )
 
 cc_library(
@@ -714,6 +707,11 @@ cc_library(
         "third_party/subzero/src/IceTargetLoweringX8664.h",
         "third_party/subzero/src/IceTargetLoweringX8664Traits.h",
     ],
+    copts = COMMON_COPTS + [
+        "-Iexternal/com_github_google_swiftshader/third_party/subzero/",
+    ],
+    defines = COMMON_DEFINES,
+    linkopts = COMMON_LINKOPTS,
     textual_hdrs = [
         "third_party/subzero/src/IceClFlags.def",
         "third_party/subzero/src/IceInst.def",
@@ -732,29 +730,20 @@ cc_library(
     deps = [
         ":llvm_subzero",
     ],
-    copts = COMMON_COPTS + [
-        "-Iexternal/com_github_google_swiftshader/third_party/subzero/",
-    ],
-    defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS,
 )
 
 cc_library(
     name = "reactor",
     srcs = [
-        "src/Reactor/Routine.cpp",
         "src/Reactor/Optimizer.cpp",
+        "src/Reactor/Routine.cpp",
         "src/Reactor/SubzeroReactor.cpp",
     ],
     hdrs = [
         "src/Reactor/Nucleus.hpp",
+        "src/Reactor/Optimizer.hpp",
         "src/Reactor/Reactor.hpp",
         "src/Reactor/Routine.hpp",
-        "src/Reactor/Optimizer.hpp",
-    ],
-    deps = [
-        ":common",
-        ":subzero",
     ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_reactor\"",
@@ -762,6 +751,10 @@ cc_library(
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
+    deps = [
+        ":common",
+        ":subzero",
+    ],
 )
 
 cc_library(
@@ -812,16 +805,8 @@ cc_library(
         "src/Renderer/Vertex.hpp",
         "src/Renderer/VertexProcessor.hpp",
     ],
-    deps = [
-        ":common",
-        ":main_config",
-        ":reactor",
-        ":renderer_hdrs",
-        ":shader",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_renderer\"",
-
         "-Iexternal/com_github_google_swiftshader/src/Common/",
         "-Iexternal/com_github_google_swiftshader/src/Main/",
         "-Iexternal/com_github_google_swiftshader/src/Renderer",
@@ -829,6 +814,13 @@ cc_library(
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
+    deps = [
+        ":common",
+        ":main_config",
+        ":reactor",
+        ":renderer_hdrs",
+        ":shader",
+    ],
 )
 
 cc_library(
@@ -859,19 +851,18 @@ cc_library(
         "src/Renderer/Vertex.hpp",
         "src/Renderer/VertexProcessor.hpp",
     ],
-    deps = [
-        ":common",
-        ":main_config",
-        ":reactor",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_renderer\"",
-
         "-Iexternal/com_github_google_swiftshader/src/Common/",
         "-Iexternal/com_github_google_swiftshader/src/Main/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
+    deps = [
+        ":common",
+        ":main_config",
+        ":reactor",
+    ],
 )
 
 cc_library(
@@ -892,18 +883,17 @@ cc_library(
         "src/OpenGL/common/Surface.hpp",
         "src/OpenGL/common/debug.h",
     ],
+    copts = COMMON_COPTS + [
+        "-DLOG_TAG=\"swiftshader_opengl_common\"",
+        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
+    ],
+    defines = COMMON_DEFINES,
+    linkopts = COMMON_LINKOPTS,
     deps = [
         ":common",
         ":gl_headers",
         ":renderer",
     ],
-    copts = COMMON_COPTS + [
-        "-DLOG_TAG=\"swiftshader_opengl_common\"",
-
-        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
-    ],
-    defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS,
 )
 
 cc_library(
@@ -943,7 +933,6 @@ cc_library(
         "src/OpenGL/compiler/preprocessor/Preprocessor.cpp",
         "src/OpenGL/compiler/preprocessor/Token.cpp",
         "src/OpenGL/compiler/preprocessor/Tokenizer.cpp",
-
         "src/OpenGL/libGLESv2/ResourceManager.h",
         "src/OpenGL/libGLESv2/Shader.h",
     ] + select({
@@ -984,7 +973,6 @@ cc_library(
         "src/OpenGL/compiler/intermediate.h",
         "src/OpenGL/compiler/localintermediate.h",
         "src/OpenGL/compiler/osinclude.h",
-        "src/OpenGL/compiler/util.h",
         "src/OpenGL/compiler/preprocessor/Diagnostics.h",
         "src/OpenGL/compiler/preprocessor/DirectiveHandler.h",
         "src/OpenGL/compiler/preprocessor/DirectiveParser.h",
@@ -1000,27 +988,27 @@ cc_library(
         "src/OpenGL/compiler/preprocessor/length_limits.h",
         "src/OpenGL/compiler/preprocessor/numeric_lex.h",
         "src/OpenGL/compiler/preprocessor/pp_utils.h",
+        "src/OpenGL/compiler/util.h",
     ],
+    copts = COMMON_COPTS + [
+        "-DLOG_TAG=\"swiftshader_opengl_compiler\"",
+        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
+    ],
+    defines = COMMON_DEFINES,
+    linkopts = COMMON_LINKOPTS,
     deps = [
         ":common",
         ":gl_common",
         ":gl_headers",
         "@//xrtl/base:debugging_settings",
     ],
-    copts = COMMON_COPTS + [
-        "-DLOG_TAG=\"swiftshader_opengl_compiler\"",
-
-        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
-    ],
-    defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS,
 )
 
 genrule(
     name = "libglesv2_exports_lds",
     srcs = ["src/OpenGL/libGLESv2/exports.map"],
     outs = ["libglesv2_exports.lds"],
-    cmd  = "\n".join([
+    cmd = "\n".join([
         "cp $< $@",
     ]),
 )
@@ -1069,7 +1057,6 @@ LIBGLESV2_SRCS = [
     "src/OpenGL/libGLESv2/resource.h",
     "src/OpenGL/libGLESv2/utilities.cpp",
     "src/OpenGL/libGLESv2/utilities.h",
-
     "src/OpenGL/libGLES_CM/libGLES_CM.hpp",
     "src/OpenGL/libEGL/Config.h",
     "src/OpenGL/libEGL/Context.hpp",
@@ -1084,14 +1071,6 @@ LIBGLESV2_SRCS = [
 cc_binary(
     name = "libGLESv2.dll",
     srcs = LIBGLESV2_SRCS,
-    deps = [
-        ":gl_common",
-        ":gl_compiler",
-        ":gl_headers",
-        ":reactor",
-        ":renderer",
-        "@//xrtl/base:debugging_settings",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libGLESv2\"",
         "-DGL_API=__declspec(dllexport)",
@@ -1107,21 +1086,20 @@ cc_binary(
     ],
     linkshared = 1,
     visibility = ["//visibility:public"],
+    deps = [
+        ":gl_common",
+        ":gl_compiler",
+        ":gl_headers",
+        ":reactor",
+        ":renderer",
+        "@//xrtl/base:debugging_settings",
+    ],
 )
 
 # libGLESv2 for Linux:
 cc_binary(
     name = "libGLESv2.so",
     srcs = LIBGLESV2_SRCS,
-    deps = [
-        ":gl_common",
-        ":gl_compiler",
-        ":gl_headers",
-        ":libglesv2_exports.lds",
-        ":reactor",
-        ":renderer",
-        "@//xrtl/base:debugging_settings",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libGLESv2\"",
         "-DGL_API=",
@@ -1138,13 +1116,22 @@ cc_binary(
     ],
     linkshared = 1,
     visibility = ["//visibility:public"],
+    deps = [
+        ":gl_common",
+        ":gl_compiler",
+        ":gl_headers",
+        ":libglesv2_exports.lds",
+        ":reactor",
+        ":renderer",
+        "@//xrtl/base:debugging_settings",
+    ],
 )
 
 genrule(
     name = "libegl_exports_lds",
     srcs = ["src/OpenGL/libEGL/exports.map"],
     outs = ["libegl_exports.lds"],
-    cmd  = "\n".join([
+    cmd = "\n".join([
         "cp $< $@",
     ]),
 )
@@ -1167,7 +1154,6 @@ LIBEGL_SRCS = [
     "src/OpenGL/libEGL/main.cpp",
     "src/OpenGL/libEGL/main.h",
     "src/OpenGL/libEGL/resource.h",
-
     "src/OpenGL/libGLES_CM/libGLES_CM.hpp",
     "src/OpenGL/libGLESv2/libGLESv2.hpp",
 ]
@@ -1176,11 +1162,6 @@ LIBEGL_SRCS = [
 cc_binary(
     name = "libEGL.dll",
     srcs = LIBEGL_SRCS,
-    deps = [
-        ":gl_common",
-        ":gl_headers",
-        "@//xrtl/base:debugging_settings",
-    ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libEGL\"",
         "-DEGL_EGLEXT_PROTOTYPES",
@@ -1194,6 +1175,11 @@ cc_binary(
     ],
     linkshared = 1,
     visibility = ["//visibility:public"],
+    deps = [
+        ":gl_common",
+        ":gl_headers",
+        "@//xrtl/base:debugging_settings",
+    ],
 )
 
 # libEGL for Linux:
@@ -1203,12 +1189,6 @@ cc_binary(
         # osx:
         # OSXUtils.hpp
         # OSXUtils.mm
-    ],
-    deps = [
-        ":gl_common",
-        ":gl_headers",
-        ":libegl_exports.lds",
-        "@//xrtl/base:debugging_settings",
     ],
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libEGL\"",
@@ -1227,6 +1207,12 @@ cc_binary(
     ],
     linkshared = 1,
     visibility = ["//visibility:public"],
+    deps = [
+        ":gl_common",
+        ":gl_headers",
+        ":libegl_exports.lds",
+        "@//xrtl/base:debugging_settings",
+    ],
 )
 
 cc_library(
@@ -1242,6 +1228,7 @@ cc_library(
             ":libEGL.dll",
         ],
     }),
+    copts = COMMON_COPTS,
     data = select({
         "@//xrtl/tools/target_platform:linux": [
             ":libGLESv2.so",
@@ -1253,7 +1240,6 @@ cc_library(
             ":libEGL.dll",
         ],
     }),
-    copts = COMMON_COPTS,
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS,
     visibility = ["//visibility:public"],
