@@ -63,10 +63,6 @@ cc_library(
         "gtest/googletest/src/*.cc",
         "gtest/googlemock/src/*.cc",
     ]),
-    deps = [
-        "//xrtl/base:flags",
-        "//xrtl/base:logging",
-    ],
     includes = [
         "gtest/googlemock",
         "gtest/googlemock/include",
@@ -74,4 +70,8 @@ cc_library(
         "gtest/googletest/include",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+    ],
 )

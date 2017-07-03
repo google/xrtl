@@ -269,12 +269,12 @@ cc_library(
         "include/spirv-tools/libspirv.hpp",
     ],
     copts = COMMON_COPTS,
+    includes = ["include"],
     deps = [
         ":generated_headers",
         "@com_github_khronosgroup_spirv_headers//:spirv_c_headers",
         "@com_github_khronosgroup_spirv_headers//:spirv_common_headers",
     ],
-    includes = ["include"],
 )
 
 cc_library(
@@ -342,11 +342,11 @@ cc_library(
         "include/spirv-tools/optimizer.hpp",
     ],
     copts = COMMON_COPTS,
+    includes = ["include"],
     deps = [
         ":spirv_tools",
         "@com_github_khronosgroup_spirv_headers//:spirv_common_headers",
     ],
-    includes = ["include"],
 )
 
 cc_binary(

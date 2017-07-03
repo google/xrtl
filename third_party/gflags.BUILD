@@ -23,8 +23,9 @@ genrule(
     name = "config_h",
     srcs = ["src/config.h.in"],
     outs = ["config.h"],
-    cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $(<) > $(@)"
+    cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $(<) > $(@)",
 )
+
 genrule(
     name = "gflags_declare_h",
     srcs = ["src/gflags_declare.h.in"],
@@ -33,8 +34,9 @@ genrule(
            "gsub(/@GFLAGS_NAMESPACE@/, \"gflags\"); " +
            "gsub(/@(HAVE_STDINT_H|HAVE_SYS_TYPES_H|HAVE_INTTYPES_H|GFLAGS_INTTYPES_FORMAT_C99)@/, \"1\"); " +
            "gsub(/@([A-Z0-9_]+)@/, \"0\"); " +
-           "print; }' $(<) > $(@)")
+           "print; }' $(<) > $(@)"),
 )
+
 genrule(
     name = "gflags_h",
     srcs = ["src/gflags.h.in"],
@@ -42,21 +44,22 @@ genrule(
     cmd = ("awk '{ " +
            "gsub(/@GFLAGS_ATTRIBUTE_UNUSED@/, \"\"); " +
            "gsub(/@INCLUDE_GFLAGS_NS_H@/, \"\"); " +
-           "print; }' $(<) > $(@)")
+           "print; }' $(<) > $(@)"),
 )
+
 genrule(
     name = "gflags_completions_h",
     srcs = ["src/gflags_completions.h.in"],
     outs = ["include/gflags/gflags_completions.h"],
-    cmd = "awk '{ gsub(/@GFLAGS_NAMESPACE@/, \"gflags\"); print; }' $(<) > $(@)"
+    cmd = "awk '{ gsub(/@GFLAGS_NAMESPACE@/, \"gflags\"); print; }' $(<) > $(@)",
 )
 
 native.cc_library(
     name = "gflags",
     hdrs = [
-        ":gflags_h",
-        ":gflags_declare_h",
         ":gflags_completions_h",
+        ":gflags_declare_h",
+        ":gflags_h",
     ],
     srcs = [
         ":config_h",
@@ -110,5 +113,5 @@ native.cc_library(
             "-lpthread",
         ],
     }),
-    visibility = ["//visibility:public"]
+    visibility = ["//visibility:public"],
 )

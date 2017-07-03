@@ -76,10 +76,10 @@ cc_library(
         "include/spirv/1.1/spirv.h",
         "include/spirv/1.2/spirv.h",
     ],
+    includes = ["include/"],
     deps = [
         ":spirv_common_headers",
     ],
-    includes = ["include/"],
 )
 
 cc_library(
@@ -89,10 +89,10 @@ cc_library(
         "include/spirv/1.1/spirv.hpp",
         "include/spirv/1.2/spirv.hpp",
     ],
+    includes = ["include/"],
     deps = [
         ":spirv_common_headers",
     ],
-    includes = ["include/"],
 )
 
 cc_library(
@@ -102,8 +102,8 @@ cc_library(
         "include/spirv/1.1/spirv.hpp11",
         "include/spirv/1.2/spirv.hpp11",
     ],
+    includes = ["include/"],
     deps = [
         ":spirv_common_headers",
     ],
-    includes = ["include/"],
 )

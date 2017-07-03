@@ -33,13 +33,13 @@ cc_library(
         "timer.h",
         "wait_handle.h",
     ],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         "//xrtl/base:intrusive_list",
         "//xrtl/base:intrusive_pool",
         "//xrtl/base:logging",
         "//xrtl/base:ref_ptr",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_library(
@@ -59,6 +59,7 @@ cc_library(
 
 cc_test(
     name = "event_test",
+    size = "small",
     srcs = ["event_test.cc"],
     deps = [
         ":event",
@@ -66,7 +67,6 @@ cc_test(
         "//xrtl/base:stopwatch",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -98,6 +98,7 @@ cc_library(
 
 cc_test(
     name = "message_loop_test",
+    size = "small",
     srcs = ["message_loop_test.cc"],
     deps = [
         ":event",
@@ -105,7 +106,6 @@ cc_test(
         ":thread",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -125,6 +125,7 @@ cc_library(
 
 cc_test(
     name = "semaphore_test",
+    size = "small",
     srcs = ["semaphore_test.cc"],
     deps = [
         ":event",
@@ -133,7 +134,6 @@ cc_test(
         "//xrtl/base:stopwatch",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -157,15 +157,16 @@ cc_library(
     name = "thread_base",
     srcs = ["thread.cc"],
     hdrs = ["thread.h"],
+    visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":wait_handle",
         "//xrtl/base:macros",
     ],
-    visibility = ["//xrtl/port:ports_only"],
 )
 
 cc_test(
     name = "thread_test",
+    size = "small",
     srcs = ["thread_test.cc"],
     deps = [
         ":event",
@@ -174,7 +175,6 @@ cc_test(
         "//xrtl/base:stopwatch",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -196,13 +196,13 @@ cc_library(
 
 cc_test(
     name = "timer_test",
+    size = "small",
     srcs = ["timer_test.cc"],
     deps = [
-        ":timer",
         ":thread",
+        ":timer",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(

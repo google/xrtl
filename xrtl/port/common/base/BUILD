@@ -30,7 +30,7 @@ cc_library(
     name = "logging_macros_hdrs",
     hdrs = ["logging_macros.h"],
     deps = [
-        "//xrtl/base:macros"
+        "//xrtl/base:macros",
     ],
 )
 

@@ -54,17 +54,20 @@ cc_library(
     name = "target_platform",
     srcs = ["target_platform.cc"],
     hdrs = ["target_platform.h"],
-    defines = select({
-        # NOTE: one platform must be defined.
-        # If you are getting bazel select errors here add the platform to
-        # the list.
-        "//xrtl/tools/target_platform:android": [],
-        "//xrtl/tools/target_platform:emscripten": [],
-        "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:linux": [],
-        "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
-    }, no_match_error = "Unrecognized platform"),
+    defines = select(
+        {
+            # NOTE: one platform must be defined.
+            # If you are getting bazel select errors here add the platform to
+            # the list.
+            "//xrtl/tools/target_platform:android": [],
+            "//xrtl/tools/target_platform:emscripten": [],
+            "//xrtl/tools/target_platform:ios": [],
+            "//xrtl/tools/target_platform:linux": [],
+            "//xrtl/tools/target_platform:macos": [],
+            "//xrtl/tools/target_platform:windows": [],
+        },
+        no_match_error = "Unrecognized platform",
+    ),
 )
 
 #===============================================================================

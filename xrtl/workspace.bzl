@@ -6,7 +6,6 @@
 #      load("//xrtl:workspace.bzl", "xrtl_workspace")
 #      xrtl_workspace()
 
-
 # Parses the bazel version string from `native.bazel_version`.
 def _parse_bazel_version(bazel_version):
   # Remove commit from version.
@@ -22,7 +21,6 @@ def _parse_bazel_version(bazel_version):
     version_tuple += (str(number),)
   return version_tuple
 
-
 # Checks that a specific bazel version is being used.
 def check_version(bazel_version):
   if "bazel_version" not in dir(native):
@@ -37,7 +35,6 @@ def check_version(bazel_version):
       fail("\nCurrent Bazel version is {}, expected at least {}\n".format(
           native.bazel_version, bazel_version))
   pass
-
 
 def xrtl_workspace():
   # Verify supported bazel version.

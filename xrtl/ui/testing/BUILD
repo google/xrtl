@@ -7,6 +7,7 @@ licenses(["notice"])  # Apache 2.0
 
 cc_library(
     name = "mock_control_listener",
+    testonly = 1,
     hdrs = ["mock_control_listener.h"],
     deps = [
         "//xrtl/base/threading:event",
@@ -15,5 +16,4 @@ cc_library(
         "//xrtl/testing:gtest_main",
         "//xrtl/ui:control",
     ],
-    testonly = 1,
 )

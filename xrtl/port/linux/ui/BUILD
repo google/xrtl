@@ -37,25 +37,25 @@ cc_library(
 
 cc_test(
     name = "x11_display_test",
+    size = "small",
     srcs = ["x11_display_test.cc"],
+    tags = ["requires_gui"],
     deps = [
         ":x11_display",
         "//xrtl/testing:gtest_main",
         "//xrtl/tools/target_config",
     ],
-    size = "small",
-    tags = ["requires_gui"],
 )
 
 cc_library(
     name = "x11_headers",
     hdrs = ["x11_headers.h"],
+    linkopts = [
+        "-lX11",
+    ],
     deps = [
         # TODO(benvanik): pull headers in so we can cross-compile?
         # "//third_party/Xorg:libX11",
-    ],
-    linkopts = [
-        "-lX11",
     ],
 )
 

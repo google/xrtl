@@ -29,11 +29,11 @@ cc_library(
 cc_library(
     name = "windows_headers",
     hdrs = ["windows.h"],
-    deps = [
-      "//xrtl/tools/target_platform",
-    ],
     defines = [
         "UNICODE=1",
     ],
     visibility = ["//xrtl/port:windows_only"],
+    deps = [
+        "//xrtl/tools/target_platform",
+    ],
 )

@@ -25,12 +25,12 @@ cc_library(
 
 cc_test(
     name = "color_test",
+    size = "small",
     srcs = ["color_test.cc"],
     deps = [
         ":color",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -101,6 +101,7 @@ cc_library(
 
 cc_library(
     name = "port_context_factory",
+    visibility = ["//visibility:private"],
     deps = select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
@@ -111,7 +112,6 @@ cc_library(
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [],
     }),
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
@@ -147,12 +147,12 @@ cc_library(
 
 cc_test(
     name = "context_factory_test",
+    size = "small",
     srcs = ["context_factory_test.cc"],
     deps = [
         ":context_factory",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -190,8 +190,8 @@ cc_library(
     name = "image_view",
     hdrs = ["image_view.h"],
     deps = [
-        ":pixel_format",
         ":image",
+        ":pixel_format",
         "//xrtl/base:ref_ptr",
     ],
 )
@@ -213,8 +213,8 @@ cc_library(
     hdrs = ["pipeline.h"],
     deps = [
         ":pipeline_layout",
-        ":shader_module",
         ":render_state",
+        ":shader_module",
         "//xrtl/base:ref_ptr",
     ],
 )
@@ -241,12 +241,12 @@ cc_library(
 
 cc_test(
     name = "pixel_format_test",
+    size = "small",
     srcs = ["pixel_format_test.cc"],
     deps = [
         ":pixel_format",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )
 
 cc_library(
@@ -343,10 +343,10 @@ cc_library(
 
 cc_test(
     name = "vertex_format_test",
+    size = "small",
     srcs = ["vertex_format_test.cc"],
     deps = [
         ":vertex_format",
         "//xrtl/testing:gtest_main",
     ],
-    size = "small",
 )

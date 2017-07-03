@@ -8,9 +8,6 @@ licenses(["notice"])  # Apache 2.0
 cc_library(
     name = "posix_demo_main",
     srcs = ["posix_demo_main.cc"],
-    deps = [
-        "//xrtl/testing:demo_main_hdrs",
-    ],
     linkopts = select({
         # TODO(benvanik): find a way to remove this requirement.
         "//xrtl/tools/target_platform:ios": [
@@ -21,18 +18,15 @@ cc_library(
         ],
         "//conditions:default": [],
     }),
+    deps = [
+        "//xrtl/testing:demo_main_hdrs",
+    ],
 )
 
 cc_library(
     name = "posix_test_main",
     testonly = 1,
     srcs = ["posix_test_main.cc"],
-    deps = [
-        "//xrtl/base:flags",
-        "//xrtl/base:logging",
-        "//xrtl/testing:file_manifest",
-        "//xrtl/testing:gtest",
-    ],
     linkopts = select({
         # TODO(benvanik): find a way to remove this requirement.
         "//xrtl/tools/target_platform:ios": [
@@ -43,4 +37,10 @@ cc_library(
         ],
         "//conditions:default": [],
     }),
+    deps = [
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+        "//xrtl/testing:file_manifest",
+        "//xrtl/testing:gtest",
+    ],
 )

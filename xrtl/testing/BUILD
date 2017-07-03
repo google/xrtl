@@ -28,6 +28,7 @@ cc_library(
 
 cc_library(
     name = "platform_demo_main",
+    visibility = ["//visibility:private"],
     deps = select({
         "//xrtl/tools/target_platform:windows": [
             "//xrtl/port/windows/testing:win32_demo_main",
@@ -36,9 +37,7 @@ cc_library(
             "//xrtl/port/common/testing:posix_demo_main",
         ],
     }),
-    visibility = ["//visibility:private"],
 )
-
 
 # googletest header shim.
 # This can be linked in to cc_library rules that require access to the gunit
@@ -74,6 +73,7 @@ cc_library(
 cc_library(
     name = "platform_gtest_main",
     testonly = 1,
+    visibility = ["//visibility:private"],
     deps = select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
@@ -86,7 +86,6 @@ cc_library(
             "//xrtl/port/common/testing:posix_test_main",
         ],
     }),
-    visibility = ["//visibility:private"],
 )
 
 cc_library(
