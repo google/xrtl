@@ -18,6 +18,7 @@
 #include <mutex>
 #include <utility>
 
+#include "xrtl/base/geometry.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/es3/es3_common.h"
 
@@ -184,6 +185,11 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
       }
     }
     ~ExclusiveLock() { reset(); }
+    ExclusiveLock& operator=(ExclusiveLock& other) {  // NOLINT
+      context_ = std::move(other.context_);
+      lock_ = std::move(other.lock_);
+      return *this;
+    }
 
     // Returns true if the context thread lock is held.
     bool is_held() const { return context_ != nullptr; }
@@ -229,11 +235,38 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     return reinterpret_cast<T>(GetExtensionProc(extension_name, proc_name));
   }
 
+  // Defines the result of RecreateSurface operation.
+  enum class RecreateSurfaceResult {
+    // Surface created successfully and may be used.
+    kSuccess,
+    // The target window was not valid for the specified config.
+    kInvalidTarget,
+    // Memory was not available to allocate the surface. The old
+    // surface may no longer be valid. Consider this fatal to the
+    // context.
+    kOutOfMemory,
+    // The device was lost before or during recreation.
+    kDeviceLost,
+  };
+
+  // Attempts to recreate the surface for the native_window.
+  virtual RecreateSurfaceResult RecreateSurface(Size2D size_hint) {
+    return RecreateSurfaceResult::kInvalidTarget;
+  }
+  // Queries the size of the backing surface, if any.
+  virtual Size2D QuerySize() { return {0, 0}; }
+  // Swaps presentation buffers, if created.
+  virtual bool SwapBuffers(std::chrono::milliseconds present_time_utc_millis) {
+    return false;
+  }
+
  protected:
   friend class ThreadLock;
 
   ES3PlatformContext();
 
+  // Initializes GL debugging support.
+  void InitializeDebugging();
   // Initializes the list of supported extensions to enable the various
   // extension functions.
   bool InitializeExtensions();

@@ -15,6 +15,8 @@
 #ifndef XRTL_GFX_ES3_ES3_SWAP_CHAIN_H_
 #define XRTL_GFX_ES3_ES3_SWAP_CHAIN_H_
 
+#include <vector>
+
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/memory_pool.h"
@@ -35,10 +37,47 @@ class ES3SwapChain : public SwapChain {
 
   ~ES3SwapChain() override = default;
 
+  virtual bool Initialize() = 0;
+
  protected:
   ES3SwapChain(PresentMode present_mode, int image_count,
                ArrayView<PixelFormat> pixel_formats)
-      : SwapChain(present_mode, image_count) {}
+      : SwapChain(present_mode, image_count),
+        available_pixel_formats_(pixel_formats) {}
+
+  std::vector<PixelFormat> available_pixel_formats_;
+};
+
+class ES3PlatformSwapChain : public ES3SwapChain {
+ public:
+  ES3PlatformSwapChain(ref_ptr<MemoryPool> memory_pool,
+                       ref_ptr<ui::Control> control,
+                       ref_ptr<ES3PlatformContext> platform_context,
+                       PresentMode present_mode, int image_count,
+                       ArrayView<PixelFormat> pixel_formats);
+  ~ES3PlatformSwapChain() override;
+
+  bool Initialize() override;
+
+  ResizeResult Resize(Size2D new_size) override;
+
+  AcquireResult AcquireNextImage(std::chrono::milliseconds timeout_millis,
+                                 ref_ptr<QueueFence> signal_queue_fence,
+                                 ref_ptr<ImageView>* out_image_view) override;
+
+  PresentResult PresentImage(
+      ref_ptr<QueueFence> wait_queue_fence, ref_ptr<ImageView> image_view,
+      std::chrono::milliseconds present_time_utc_millis) override;
+
+ private:
+  ref_ptr<MemoryPool> memory_pool_;
+  ref_ptr<ui::Control> control_;
+  ref_ptr<ES3PlatformContext> platform_context_;
+
+  Image::CreateParams image_create_params_;
+  std::vector<ref_ptr<ImageView>> image_views_;
+  std::vector<GLuint> framebuffers_;
+  int next_image_index_ = 0;
 };
 
 }  // namespace es3

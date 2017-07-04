@@ -29,6 +29,10 @@ cc_library(
 cc_library(
     name = "windows_headers",
     hdrs = ["windows.h"],
+    copts = [
+        "/UNOGDI",
+        "/wd9025",
+    ],
     defines = [
         "UNICODE=1",
     ],

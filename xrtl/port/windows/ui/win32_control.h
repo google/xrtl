@@ -37,7 +37,7 @@ class Win32Control : public Control {
 
   HWND hwnd() const;
   PlatformHandle platform_handle() override;
-  PlatformHandle platform_display_handle() override { return 0; }
+  PlatformHandle platform_display_handle() override;
 
   State state() override;
   bool is_active() override;
@@ -71,6 +71,7 @@ class Win32Control : public Control {
 
   ControlContainer* container_ = nullptr;
 
+  HDC dc_ = nullptr;
   HWND hwnd_ = nullptr;
 
   ref_ptr<Event> create_event_;

@@ -34,11 +34,12 @@ TEST(PixelFormatTest, PixelFormatTable) {
     int index;
     MyEntry(const MyEntry& other) = delete;  // Ensure we don't copy.
   };
+  static const MyEntry kTable[] = {
+      {0}, {1}, {2}, {3}, {4}, {5},
+  };
   PixelFormatTable<MyEntry, PixelFormats::kEtc2R8G8B8UNorm,
                    PixelFormats::kEtc2R8G8B8A8Srgb>
-      table({
-          {0}, {1}, {2}, {3}, {4}, {5},
-      });
+      table(kTable);
   EXPECT_EQ(6, table.range());
   EXPECT_EQ(6, table.size());
   EXPECT_EQ(0, table.Find(PixelFormats::kEtc2R8G8B8UNorm).index);
@@ -52,11 +53,12 @@ TEST(PixelFormatTest, PixelFormatTableStride) {
     int index;
     MyEntry(const MyEntry& other) = delete;  // Ensure we don't copy.
   };
+  static const MyEntry kTable[] = {
+      {0}, {2}, {4},
+  };
   PixelFormatTable<MyEntry, PixelFormats::kEtc2R8G8B8UNorm,
                    PixelFormats::kEtc2R8G8B8A8Srgb, 2>
-      table({
-          {0}, {2}, {4},
-      });
+      table(kTable);
   EXPECT_EQ(6, table.range());
   EXPECT_EQ(3, table.size());
   EXPECT_EQ(0, table.Find(PixelFormats::kEtc2R8G8B8UNorm).index);

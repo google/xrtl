@@ -283,12 +283,13 @@ static_assert(sizeof(PixelFormat) == sizeof(uint64_t),
 //
 // Usage:
 //  struct MyEntry { GLint some_mapped_value; };
-//  PixelFormatTable<MyEntry, PixelFormats::kEtc2R8G8B8UNorm,
-//                            PixelFormats::kEtc2R8G8B8A8Srgb> table({
+//  static const MyEntry kTable[] = {
 //      {GL_ETC2_A},  // kEtc2R8G8B8UNorm (first)
 //      {GL_ETC2_B},  // kEtc2R8G8B8Srgb
 //      {GL_ETC2_C},  // kEtc2R8G8B8A8Srgb (last)
-//  });
+//  };
+//  PixelFormatTable<MyEntry, PixelFormats::kEtc2R8G8B8UNorm,
+//                            PixelFormats::kEtc2R8G8B8A8Srgb> table(kTable);
 //  MyEntry entry = table.Find(some_pixel_format);
 template <typename T, int kFirstId, int kLastId, int kStride = 1>
 class PixelFormatTable {

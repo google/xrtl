@@ -472,13 +472,18 @@ void ES3RenderPassCommandEncoder::ClearDepthStencilAttachment(
 void ES3RenderPassCommandEncoder::BeginRenderPass(
     ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
     ArrayView<ClearColor> clear_colors) {
-  render_pass_ = render_pass;
-  framebuffer_ = framebuffer;
+  render_pass_ = std::move(render_pass);
+  framebuffer_ = std::move(framebuffer);
   clear_colors_ = std::vector<ClearColor>(clear_colors);
   subpass_index_ = 0;
 
   DCHECK_LE(framebuffer_->attachments().size(), 64);
   used_attachments_ = 0;
+
+  // TODO(benvanik): cache many VAOs to use (bitmaks of enabled attribs?)
+  glGenVertexArrays(1, &scratch_vao_id_);
+  DCHECK_NE(scratch_vao_id_, 0);
+  glBindVertexArray(scratch_vao_id_);
 
   glGenFramebuffers(1, &scratch_framebuffer_id_);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, scratch_framebuffer_id_);
@@ -550,6 +555,10 @@ void ES3RenderPassCommandEncoder::EndRenderPass() {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glDeleteFramebuffers(1, &scratch_framebuffer_id_);
   scratch_framebuffer_id_ = 0;
+
+  glBindVertexArray(0);
+  glDeleteVertexArrays(1, &scratch_vao_id_);
+  scratch_vao_id_ = 0;
 }
 
 void ES3RenderPassCommandEncoder::SetScissors(int first_scissor,
@@ -877,15 +886,15 @@ void ES3RenderPassCommandEncoder::DrawIndexed(int index_count,
   DCHECK(index_buffer_);
   size_t type_size = (index_buffer_type_ == GL_UNSIGNED_INT) ? 4 : 2;
   if (instance_count > 1) {
-    glDrawElementsInstanced(
-        draw_primitive_mode_, index_count, index_buffer_type_,
-        reinterpret_cast<const void*>(index_buffer_offset_ +
-                                      first_index * sizeof(type_size)),
-        instance_count);
+    glDrawElementsInstanced(draw_primitive_mode_, index_count,
+                            index_buffer_type_,
+                            reinterpret_cast<const void*>(
+                                index_buffer_offset_ + first_index * type_size),
+                            instance_count);
   } else {
     glDrawElements(draw_primitive_mode_, index_count, index_buffer_type_,
-                   reinterpret_cast<const void*>(
-                       index_buffer_offset_ + first_index * sizeof(type_size)));
+                   reinterpret_cast<const void*>(index_buffer_offset_ +
+                                                 first_index * type_size));
   }
 }
 

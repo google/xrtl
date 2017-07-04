@@ -31,11 +31,17 @@
 #define NOMINMAX
 #endif  // NOMINMAX
 
+// Bazel's default CROSSTOOL defines NOGDI. Undo that nastiness.
+#undef NOGDI
+
 // Must be first.
 #include <windows.h>
 
 #include <mmsystem.h>  // winmm
 #include <objbase.h>   // ole32
 #include <shellapi.h>  // shell32
+
+// Global namespace conflicts.
+#undef ERROR
 
 #endif  // XRTL_PORT_WINDOWS_BASE_WINDOWS_H_
