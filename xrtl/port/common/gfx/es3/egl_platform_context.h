@@ -22,7 +22,6 @@
 #include <mutex>
 #include <vector>
 
-#include "xrtl/base/geometry.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 
@@ -61,33 +60,16 @@ class EGLPlatformContext : public ES3PlatformContext {
 
   void* native_handle() const override { return egl_context_; }
 
-  // Defines the result of RecreateSurface operation.
-  enum class RecreateSurfaceResult {
-    // Surface created successfully and may be used.
-    kSuccess,
-    // The target window was not valid for the specified config.
-    kInvalidTarget,
-    // Memory was not available to allocate the surface. The old
-    // surface may no longer be valid. Consider this fatal to the
-    // context.
-    kOutOfMemory,
-    // The device was lost before or during recreation.
-    kDeviceLost,
-  };
-
-  // Attempts to recreate the surface for the native_window.
-  RecreateSurfaceResult RecreateSurface(Size2D size_hint);
-  // Queries the size of the backing surface, if any.
-  Size2D QuerySize();
-  // Swaps presentation buffers, if created.
-  bool SwapBuffers(std::chrono::milliseconds present_time_utc_millis);
-
   bool IsCurrent() override;
   bool MakeCurrent() override;
   void ClearCurrent() override;
 
   void Flush() override;
   void Finish() override;
+
+  RecreateSurfaceResult RecreateSurface(Size2D size_hint) override;
+  Size2D QuerySize() override;
+  bool SwapBuffers(std::chrono::milliseconds present_time_utc_millis) override;
 
   void* GetExtensionProc(const char* extension_name,
                          const char* proc_name) override;
@@ -111,6 +93,9 @@ class EGLPlatformContext : public ES3PlatformContext {
                    ConfigRequestFlag config_request_flags);
   // Dumps all config attributes to LOG.
   void DumpConfig(EGLDisplay egl_display, EGLConfig egl_config);
+
+  // Finishes all context operations before shutting down.
+  void FinishOnShutdown();
 
   EGLDisplay egl_display_ = EGL_NO_DISPLAY;
   EGLConfig egl_config_ = nullptr;

@@ -218,7 +218,9 @@ cc_library(
             "//xrtl/port/common/gfx/es3:egl_platform_context",
         ],
         "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
+        "//xrtl/tools/target_platform:windows": [
+            "//xrtl/port/windows/gfx/es3:wgl_platform_context",
+        ],
     }),
 )
 
@@ -228,6 +230,8 @@ cc_library(
     hdrs = ["es3_platform_context.h"],
     deps = [
         ":es3_common",
+        "//xrtl/base:flags",
+        "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
         "//xrtl/base/threading:thread",
     ] + select({
@@ -248,6 +252,7 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":es3_common",
+        "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
     ],
 )
@@ -334,49 +339,16 @@ cc_library(
 )
 
 cc_library(
-    name = "port_swap_chain",
-    visibility = ["//visibility:private"],
-    deps = select({
-        "//xrtl/tools/target_platform:android": [],
-        "//xrtl/tools/target_platform:emscripten": [],
-        "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:linux": [
-            "//xrtl/port/common/gfx/es3:egl_swap_chain",
-        ],
-        "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
-    }),
-)
-
-cc_library(
     name = "es3_swap_chain",
     srcs = ["es3_swap_chain.cc"],
     hdrs = ["es3_swap_chain.h"],
     deps = [
         ":es3_common",
+        ":es3_image",
         ":es3_platform_context",
-        "//xrtl/gfx:memory_pool",
-        "//xrtl/gfx:swap_chain",
-        "//xrtl/ui:control",
-    ] + select({
-        # Always use EGL when targeting swiftshader, and otherwise use the
-        # port's default implementation.
-        "//xrtl/tools/target_config:swiftshader": [
-            "//xrtl/port/common/gfx/es3:egl_swap_chain",
-        ],
-        "//conditions:default": [
-            ":port_swap_chain",
-        ],
-    }),
-)
-
-cc_library(
-    name = "es3_swap_chain_hdrs",
-    hdrs = ["es3_swap_chain.h"],
-    visibility = ["//xrtl/port:ports_only"],
-    deps = [
-        ":es3_common",
-        ":es3_platform_context",
+        ":es3_queue_fence",
+        "//xrtl/base:tracing",
+        "//xrtl/base/threading:thread",
         "//xrtl/gfx:memory_pool",
         "//xrtl/gfx:swap_chain",
         "//xrtl/ui:control",

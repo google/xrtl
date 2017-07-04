@@ -41,7 +41,6 @@ cc_library(
         ":egl_strings",
         "//third_party/glad:glad_egl",
         "//xrtl/base:debugging",
-        "//xrtl/base:geometry",
         "//xrtl/base:macros",
         "//xrtl/base:tracing",
         "//xrtl/gfx/es3:es3_platform_context_hdrs",
@@ -62,20 +61,5 @@ cc_library(
     hdrs = ["egl_strings.h"],
     deps = [
         "//third_party/glad:glad_egl",
-    ],
-)
-
-cc_library(
-    name = "egl_swap_chain",
-    srcs = ["egl_swap_chain.cc"],
-    hdrs = ["egl_swap_chain.h"],
-    deps = [
-        ":egl_platform_context",
-        ":egl_strings",
-        "//xrtl/base:tracing",
-        "//xrtl/base/threading:thread",
-        "//xrtl/gfx/es3:es3_image",
-        "//xrtl/gfx/es3:es3_queue_fence",
-        "//xrtl/gfx/es3:es3_swap_chain_hdrs",
     ],
 )

@@ -144,6 +144,19 @@ Control::PlatformHandle Win32Control::platform_handle() {
   }
 }
 
+Control::PlatformHandle Win32Control::platform_display_handle() {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  switch (state_) {
+    default:
+    case State::kCreating:
+    case State::kDestroyed:
+      return 0;
+    case State::kCreated:
+    case State::kDestroying:
+      return reinterpret_cast<Control::PlatformHandle>(dc_);
+  }
+}
+
 Control::State Win32Control::state() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   return state_;
@@ -355,6 +368,7 @@ bool Win32Control::BeginCreate() {
     LOG(ERROR) << "Unable to create window";
     return false;
   }
+  DCHECK(dc_ != nullptr);
   VLOG(1) << "Created Win32 window: " << std::hex << hwnd();
 
   // Disable flicks and other tablet gestures.
@@ -474,6 +488,10 @@ bool Win32Control::EndDestroy() {
   {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     state_ = State::kDestroyed;
+    if (dc_) {
+      ::ReleaseDC(hwnd_, dc_);
+      dc_ = nullptr;
+    }
     if (hwnd_) {
       ::SetWindowLongPtr(hwnd(), GWLP_USERDATA, 0);
       hwnd_ = nullptr;
@@ -541,6 +559,7 @@ LRESULT CALLBACK Win32Control::WndProcThunk(HWND hwnd, UINT message,
     auto create_struct = reinterpret_cast<LPCREATESTRUCT>(l_param);
     control = reinterpret_cast<Win32Control*>(create_struct->lpCreateParams);
     control->hwnd_ = hwnd;
+    control->dc_ = ::GetDC(hwnd);
 
     // Attach our pointer in user data so that we can get it back in the
     // message thunk.

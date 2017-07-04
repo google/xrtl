@@ -383,6 +383,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   FixedVector<VertexBufferAttribs, kMaxVertexInputs> vertex_buffer_attribs_;
   bool vertex_inputs_dirty_ = true;
   uint32_t vertex_attrib_enable_mask_ = 0;
+  GLuint scratch_vao_id_ = 0;
 
   ref_ptr<Buffer> index_buffer_;
   size_t index_buffer_offset_ = 0;

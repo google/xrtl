@@ -41,3 +41,13 @@ cc_library(
         "//third_party/GLES_khronos_headers:EGL",
     ],
 )
+
+cc_library(
+    name = "glad_wgl",
+    srcs = ["src/glad_wgl.c"],
+    hdrs = ["include/glad/glad_wgl.h"],
+    includes = ["include"],
+    deps = [
+        ":glad",
+    ],
+)

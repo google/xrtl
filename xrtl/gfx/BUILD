@@ -110,7 +110,9 @@ cc_library(
             "//xrtl/gfx/es3:es3_context_factory",
         ],
         "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
+        "//xrtl/tools/target_platform:windows": [
+            "//xrtl/gfx/es3:es3_context_factory",
+        ],
     }),
 )
 
