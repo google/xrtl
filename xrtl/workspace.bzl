@@ -47,6 +47,13 @@ def xrtl_workspace():
       build_file = "third_party/gflags.BUILD",
   )
 
+  # //third_party/glm/
+  native.new_local_repository(
+      name = "com_github_gtruc_glm",
+      path = "third_party/glm/",
+      build_file = "third_party/glm.BUILD",
+  )
+
   # //third_party/glslang/
   native.new_local_repository(
       name = "com_github_khronosgroup_glslang",

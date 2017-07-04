@@ -14,11 +14,6 @@
 
 #include "xrtl/testing/image_loader.h"
 
-// TODO(scotttodd): Move this to some build magic and/or a .cc file
-#define STBI_NO_LINEAR  // no loadf
-#define STBI_NO_HDR     // no hdr conversion
-#define STBI_ONLY_PNG   // only .png support
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <utility>

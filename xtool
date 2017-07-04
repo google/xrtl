@@ -915,10 +915,11 @@ def find_xrtl_source_files(file_filter = is_source_file):
   Returns:
     A list of file paths.
   """
-  return [os.path.join(root, name)
+  all_files = [os.path.join(root, name)
       for root, dirs, files in os.walk('xrtl')
       for name in files
       if file_filter(name)]
+  return [file_path.replace('\\', '/') for file_path in all_files]
 
 
 def find_all_source_files(file_filter = is_source_file):
@@ -973,8 +974,8 @@ def lint_check_files(check_all_files = False, diff_origin = False):
   return_code = 0
 
   # TODO(benvanik): multithreading.
+  all_files = find_all_source_files()
   if check_all_files:
-    all_files = find_all_source_files()
     print('- linting %d files' % (len(all_files)))
     any_errors = False
     for file_path in all_files:
@@ -1019,7 +1020,7 @@ def lint_check_files(check_all_files = False, diff_origin = False):
         '--binary=%s' % (clang_format_binary),
         '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
         '--diff',
-        ], throw_on_error=False, stdout_path=difftemp)
+        ] + all_files, throw_on_error=False, stdout_path=difftemp)
     with open(difftemp) as f:
       contents = f.read()
       not_modified = 'no modified files' in contents
@@ -1035,7 +1036,7 @@ def lint_check_files(check_all_files = False, diff_origin = False):
           '--binary=%s' % (clang_format_binary),
           '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
           '--diff',
-          ])
+          ] + all_files)
       print('ERROR: 1+ diffs. Stage changes and run \'xtool fix\' to fix.')
       return_code = 1
     else:
@@ -1058,8 +1059,8 @@ def lint_fix_files(check_all_files = False, diff_origin = False, force = False):
   clang_format_binary = get_clang_format_binary()
   git_clang_format_py = get_git_clang_format_py()
 
+  all_files = find_all_source_files()
   if check_all_files:
-    all_files = find_all_source_files()
     print('- clang-format [%d files]' % (len(all_files)))
     any_errors = False
     for file_path in all_files:
@@ -1086,7 +1087,7 @@ def lint_fix_files(check_all_files = False, diff_origin = False, force = False):
         git_clang_format_py,
         '--binary=%s' % (clang_format_binary),
         '--commit=%s' % ('origin/master' if diff_origin else 'HEAD'),
-        ] + (['--force'] if force else []))
+        ] + (['--force'] if force else []) + all_files)
     print('')
   return 0
 
@@ -1101,11 +1102,14 @@ def style_check_files(check_all_files = False, diff_origin = False):
     0 if style check completed without errors.
   """
   # Select source files for style checking.
+  all_files = find_all_source_files()
   source_files = []
   if check_all_files:
-    source_files = find_all_source_files()
+    source_files.extend(all_files)
   else:
-    source_files = find_changed_source_files(diff_origin = diff_origin)
+    changed_files = find_changed_source_files(diff_origin = diff_origin)
+    source_files.extend([changed_file for changed_file in changed_files
+                         if changed_file in all_files])
   if not source_files:
     print('No source file changes found to style check')
     return 0

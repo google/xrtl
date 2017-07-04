@@ -205,6 +205,8 @@ cc_library(
     name = "logging",
     srcs = ["logging.cc"],
     hdrs = ["logging.h"],
+    # Some third_party builds may reference this to reuse our logging.
+    visibility = ["//visibility:public"],
     deps = [
         ":macros",
     ] + select({
