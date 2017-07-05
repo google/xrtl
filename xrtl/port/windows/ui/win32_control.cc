@@ -25,6 +25,9 @@ typedef struct _MARGINS {
 
 #include <dwmapi.h>   // DWM MMCSS/etc.
 #include <tpcshrd.h>  // Tablet defines.
+#include <windowsx.h>
+
+#include <utility>
 
 #include "xrtl/base/logging.h"
 
@@ -582,12 +585,14 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
   DCHECK_EQ(hwnd_, hwnd);
 
   if (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST) {
-    // TODO(benvanik): mouse events.
-    VLOG(2) << "(mouse message)";
+    if (HandleMouseMessage(message, w_param, l_param)) {
+      return 0;  // Handled - don't perform default.
+    }
     return ::DefWindowProc(hwnd, message, w_param, l_param);
   } else if (message >= WM_KEYFIRST && message <= WM_KEYLAST) {
-    // TODO(benvanik): keyboard events.
-    VLOG(2) << "(keyboard message)";
+    if (HandleKeyboardMessage(message, w_param, l_param)) {
+      return 0;  // Handled - don't perform default.
+    }
     return ::DefWindowProc(hwnd, message, w_param, l_param);
   }
 
@@ -676,6 +681,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         PostSuspendChanged(is_suspended_);
         bounds_ = QueryBounds();
         PostResized(bounds_);
+        OnFocusChanged(is_focused_);
         PostFocusChanged(is_focused_);
       }
       break;
@@ -689,6 +695,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
           is_suspended_ = true;
           PostSuspendChanged(is_suspended_);
           is_focused_ = false;
+          OnFocusChanged(is_focused_);
           PostFocusChanged(is_focused_);
           break;
         }
@@ -699,6 +706,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
           PostSuspendChanged(is_suspended_);
           bounds_ = QueryBounds();
           PostResized(bounds_);
+          OnFocusChanged(is_focused_);
           PostFocusChanged(is_focused_);
           break;
         }
@@ -715,6 +723,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
       std::lock_guard<std::recursive_mutex> lock(mutex_);
       is_focused_ = false;
       if (state_ == State::kCreated) {
+        OnFocusChanged(is_focused_);
         PostFocusChanged(is_focused_);
       }
       break;
@@ -724,6 +733,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
       std::lock_guard<std::recursive_mutex> lock(mutex_);
       is_focused_ = true;
       if (state_ == State::kCreated) {
+        OnFocusChanged(is_focused_);
         PostFocusChanged(is_focused_);
       }
       break;
@@ -731,6 +741,194 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
   }
 
   return ::DefWindowProc(hwnd, message, w_param, l_param);
+}
+
+bool Win32Control::HandleMouseMessage(UINT message, WPARAM w_param,
+                                      LPARAM l_param) {
+  // Most wheel events are already in client-space, except MOUSEWHEEL.
+  int x = GET_X_LPARAM(l_param);
+  int y = GET_Y_LPARAM(l_param);
+  Point2D control_px;
+  Point2D screen_px;
+  if (message == WM_MOUSEWHEEL) {
+    POINT pt = {x, y};
+    ::ScreenToClient(hwnd_, &pt);
+    screen_px = {x, y};
+    control_px = {pt.x, pt.y};
+  } else {
+    POINT pt = {x, y};
+    ::ClientToScreen(hwnd_, &pt);
+    screen_px = {pt.x, pt.y};
+    control_px = {x, y};
+  }
+
+  int wheel_delta = 0;
+  MouseButton action_button = MouseButton::kNone;
+  switch (message) {
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+      action_button = MouseButton::kButton1;
+      break;
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+      action_button = MouseButton::kButton2;
+      break;
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+      action_button = MouseButton::kButton3;
+      break;
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP:
+      switch (GET_XBUTTON_WPARAM(w_param)) {
+        case XBUTTON1:
+          action_button = MouseButton::kButton4;
+          break;
+        case XBUTTON2:
+          action_button = MouseButton::kButton5;
+          break;
+        default:
+          return false;
+      }
+      break;
+    case WM_MOUSEWHEEL:
+      // No action button for mouse wheel.
+      wheel_delta = GET_WHEEL_DELTA_WPARAM(w_param);
+      break;
+    case WM_MOUSEMOVE:
+      // No action button for mouse move.
+      break;
+      break;
+    default:
+      // Unhandled mouse gesture (like double click/etc).
+      return true;
+  }
+
+  MouseButton pressed_button_mask = MouseButton::kNone;
+  ModifierKey modifier_key_mask = ModifierKey::kNone;
+  if (w_param & MK_LBUTTON) {
+    pressed_button_mask |= MouseButton::kButton1;
+  }
+  if (w_param & MK_MBUTTON) {
+    pressed_button_mask |= MouseButton::kButton2;
+  }
+  if (w_param & MK_RBUTTON) {
+    pressed_button_mask |= MouseButton::kButton3;
+  }
+  if (w_param & MK_XBUTTON1) {
+    pressed_button_mask |= MouseButton::kButton4;
+  }
+  if (w_param & MK_XBUTTON2) {
+    pressed_button_mask |= MouseButton::kButton5;
+  }
+  if (w_param & MK_CONTROL) {
+    modifier_key_mask |= ModifierKey::kCtrl;
+  }
+  if (w_param & MK_SHIFT) {
+    modifier_key_mask |= ModifierKey::kShift;
+  }
+
+  MouseEvent mouse_event{screen_px,     control_px,          wheel_delta,
+                         action_button, pressed_button_mask, modifier_key_mask};
+  switch (message) {
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_XBUTTONDOWN:
+      PostInputEvent(
+          [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnMouseDown(std::move(control), mouse_event);
+          });
+      break;
+    case WM_LBUTTONUP:
+    case WM_MBUTTONUP:
+    case WM_RBUTTONUP:
+    case WM_XBUTTONUP:
+      PostInputEvent(
+          [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnMouseUp(std::move(control), mouse_event);
+          });
+      break;
+    case WM_MOUSEWHEEL:
+      PostInputEvent(
+          [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnMouseWheel(std::move(control), mouse_event);
+          });
+      break;
+    case WM_MOUSEMOVE:
+      PostInputEvent(
+          [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnMouseMove(std::move(control), mouse_event);
+          });
+      break;
+  }
+
+  // Returning true will prevent default wndproc.
+  return true;
+}
+
+bool Win32Control::HandleKeyboardMessage(UINT message, WPARAM w_param,
+                                         LPARAM l_param) {
+  // TODO(benvanik): figure out if we can get >255 and how to handle that.
+  int key_code = static_cast<int>(w_param);
+  DCHECK_LE(key_code, 255);
+  if (key_code > 255) {
+    return false;
+  }
+
+  ModifierKey modifier_key_mask = ModifierKey::kNone;
+  if ((::GetAsyncKeyState(VK_CONTROL) & 0x8000) == 0x8000) {
+    modifier_key_mask |= ModifierKey::kCtrl;
+  }
+  if ((::GetAsyncKeyState(VK_SHIFT) & 0x8000) == 0x8000) {
+    modifier_key_mask |= ModifierKey::kShift;
+  }
+  if ((::GetAsyncKeyState(VK_MENU) & 0x8000) == 0x8000) {
+    modifier_key_mask |= ModifierKey::kAlt;
+  }
+
+  KeyboardEvent keyboard_event{key_code, modifier_key_mask};
+  switch (message) {
+    case WM_KEYDOWN:
+      if (!key_down_map_[key_code]) {
+        key_down_map_[key_code] = 1;
+        PostInputEvent([keyboard_event](InputListener* listener,
+                                        ref_ptr<Control> control) {
+          listener->OnKeyDown(std::move(control), keyboard_event);
+        });
+      }
+      break;
+    case WM_KEYUP:
+      if (key_down_map_[key_code]) {
+        key_down_map_[key_code] = 0;
+        PostInputEvent([keyboard_event](InputListener* listener,
+                                        ref_ptr<Control> control) {
+          listener->OnKeyUp(std::move(control), keyboard_event);
+        });
+      }
+      break;
+    case WM_CHAR:
+      PostInputEvent(
+          [keyboard_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnKeyPress(std::move(control), keyboard_event);
+          });
+      break;
+  }
+
+  // Returning true will prevent default wndproc.
+  return true;
+}
+
+void Win32Control::OnFocusChanged(bool is_focused) {
+  for (int key_code = 0; key_code < count_of(key_down_map_); ++key_code) {
+    if (key_down_map_[key_code]) {
+      key_down_map_[key_code] = 0;
+      PostInputEvent(
+          [key_code](InputListener* listener, ref_ptr<Control> control) {
+            KeyboardEvent keyboard_event{key_code, ModifierKey::kNone};
+            listener->OnKeyUp(std::move(control), keyboard_event);
+          });
+    }
+  }
 }
 
 }  // namespace ui

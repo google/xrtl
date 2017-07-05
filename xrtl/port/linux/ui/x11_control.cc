@@ -14,6 +14,8 @@
 
 #include "xrtl/port/linux/ui/x11_control.h"
 
+#include <utility>
+
 #include "xrtl/base/debugging.h"
 #include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
@@ -23,6 +25,40 @@ DEFINE_string(display, "",
 
 namespace xrtl {
 namespace ui {
+
+namespace {
+
+void ParseXEventState(uint32_t state, MouseButton* out_pressed_button_mask,
+                      ModifierKey* out_modifier_key_mask) {
+  if (out_pressed_button_mask) {
+    MouseButton pressed_button_mask = MouseButton::kNone;
+    if (state & Button1Mask) {
+      pressed_button_mask |= MouseButton::kButton1;
+    }
+    if (state & Button2Mask) {
+      pressed_button_mask |= MouseButton::kButton2;
+    }
+    if (state & Button3Mask) {
+      pressed_button_mask |= MouseButton::kButton3;
+    }
+    *out_pressed_button_mask = pressed_button_mask;
+  }
+  if (out_modifier_key_mask) {
+    ModifierKey modifier_key_mask = ModifierKey::kNone;
+    if (state & ShiftMask) {
+      modifier_key_mask |= ModifierKey::kShift;
+    }
+    if (state & ControlMask) {
+      modifier_key_mask |= ModifierKey::kCtrl;
+    }
+    if (state & Mod1Mask) {
+      modifier_key_mask |= ModifierKey::kAlt;
+    }
+    *out_modifier_key_mask = modifier_key_mask;
+  }
+}
+
+}  // namespace
 
 ref_ptr<Control> Control::Create(ref_ptr<MessageLoop> message_loop) {
   return make_ref<X11Control>(message_loop, nullptr);
@@ -589,36 +625,105 @@ X11Control::WindowState X11Control::QueryWindowState() {
 
 bool X11Control::OnXEvent(::XEvent* x_event) {
   switch (x_event->type) {
-    case KeyPress: {
-      // Emitted when a key is pressed while the control has focus.
-      // const auto& ev = x_event->xkey;
-      VLOG(2) << "KeyPress";
-      return true;
-    }
+    case KeyPress:
     case KeyRelease: {
-      // Emitted when a key is released while the control has focus.
-      // const auto& ev = x_event->xkey;
-      VLOG(2) << "KeyRelease";
+      // Emitted when a key is pressed or released while the control has focus.
+      const auto& ev = x_event->xkey;
+      KeySym key_sym = XLookupKeysym(&x_event->xkey, 0);
+      int key_code = static_cast<int>(key_sym);
+      ModifierKey modifier_key_mask = ModifierKey::kNone;
+      ParseXEventState(ev.state, nullptr, &modifier_key_mask);
+      bool is_down = x_event->type == KeyPress;
+      PostInputEvent([key_code, modifier_key_mask, is_down](
+          InputListener* listener, ref_ptr<Control> control) {
+        KeyboardEvent keyboard_event{key_code, modifier_key_mask};
+        if (is_down) {
+          listener->OnKeyDown(std::move(control), keyboard_event);
+        } else {
+          listener->OnKeyUp(std::move(control), keyboard_event);
+        }
+      });
       return true;
     }
 
-    case ButtonPress: {
-      // Emitted when a mouse button is pressed.
-      // const auto& ev = x_event->xbutton;
-      VLOG(2) << "ButtonPress";
-      return true;
-    }
+    case ButtonPress:
     case ButtonRelease: {
-      // Emitted when a mouse button is released.
-      // const auto& ev = x_event->xbutton;
-      VLOG(2) << "ButtonRelease";
+      // Emitted when a mouse button is pressed or released.
+      const auto& ev = x_event->xbutton;
+      Point2D screen_px{ev.x_root, ev.y_root};
+      Point2D control_px{ev.x, ev.y};
+      int wheel_delta = 0;
+      bool is_wheel_event = false;
+      MouseButton action_button = MouseButton::kNone;
+      if (ev.button == 4 || ev.button == 5) {
+        // Mouse wheel events are button 4/5. Smh.
+        if (x_event->type != ButtonPress) {
+          // Only handle down.
+          return false;
+        }
+        switch (ev.button) {
+          case 4:
+            wheel_delta = -120;
+            break;
+          case 5:
+            wheel_delta = 120;
+            break;
+        }
+      } else {
+        // Normal button press.
+        switch (ev.button) {
+          case 1:
+            action_button = MouseButton::kButton1;
+            break;
+          case 2:
+            action_button = MouseButton::kButton2;
+            break;
+          case 3:
+            action_button = MouseButton::kButton3;
+            break;
+          default:
+            return false;
+        }
+      }
+      MouseButton pressed_button_mask = MouseButton::kNone;
+      ModifierKey modifier_key_mask = ModifierKey::kNone;
+      ParseXEventState(ev.state, &pressed_button_mask, &modifier_key_mask);
+      MouseEvent mouse_event{screen_px,           control_px,
+                             wheel_delta,         action_button,
+                             pressed_button_mask, modifier_key_mask};
+      if (is_wheel_event) {
+        PostInputEvent(
+            [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+              listener->OnMouseWheel(std::move(control), mouse_event);
+            });
+      } else if (x_event->type == ButtonPress) {
+        PostInputEvent(
+            [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+              listener->OnMouseDown(std::move(control), mouse_event);
+            });
+      } else {
+        PostInputEvent(
+            [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+              listener->OnMouseUp(std::move(control), mouse_event);
+            });
+      }
       return true;
     }
-
     case MotionNotify: {
       // Emitted on pointer motion.
       const auto& ev = x_event->xmotion;
-      VLOG(2) << "MotionNotify " << ev.x << "," << ev.y;
+      Point2D screen_px{ev.x_root, ev.y_root};
+      Point2D control_px{ev.x, ev.y};
+      MouseButton pressed_button_mask = MouseButton::kNone;
+      ModifierKey modifier_key_mask = ModifierKey::kNone;
+      ParseXEventState(ev.state, &pressed_button_mask, &modifier_key_mask);
+      MouseEvent mouse_event{
+          screen_px,          control_px,          0,
+          MouseButton::kNone, pressed_button_mask, modifier_key_mask};
+      PostInputEvent(
+          [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnMouseMove(std::move(control), mouse_event);
+          });
       return true;
     }
 
@@ -630,8 +735,21 @@ bool X11Control::OnXEvent(::XEvent* x_event) {
     }
     case LeaveNotify: {
       // Emitted when the mouse cursor leaves the control.
-      // const auto& ev = x_event->xcrossing;
       VLOG(1) << "LeaveNotify";
+      const auto& ev = x_event->xcrossing;
+      Point2D screen_px{ev.x_root, ev.y_root};
+      Point2D control_px{ev.x, ev.y};
+      MouseButton pressed_button_mask = MouseButton::kNone;
+      ModifierKey modifier_key_mask = ModifierKey::kNone;
+      ParseXEventState(ev.state, &pressed_button_mask, &modifier_key_mask);
+      MouseEvent mouse_event{
+          screen_px,          control_px,          0,
+          MouseButton::kNone, pressed_button_mask, modifier_key_mask};
+
+      PostInputEvent(
+          [mouse_event](InputListener* listener, ref_ptr<Control> control) {
+            listener->OnMouseOut(std::move(control), mouse_event);
+          });
       return true;
     }
 
