@@ -25,6 +25,7 @@
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/base/threading/message_loop.h"
 #include "xrtl/gfx/color.h"
+#include "xrtl/ui/input_events.h"
 
 namespace xrtl {
 namespace ui {
@@ -103,6 +104,32 @@ class Control : public RefObject<Control> {
   };
   using ListenerPtr = std::unique_ptr<Listener, void (*)(Listener*)>;
 
+  // Control input event listener interface.
+  //
+  // All listener callbacks occur on the message loop associated with the
+  // control.
+  struct InputListener {
+    // Handles the start of a key press.
+    virtual void OnKeyDown(ref_ptr<Control> target, const KeyboardEvent& ev) {}
+    // Handles the end of a key press.
+    virtual void OnKeyUp(ref_ptr<Control> target, const KeyboardEvent& ev) {}
+    // Handles system key press events.
+    virtual void OnKeyPress(ref_ptr<Control> target, const KeyboardEvent& ev) {}
+
+    // Handles the start of a mouse button press.
+    virtual void OnMouseDown(ref_ptr<Control> target, const MouseEvent& ev) {}
+    // Handles the end of a mouse button press.
+    virtual void OnMouseUp(ref_ptr<Control> target, const MouseEvent& ev) {}
+    // Handles the mouse leaving the control.
+    virtual void OnMouseOut(ref_ptr<Control> target, const MouseEvent& ev) {}
+    // Handles mouse movement.
+    virtual void OnMouseMove(ref_ptr<Control> target, const MouseEvent& ev) {}
+    // Handles mouse wheel changes.
+    virtual void OnMouseWheel(ref_ptr<Control> target, const MouseEvent& ev) {}
+  };
+  using InputListenerPtr =
+      std::unique_ptr<InputListener, void (*)(InputListener*)>;
+
   // Creates a new control using the given message loop for event dispatch.
   static ref_ptr<Control> Create(ref_ptr<MessageLoop> message_loop);
 
@@ -134,6 +161,14 @@ class Control : public RefObject<Control> {
   void set_listener(ListenerPtr listener);
   void set_listener(Listener* listener) {
     set_listener(ListenerPtr(listener, [](Listener*) {}));
+  }
+
+  // Sets a listener that will receive input notifications.
+  // If the listener is passed as a naked pointer it must be kept alive for the
+  // lifetime of the control.
+  void set_input_listener(InputListenerPtr input_listener);
+  void set_input_listener(InputListener* input_listener) {
+    set_input_listener(InputListenerPtr(input_listener, [](InputListener*) {}));
   }
 
   // Returns the current control state.
@@ -214,8 +249,10 @@ class Control : public RefObject<Control> {
   void PostFocusChanged(bool is_focused);
   void PostResized(Rect2D bounds);
 
-  void PostEvent(std::function<void(Listener*, ref_ptr<Control>)> callback);
   void ResetEventShadows();
+  void PostEvent(std::function<void(Listener*, ref_ptr<Control>)> callback);
+  void PostInputEvent(
+      std::function<void(InputListener*, ref_ptr<Control>)> callback);
 
   MessageLoop::TaskList pending_task_list_;
   ref_ptr<MessageLoop> message_loop_;
@@ -224,6 +261,7 @@ class Control : public RefObject<Control> {
 
   std::mutex listener_mutex_;
   ListenerPtr listener_{nullptr, [](Listener*) {}};
+  InputListenerPtr input_listener_{nullptr, [](InputListener*) {}};
 
   bool has_posted_suspended_ = false;
   bool has_posted_focused_ = false;

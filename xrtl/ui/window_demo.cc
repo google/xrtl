@@ -23,7 +23,7 @@ namespace xrtl {
 namespace ui {
 namespace {
 
-class WindowDemo : private Control::Listener {
+class WindowDemo : private Control::Listener, private Control::InputListener {
  public:
   WindowDemo() {
     message_loop_ = MessageLoop::Create();
@@ -38,6 +38,7 @@ class WindowDemo : private Control::Listener {
 
     auto control = window_->root_control();
     control->set_listener(this);
+    control->set_input_listener(this);
     control->set_size({640, 480});
     control->set_background_color({255, 0, 0, 255});
 
@@ -82,6 +83,45 @@ class WindowDemo : private Control::Listener {
   void OnResized(ref_ptr<Control> target, Rect2D bounds) override {
     LOG(INFO) << "OnResized: " << bounds.origin.x << "," << bounds.origin.y
               << " " << bounds.size.width << "x" << bounds.size.height;
+  }
+
+  void OnKeyDown(ref_ptr<Control> target, const KeyboardEvent& ev) override {
+    LOG(INFO) << "OnKeyDown: " << ev.key_code();
+  }
+
+  void OnKeyUp(ref_ptr<Control> target, const KeyboardEvent& ev) override {
+    LOG(INFO) << "OnKeyUp: " << ev.key_code();
+  }
+
+  void OnKeyPress(ref_ptr<Control> target, const KeyboardEvent& ev) override {
+    LOG(INFO) << "OnKeyPress: " << ev.key_code();
+  }
+
+  void OnMouseDown(ref_ptr<Control> target, const MouseEvent& ev) override {
+    LOG(INFO) << "OnMouseDown: " << ev.control_offset_px().x << ","
+              << ev.control_offset_px().y << " b"
+              << static_cast<int>(ev.action_button());
+  }
+
+  void OnMouseUp(ref_ptr<Control> target, const MouseEvent& ev) override {
+    LOG(INFO) << "OnMouseUp: " << ev.control_offset_px().x << ","
+              << ev.control_offset_px().y << " b"
+              << static_cast<int>(ev.action_button());
+  }
+
+  void OnMouseOut(ref_ptr<Control> target, const MouseEvent& ev) override {
+    LOG(INFO) << "OnMouseOut: " << ev.control_offset_px().x << ","
+              << ev.control_offset_px().y;
+  }
+
+  void OnMouseMove(ref_ptr<Control> target, const MouseEvent& ev) override {
+    LOG(INFO) << "OnMouseMove: " << ev.control_offset_px().x << ","
+              << ev.control_offset_px().y;
+  }
+
+  void OnMouseWheel(ref_ptr<Control> target, const MouseEvent& ev) override {
+    LOG(INFO) << "OnMouseWheel: " << ev.control_offset_px().x << ","
+              << ev.control_offset_px().y << " d" << ev.wheel_delta();
   }
 
   ref_ptr<MessageLoop> message_loop_;

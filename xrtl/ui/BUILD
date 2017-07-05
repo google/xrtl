@@ -13,6 +13,7 @@ cc_library(
     srcs = ["control.cc"],
     hdrs = ["control.h"],
     deps = [
+        ":input_events",
         "//xrtl/base:geometry",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
@@ -34,6 +35,7 @@ cc_library(
     hdrs = ["control.h"],
     visibility = ["//xrtl/port:ports_only"],
     deps = [
+        ":input_events",
         "//xrtl/base:geometry",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
@@ -57,6 +59,15 @@ cc_test(
         "//xrtl/base/threading:thread",
         "//xrtl/testing:gtest_main",
         "//xrtl/ui/testing:mock_control_listener",
+    ],
+)
+
+cc_library(
+    name = "input_events",
+    hdrs = ["input_events.h"],
+    deps = [
+        "//xrtl/base:geometry",
+        "//xrtl/base:macros",
     ],
 )
 

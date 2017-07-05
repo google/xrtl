@@ -68,6 +68,10 @@ class Win32Control : public Control {
   static LRESULT CALLBACK WndProcThunk(HWND hwnd, UINT message, WPARAM w_param,
                                        LPARAM l_param);
   LRESULT WndProc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param);
+  bool HandleMouseMessage(UINT message, WPARAM w_param, LPARAM l_param);
+  bool HandleKeyboardMessage(UINT message, WPARAM w_param, LPARAM l_param);
+
+  void OnFocusChanged(bool is_focused);
 
   ControlContainer* container_ = nullptr;
 
@@ -84,6 +88,9 @@ class Win32Control : public Control {
   Rect2D bounds_{{0, 0}, {128, 128}};
   gfx::rgba8_t background_color_;
   bool is_cursor_visible_ = true;
+
+  // TODO(benvanik): switch to bitmap.
+  uint8_t key_down_map_[256] = {0};
 };
 
 }  // namespace ui
