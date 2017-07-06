@@ -1149,6 +1149,11 @@ def buildifier_check_files(check_all_files = False, diff_origin = False,
     0 if buildifier check completed without errors.
   """
   # Select source files for style checking.
+  buildifier_bin = get_bin('buildifier')
+  if not buildifier_bin:
+    print('ERROR: buildifier not found')
+    return 1
+
   source_files = []
   if check_all_files:
     source_files = find_all_source_files(file_filter = is_bazel_file)

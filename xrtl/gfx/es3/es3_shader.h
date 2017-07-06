@@ -16,6 +16,8 @@
 #define XRTL_GFX_ES3_ES3_SHADER_H_
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "xrtl/base/array_view.h"
 #include "xrtl/base/string_view.h"
@@ -50,6 +52,10 @@ class ES3Shader : public RefObject<ES3Shader> {
   // Returns false if the binary cannot be translated or if compilation fails.
   bool CompileSpirVBinary(const uint32_t* data, size_t data_length);
 
+  // Initializes all bindings for the currently bound program.
+  // This must be called after a program using this shader is linked.
+  bool InitializeUniformBindings(GLuint program_id);
+
  private:
   ref_ptr<ES3PlatformContext> platform_context_;
   std::string entry_point_;
@@ -57,6 +63,8 @@ class ES3Shader : public RefObject<ES3Shader> {
   GLuint shader_id_ = 0;
 
   std::string info_log_;
+
+  std::vector<std::pair<std::string, int>> uniform_bindings_;
 };
 
 }  // namespace es3

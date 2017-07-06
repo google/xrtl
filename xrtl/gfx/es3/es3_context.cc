@@ -41,16 +41,15 @@ ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
                        std::vector<ref_ptr<Device>> devices,
                        Device::Features features,
                        ref_ptr<ES3PlatformContext> platform_context)
-    : Context(std::move(devices), std::move(features)),
-      context_factory_(context_factory),
+    : Context(std::move(devices), features),
+      context_factory_(std::move(context_factory)),
       platform_context_(std::move(platform_context)) {
   // Spawn the thread that will execute command buffers.
   queue_work_pending_event_ = Event::CreateAutoResetEvent(false);
   queue_work_completed_event_ = Event::CreateAutoResetEvent(false);
   Thread::CreateParams create_params;
   create_params.name = "ES3ContextQueueThread";
-  queue_thread_ =
-      Thread::Create(std::move(create_params), QueueThreadMain, this);
+  queue_thread_ = Thread::Create(create_params, QueueThreadMain, this);
 }
 
 ES3Context::~ES3Context() {
@@ -99,9 +98,9 @@ ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
 }
 
 ref_ptr<PipelineLayout> ES3Context::CreatePipelineLayout(
-    ArrayView<PipelineBinding> bindings,
-    ArrayView<PushConstantRange> push_constant_ranges) {
-  return make_ref<ES3PipelineLayout>(bindings, push_constant_ranges);
+    ArrayView<PipelineLayout::BindingSlot> binding_slots,
+    ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges) {
+  return make_ref<ES3PipelineLayout>(binding_slots, push_constant_ranges);
 }
 
 ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
@@ -207,8 +206,8 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
 
 ref_ptr<ResourceSet> ES3Context::CreateResourceSet(
     ref_ptr<PipelineLayout> pipeline_layout,
-    ArrayView<ResourceSet::Binding> bindings) {
-  return make_ref<ES3ResourceSet>(pipeline_layout, bindings);
+    ArrayView<ResourceSet::BindingValue> binding_values) {
+  return make_ref<ES3ResourceSet>(pipeline_layout, binding_values);
 }
 
 ref_ptr<SwapChain> ES3Context::CreateSwapChain(
@@ -231,7 +230,7 @@ ref_ptr<MemoryPool> ES3Context::CreateMemoryPool(MemoryType memory_type_mask,
 }
 
 ref_ptr<Sampler> ES3Context::CreateSampler(Sampler::Params params) {
-  return make_ref<ES3Sampler>(params);
+  return make_ref<ES3Sampler>(platform_context_, params);
 }
 
 ref_ptr<RenderPass> ES3Context::CreateRenderPass(

@@ -36,6 +36,7 @@ cc_library(
         ":es3_common",
         ":es3_image",
         ":es3_pipeline",
+        ":es3_sampler",
         "//xrtl/gfx:command_encoder",
         "//xrtl/gfx:framebuffer",
     ],
@@ -145,6 +146,7 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_image_view",
+        ":es3_pixel_format",
         ":es3_platform_context",
         "//xrtl/gfx:image",
     ],
@@ -307,6 +309,7 @@ cc_library(
     hdrs = ["es3_sampler.h"],
     deps = [
         ":es3_common",
+        ":es3_platform_context",
         "//xrtl/gfx:sampler",
     ],
 )

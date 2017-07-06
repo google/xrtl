@@ -14,13 +14,16 @@
 
 #include "xrtl/gfx/es3/es3_buffer.h"
 
+#include <utility>
+
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
 ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
                      size_t allocation_size, Usage usage_mask)
-    : Buffer(allocation_size, usage_mask), platform_context_(platform_context) {
+    : Buffer(allocation_size, usage_mask),
+      platform_context_(std::move(platform_context)) {
   ES3PlatformContext::ThreadLock context_lock(
       ES3PlatformContext::AcquireThreadContext(platform_context_));
 

@@ -242,8 +242,10 @@ ref_ptr<ES3PlatformContext> ES3PlatformContext::Create(
   auto platform_context = make_ref<EGLPlatformContext>();
 
   if (!platform_context->Initialize(
-          reinterpret_cast<EGLNativeDisplayType>(native_display),
-          reinterpret_cast<EGLNativeWindowType>(native_window),
+          reinterpret_cast<EGLNativeDisplayType>(
+              reinterpret_cast<uintptr_t>(native_display)),
+          reinterpret_cast<EGLNativeWindowType>(
+              reinterpret_cast<uintptr_t>(native_window)),
           std::move(share_group))) {
     LOG(ERROR) << "Unable to initialize the EGL platform context";
     return nullptr;

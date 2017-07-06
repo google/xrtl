@@ -24,9 +24,10 @@ namespace es3 {
 
 class ES3PipelineLayout : public PipelineLayout {
  public:
-  ES3PipelineLayout(ArrayView<PipelineBinding> bindings,
-                    ArrayView<PushConstantRange> push_constant_ranges)
-      : PipelineLayout(bindings, push_constant_ranges) {}
+  ES3PipelineLayout(
+      ArrayView<PipelineLayout::BindingSlot> binding_slots,
+      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
+      : PipelineLayout(binding_slots, push_constant_ranges) {}
 };
 
 }  // namespace es3

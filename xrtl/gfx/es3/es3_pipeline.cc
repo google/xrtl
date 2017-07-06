@@ -25,8 +25,8 @@ ES3ComputePipeline::ES3ComputePipeline(
     ref_ptr<ES3Program> program)
     : ComputePipeline(std::move(pipeline_layout), std::move(shader_module),
                       std::move(entry_point)),
-      platform_context_(platform_context),
-      program_(program) {}
+      platform_context_(std::move(platform_context)),
+      program_(std::move(program)) {}
 
 ES3ComputePipeline::~ES3ComputePipeline() = default;
 
@@ -36,10 +36,9 @@ ES3RenderPipeline::ES3RenderPipeline(
     int render_subpass, RenderState render_state,
     RenderPipeline::ShaderStages shader_stages, ref_ptr<ES3Program> program)
     : RenderPipeline(std::move(pipeline_layout), std::move(render_pass),
-                     render_subpass, std::move(render_state),
-                     std::move(shader_stages)),
-      platform_context_(platform_context),
-      program_(program) {}
+                     render_subpass, render_state, std::move(shader_stages)),
+      platform_context_(std::move(platform_context)),
+      program_(std::move(program)) {}
 
 ES3RenderPipeline::~ES3RenderPipeline() = default;
 

@@ -104,8 +104,8 @@ class Context : public RefObject<Context> {
 
   // Creates a pipeline layout.
   virtual ref_ptr<PipelineLayout> CreatePipelineLayout(
-      ArrayView<PipelineBinding> bindings,
-      ArrayView<PushConstantRange> push_constant_ranges) = 0;
+      ArrayView<PipelineLayout::BindingSlot> binding_slots,
+      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges) = 0;
 
   // Creates a compute pipeline with the given shader.
   virtual ref_ptr<ComputePipeline> CreateComputePipeline(
@@ -121,9 +121,11 @@ class Context : public RefObject<Context> {
   // Creates a binding set used to bind resources to pipelines.
   // A binding set is only tied to a particular pipeline layout and may be used
   // with any pipeline sharing that layout.
+  // The binding values provided must match 1:1 with the bindings as defined in
+  // the pipeline layout.
   virtual ref_ptr<ResourceSet> CreateResourceSet(
       ref_ptr<PipelineLayout> pipeline_layout,
-      ArrayView<ResourceSet::Binding> bindings) = 0;
+      ArrayView<ResourceSet::BindingValue> binding_values) = 0;
 
   // Creates a new swap chain using the given control as a display surface.
   // The present_mode defines how the images are queued for display and

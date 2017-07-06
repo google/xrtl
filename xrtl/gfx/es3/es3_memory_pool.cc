@@ -28,7 +28,7 @@ namespace es3 {
 ES3MemoryPool::ES3MemoryPool(ref_ptr<ES3PlatformContext> platform_context,
                              MemoryType memory_type_mask, size_t chunk_size)
     : MemoryPool(memory_type_mask, chunk_size),
-      platform_context_(platform_context) {}
+      platform_context_(std::move(platform_context)) {}
 
 ES3MemoryPool::~ES3MemoryPool() = default;
 
@@ -53,9 +53,9 @@ MemoryPool::AllocationResult ES3MemoryPool::AllocateImage(
   WTF_SCOPE0("ES3MemoryPool#AllocateImage");
 
   // Pick a pixel format for the texture.
-  GLenum internal_format =
-      ConvertPixelFormatToInternalFormat(create_params.format);
-  if (internal_format == GL_NONE) {
+  ES3TextureParams texture_params;
+  if (!ConvertPixelFormatToTextureParams(create_params.format,
+                                         &texture_params)) {
     LOG(ERROR) << "Unsupported GL pixel format";
     return AllocationResult::kUnsupported;
   }
@@ -67,8 +67,8 @@ MemoryPool::AllocationResult ES3MemoryPool::AllocateImage(
   size_t allocation_size = ES3Image::ComputeAllocationSize(create_params);
 
   // Create the image and allocate underlying texture.
-  *out_image = make_ref<ES3Image>(platform_context_, internal_format,
-                                  allocation_size, std::move(create_params));
+  *out_image = make_ref<ES3Image>(platform_context_, texture_params,
+                                  allocation_size, create_params);
 
   return AllocationResult::kSuccess;
 }
