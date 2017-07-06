@@ -352,6 +352,8 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   // Prepares the current subpass state.
   void PrepareSubpass();
 
+  // Updates the resource set binding based on the current pipeline and set.
+  void UpdateResourceSet();
   // Updates all vertex inputs based on the current bindings and pipeline.
   void UpdateVertexInputs();
 
@@ -366,6 +368,11 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   GLenum draw_primitive_mode_ = GL_TRIANGLES;
 
   Rect2D scissor_rect_{0, 0, 16 * 1024, 16 * 1024};
+
+  ref_ptr<ResourceSet> resource_set_;
+  std::vector<size_t> dynamic_offsets_;
+  bool resource_set_dirty_ = true;
+  uint32_t texture_binding_mask_ = 0;
 
   // Array indices are binding and location, respectively.
   struct VertexBufferBinding {

@@ -28,7 +28,7 @@ namespace es3 {
 
 ES3Shader::ES3Shader(ref_ptr<ES3PlatformContext> platform_context,
                      std::string entry_point)
-    : platform_context_(platform_context),
+    : platform_context_(std::move(platform_context)),
       entry_point_(std::move(entry_point)) {}
 
 ES3Shader::~ES3Shader() {
@@ -154,7 +154,7 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
   }
 
   // Perform some fixup for GLSL ES 300.
-  // - remove layout location specifiers on varyings
+  // * Remove layout location specifiers on varyings:
   auto shader_resources = compiler.get_shader_resources();
   if (shader_type != GL_VERTEX_SHADER) {
     // Remove location specifiers from shader inputs (except vertex shaders).
@@ -170,6 +170,39 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
       if (compiler.has_decoration(resource.id, spv::DecorationLocation)) {
         compiler.unset_decoration(resource.id, spv::DecorationLocation);
       }
+    }
+  }
+  // * Record and then remove uniform binding locations.
+  for (const auto& resource : shader_resources.uniform_buffers) {
+    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
+      int binding =
+          compiler.get_decoration(resource.id, spv::DecorationBinding);
+      uniform_bindings_.push_back({resource.name, binding});
+      compiler.unset_decoration(resource.id, spv::DecorationBinding);
+    }
+  }
+  for (const auto& resource : shader_resources.storage_buffers) {
+    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
+      int binding =
+          compiler.get_decoration(resource.id, spv::DecorationBinding);
+      uniform_bindings_.push_back({resource.name, binding});
+      compiler.unset_decoration(resource.id, spv::DecorationBinding);
+    }
+  }
+  for (const auto& resource : shader_resources.storage_images) {
+    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
+      int binding =
+          compiler.get_decoration(resource.id, spv::DecorationBinding);
+      uniform_bindings_.push_back({resource.name, binding});
+      compiler.unset_decoration(resource.id, spv::DecorationBinding);
+    }
+  }
+  for (const auto& resource : shader_resources.sampled_images) {
+    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
+      int binding =
+          compiler.get_decoration(resource.id, spv::DecorationBinding);
+      uniform_bindings_.push_back({resource.name, binding});
+      compiler.unset_decoration(resource.id, spv::DecorationBinding);
     }
   }
 
@@ -193,6 +226,17 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
 
   // Attempt to compile GLSL to a native GL shader.
   return CompileSource(shader_type, ArrayView<std::string>{translated_source});
+}
+
+bool ES3Shader::InitializeUniformBindings(GLuint program_id) {
+  for (const auto& pair : uniform_bindings_) {
+    GLint uniform_location =
+        glGetUniformLocation(program_id, pair.first.c_str());
+    if (uniform_location != -1) {
+      glUniform1i(uniform_location, pair.second);
+    }
+  }
+  return true;
 }
 
 }  // namespace es3

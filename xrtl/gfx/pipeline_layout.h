@@ -24,46 +24,6 @@
 namespace xrtl {
 namespace gfx {
 
-enum class BindingType {
-  kSampler = 0,
-  kCombinedImageSampler = 1,
-  kSampledImage = 2,
-  kStorageImage = 3,
-  kUniformTexelBuffer = 4,
-  kStorageTexelBuffer = 5,
-  kUniformBuffer = 6,
-  kStorageBuffer = 7,
-  kUniformBufferDynamic = 8,
-  kStorageBufferDynamic = 9,
-  kInputAttachment = 10,
-};
-
-struct PipelineBinding {
-  // Binding number of this entry and corresponds to a resource of the same
-  // binding number in the shader stages.
-  int binding = 0;
-  // Specifies which type of resources are used for this binding.
-  BindingType type = BindingType::kSampler;
-  // The number of slots contained in the binding, accessed in a shader as
-  // an array.
-  int array_count = 0;
-  // A bitmask specifying which pipeline shader stages can access a resource for
-  // this binding.
-  ShaderStageFlag stage_mask = ShaderStageFlag::kAll;
-};
-
-// Describes a range of push constant data within the pipeline.
-struct PushConstantRange {
-  // A set of stage flags describing the shader stages that will access a range
-  // of push constants.
-  ShaderStageFlag stage_mask = ShaderStageFlag::kNone;
-
-  // Start offset and size, respectively, consumed by the range.
-  // Both offset and size are in units of bytes and must be a multiple of 4.
-  size_t offset = 0;
-  size_t size = 0;
-};
-
 // Completely describes the layout of pipeline bindings.
 // This is used to allow multiple pipelines to share the same descriptor sets.
 //
@@ -71,20 +31,75 @@ struct PushConstantRange {
 // DescriptorSetLayouts.
 class PipelineLayout : public RefObject<PipelineLayout> {
  public:
+  struct BindingSlot {
+    enum class Type {
+      kSampler = 0,
+      kCombinedImageSampler = 1,
+      kSampledImage = 2,
+      kStorageImage = 3,
+      kUniformTexelBuffer = 4,
+      kStorageTexelBuffer = 5,
+      kUniformBuffer = 6,
+      kStorageBuffer = 7,
+      kUniformBufferDynamic = 8,
+      kStorageBufferDynamic = 9,
+      kInputAttachment = 10,
+    };
+
+    // Binding number of this entry and corresponds to a resource of the same
+    // binding number in the shader stages.
+    int binding = 0;
+    // Specifies which type of resources are used for this binding.
+    Type type = Type::kCombinedImageSampler;
+    // The number of slots contained in the binding, accessed in a shader as
+    // an array.
+    int array_count = 1;
+    // A bitmask specifying which pipeline shader stages can access a resource
+    // for this binding.
+    ShaderStageFlag stage_mask = ShaderStageFlag::kAll;
+
+    BindingSlot() = default;
+    BindingSlot(int binding, Type type) : binding(binding), type(type) {}
+    BindingSlot(int binding, Type type, int array_count)
+        : binding(binding), type(type), array_count(array_count) {}
+    BindingSlot(int binding, Type type, int array_count,
+                ShaderStageFlag stage_mask)
+        : binding(binding),
+          type(type),
+          array_count(array_count),
+          stage_mask(stage_mask) {}
+  };
+
+  // Describes a range of push constant data within the pipeline.
+  struct PushConstantRange {
+    // A set of stage flags describing the shader stages that will access a
+    // range of push constants.
+    ShaderStageFlag stage_mask = ShaderStageFlag::kNone;
+
+    // Start offset and size, respectively, consumed by the range.
+    // Both offset and size are in units of bytes and must be a multiple of 4.
+    size_t offset = 0;
+    size_t size = 0;
+  };
+
   virtual ~PipelineLayout() = default;
 
-  const std::vector<PipelineBinding>& bindings() const { return bindings_; }
+  const std::vector<PipelineLayout::BindingSlot>& binding_slots() const {
+    return binding_slots_;
+  }
   const std::vector<PushConstantRange>& push_constant_ranges() const {
     return push_constant_ranges_;
   }
 
  protected:
-  PipelineLayout(ArrayView<PipelineBinding> bindings,
-                 ArrayView<PushConstantRange> push_constant_ranges)
-      : bindings_(bindings), push_constant_ranges_(push_constant_ranges) {}
+  PipelineLayout(
+      ArrayView<PipelineLayout::BindingSlot> binding_slots,
+      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
+      : binding_slots_(binding_slots),
+        push_constant_ranges_(push_constant_ranges) {}
 
-  std::vector<PipelineBinding> bindings_;
-  std::vector<PushConstantRange> push_constant_ranges_;
+  std::vector<PipelineLayout::BindingSlot> binding_slots_;
+  std::vector<PipelineLayout::PushConstantRange> push_constant_ranges_;
 };
 
 }  // namespace gfx

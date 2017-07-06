@@ -28,15 +28,15 @@ namespace {
 using gfx::Buffer;
 using gfx::Context;
 using gfx::ContextFactory;
-using gfx::Framebuffer;
 using gfx::Image;
 using gfx::ImageView;
 using gfx::MemoryPool;
-using gfx::Pipeline;
 using gfx::PipelineLayout;
 using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
+using gfx::ResourceSet;
+using gfx::Sampler;
 using gfx::ShaderModule;
 using gfx::SwapChain;
 using gfx::spirv::ShaderCompiler;
@@ -86,9 +86,8 @@ class TriangleExample : private Control::Listener {
     gfx::Device::Features required_features;
 
     // Attempt to create the context.
-    auto create_result =
-        context_factory->CreateContext(context_factory->default_device(),
-                                       std::move(required_features), &context_);
+    auto create_result = context_factory->CreateContext(
+        context_factory->default_device(), required_features, &context_);
     switch (create_result) {
       case ContextFactory::CreateResult::kSuccess:
         break;
@@ -103,6 +102,108 @@ class TriangleExample : private Control::Listener {
         {gfx::PixelFormats::kB8G8R8A8UNorm});
     if (!swap_chain_) {
       LOG(ERROR) << "Failed to create swap chain";
+      return false;
+    }
+
+    // Allocate a memory pool to allocate buffers and textures.
+    memory_pool_ = context_->CreateMemoryPool(
+        gfx::MemoryType::kHostVisible | gfx::MemoryType::kHostCoherent,
+        1 * 1024 * 1024);
+    if (!memory_pool_) {
+      LOG(ERROR) << "Unable to create memory pool";
+      return false;
+    }
+
+    return true;
+  }
+
+  // Creates the input geometry for the triangle.
+  // Returns false if the geometry could not be prepared.
+  bool CreateGeometry() {
+    struct Vertex {
+      float x, y, z;
+      float u, v;
+      float r, g, b, a;
+    };
+    const Vertex kVertexData[] = {
+        {1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f},   // v0
+        {-1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},  // v1
+        {0.0f, -1.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f},  // v2
+    };
+
+    // Allocate a buffer for the geometry.
+    auto allocation_result = memory_pool_->AllocateBuffer(
+        sizeof(kVertexData), Buffer::Usage::kVertexBuffer, &triangle_buffer_);
+    switch (allocation_result) {
+      case MemoryPool::AllocationResult::kSuccess:
+        break;
+      default:
+        LOG(ERROR) << "Failed to allocate geometry buffer";
+        return false;
+    }
+
+    // Write data directly into the buffer.
+    // A real app would want to use a staging buffer.
+    if (!triangle_buffer_->WriteData(0, kVertexData, sizeof(kVertexData))) {
+      LOG(ERROR) << "Failed to write data into geometry buffer";
+      return false;
+    }
+
+    return true;
+  }
+
+  // Creates a grid pattern texture we blend onto the triangle.
+  // Returns false if the texture or sampler could not be prepared.
+  bool CreateGridTexture() {
+    const int kWidth = 8;
+    const int kHeight = 8;
+
+    std::vector<uint32_t> image_data(kWidth * kHeight);
+    for (int y = 0; y < 8; ++y) {
+      int yg = y < 4 ? 1 : 0;
+      for (int x = 0; x < 8; ++x) {
+        int xg = x < 4 ? 1 : 0;
+        image_data[y * kWidth + x] = (xg ^ yg) ? 0xFFFFFFFF : 0xFF000000;
+      }
+    }
+
+    gfx::Image::CreateParams create_params;
+    create_params.format = gfx::PixelFormats::kR8G8B8A8UNorm;
+    create_params.tiling_mode = Image::TilingMode::kLinear;
+    create_params.size = {kWidth, kHeight};
+    create_params.usage_mask = Image::Usage::kSampled;
+    create_params.initial_layout = Image::Layout::kPreinitialized;
+
+    auto allocation_result =
+        memory_pool_->AllocateImage(create_params, &grid_image_);
+    switch (allocation_result) {
+      case MemoryPool::AllocationResult::kSuccess:
+        break;
+      default:
+        LOG(ERROR) << "Failed to allocate texture image";
+        return false;
+    }
+
+    // Write data directly into the image.
+    // A real app would want to use a staging buffer.
+    if (!grid_image_->WriteData(grid_image_->entire_range(), image_data.data(),
+                                image_data.size() * 4)) {
+      LOG(ERROR) << "Failed to write data into texture image";
+      return false;
+    }
+
+    // Create simple view into the image.
+    grid_image_view_ = grid_image_->CreateView();
+    if (!grid_image_view_) {
+      LOG(ERROR) << "Failed to create image view";
+      return false;
+    }
+
+    // Create a nearest-neighbor sampler we'll use for the grid.
+    Sampler::Params sampler_params;
+    nearest_sampler_ = context_->CreateSampler(sampler_params);
+    if (!nearest_sampler_) {
+      LOG(ERROR) << "Failed to create sampler";
       return false;
     }
 
@@ -132,11 +233,13 @@ class TriangleExample : private Control::Listener {
     // Prepare render state.
     RenderState render_state;
     render_state.vertex_input_state.vertex_bindings.push_back(
-        {0, sizeof(float) * 6});
+        {0, sizeof(float) * 9});
     render_state.vertex_input_state.vertex_attributes.push_back(
         {0, 0, 0, gfx::VertexFormats::kX32Y32Z32SFloat});
     render_state.vertex_input_state.vertex_attributes.push_back(
-        {1, 0, sizeof(float) * 3, gfx::VertexFormats::kX32Y32Z32SFloat});
+        {1, 0, sizeof(float) * 3, gfx::VertexFormats::kX32Y32SFloat});
+    render_state.vertex_input_state.vertex_attributes.push_back(
+        {2, 0, sizeof(float) * 5, gfx::VertexFormats::kX32Y32Z32W32SFloat});
     render_state.input_assembly_state.set_primitive_topology(
         gfx::PrimitiveTopology::kTriangleList);
     render_state.viewport_state.set_count(1);
@@ -147,12 +250,15 @@ class TriangleExample : private Control::Listener {
         make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
                                     ShaderCompiler::ShaderStage::kVertex);
     vert_shader_compiler->AddSource(R"""(#version 310 es
-layout(location = 0) in vec4 a_position;
-layout(location = 1) in vec3 a_color;
-layout(location = 0) out vec4 v_color;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec2 a_uv;
+layout(location = 2) in vec4 a_color;
+layout(location = 0) out vec2 v_uv;
+layout(location = 1) out vec4 v_color;
 void main() {
-  gl_Position = vec4(a_position.xyz, 1.0);
-  v_color = vec4(a_color, 1.0);
+  gl_Position = vec4(a_position, 1.0);
+  v_uv = a_uv;
+  v_color = a_color;
 }
 )""");
     std::vector<uint32_t> vert_shader_data;
@@ -165,10 +271,13 @@ void main() {
                                     ShaderCompiler::ShaderStage::kFragment);
     frag_shader_compiler->AddSource(R"""(#version 310 es
 precision highp float;
-layout(location = 0) in vec4 v_color;
+layout(location = 0) in vec2 v_uv;
+layout(location = 1) in vec4 v_color;
 layout(location = 0) out vec4 out_color;
+layout(binding = 0) uniform sampler2D u_image_sampler;
 void main() {
-  out_color = v_color;
+  vec4 tex_sample = texture(u_image_sampler, v_uv);
+  out_color = vec4(mix(v_color.rgb, tex_sample.rgb, v_color.a), 1.0);
 }
 )""");
     std::vector<uint32_t> frag_shader_data;
@@ -199,53 +308,33 @@ void main() {
     shader_stages.fragment_entry_point = "main";
 
     // Pipeline layout (in this case, empty).
-    auto pipeline_layout = context_->CreatePipelineLayout({}, {});
+    std::vector<PipelineLayout::BindingSlot> binding_slots;
+    binding_slots.push_back(
+        {0, PipelineLayout::BindingSlot::Type::kCombinedImageSampler, 1,
+         gfx::ShaderStageFlag::kAll});
+    auto pipeline_layout = context_->CreatePipelineLayout(binding_slots, {});
+    if (!pipeline_layout) {
+      LOG(ERROR) << "Unable to create pipeline layout";
+      return false;
+    }
 
     // Create the pipeline.
-    render_pipeline_ = context_->CreateRenderPipeline(
-        pipeline_layout, render_pass_, 0, std::move(render_state),
-        std::move(shader_stages));
+    render_pipeline_ =
+        context_->CreateRenderPipeline(pipeline_layout, render_pass_, 0,
+                                       render_state, std::move(shader_stages));
     if (!render_pipeline_) {
       LOG(ERROR) << "Unable to create render pipeline";
       return false;
     }
 
-    return true;
-  }
-
-  // Creates the input geometry for the triangle.
-  // Returns false if the geometry could not be prepared.
-  bool CreateGeometry() {
-    // Allocate a memory pool to allocate the buffer.
-    memory_pool_ = context_->CreateMemoryPool(
-        gfx::MemoryType::kHostVisible | gfx::MemoryType::kHostCoherent,
-        1 * 1024 * 1024);
-    if (!memory_pool_) {
-      LOG(ERROR) << "Unable to create memory pool";
-      return false;
-    }
-
-    const float kVertexData[] = {
-        1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f,  // v0
-        -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, 0.0f,  // v1
-        0.0f,  -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,  // v2
-    };
-
-    // Allocate a buffer for the geometry.
-    auto allocation_result = memory_pool_->AllocateBuffer(
-        sizeof(kVertexData), Buffer::Usage::kVertexBuffer, &triangle_buffer_);
-    switch (allocation_result) {
-      case MemoryPool::AllocationResult::kSuccess:
-        break;
-      default:
-        LOG(ERROR) << "Failed to allocate geometry buffer";
-        return false;
-    }
-
-    // Write data directly into the buffer.
-    // A real app would want to use a staging buffer.
-    if (!triangle_buffer_->WriteData(0, kVertexData, sizeof(kVertexData))) {
-      LOG(ERROR) << "Failed to write data into geometry buffer";
+    // Create the resource set we'll use for the triangle.
+    std::vector<ResourceSet::BindingValue> binding_values;
+    binding_values.push_back(
+        {grid_image_view_, Image::Layout::kGeneral, nearest_sampler_});
+    resource_set_ =
+        context_->CreateResourceSet(pipeline_layout, binding_values);
+    if (!resource_set_) {
+      LOG(ERROR) << "Unable to create resource set";
       return false;
     }
 
@@ -291,6 +380,7 @@ void main() {
     rpe->SetViewport({framebuffer_image_view->size().width,
                       framebuffer_image_view->size().height});
     rpe->BindPipeline(render_pipeline_);
+    rpe->BindResourceSet(resource_set_);
     rpe->BindVertexBuffers(0, {triangle_buffer_});
     rpe->Draw(3);
     command_buffer->EndRenderPass(std::move(rpe));
@@ -346,8 +436,9 @@ void main() {
   void OnCreated(ref_ptr<Control> target) override {
     LOG(INFO) << "OnCreated";
     // Setup everything for rendering.
-    if (!CreateContext() || !CreateRenderPipeline() || !CreateGeometry()) {
-      LOG(FATAL) << "Failed to launch example";
+    if (!CreateContext() || !CreateGeometry() || !CreateGridTexture() ||
+        !CreateRenderPipeline()) {
+      LOG(ERROR) << "Failed to launch example";
       done_event_->Set();
     }
   }
@@ -355,10 +446,13 @@ void main() {
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
 
-    triangle_buffer_.reset();
-    memory_pool_.reset();
+    resource_set_.reset();
     render_pipeline_.reset();
     render_pass_.reset();
+    grid_image_view_.reset();
+    grid_image_.reset();
+    triangle_buffer_.reset();
+    memory_pool_.reset();
     swap_chain_.reset();
     context_.reset();
   }
@@ -407,9 +501,13 @@ void main() {
 
   ref_ptr<RenderPass> render_pass_;
   ref_ptr<RenderPipeline> render_pipeline_;
+  ref_ptr<ResourceSet> resource_set_;
 
   ref_ptr<MemoryPool> memory_pool_;
   ref_ptr<Buffer> triangle_buffer_;
+  ref_ptr<Image> grid_image_;
+  ref_ptr<ImageView> grid_image_view_;
+  ref_ptr<Sampler> nearest_sampler_;
 };
 
 int TriangleEntry(int argc, char** argv) {

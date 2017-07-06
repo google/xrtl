@@ -171,6 +171,7 @@ class Image : public Resource {
   }
 
   // Creates a new image view referencing an existing image.
+  virtual ref_ptr<ImageView> CreateView() = 0;
   virtual ref_ptr<ImageView> CreateView(Image::Type type, PixelFormat format,
                                         Image::LayerRange layer_range) = 0;
   virtual ref_ptr<ImageView> CreateView(Image::Type type,

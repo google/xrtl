@@ -14,12 +14,14 @@
 
 #include "xrtl/gfx/es3/es3_shader_module.h"
 
+#include <utility>
+
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
 ES3ShaderModule::ES3ShaderModule(ref_ptr<ES3PlatformContext> platform_context)
-    : platform_context_(platform_context) {}
+    : platform_context_(std::move(platform_context)) {}
 
 ES3ShaderModule::~ES3ShaderModule() { shaders_.clear(); }
 

@@ -22,9 +22,24 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-// Converts a PixelFormat to a sized internal format (like GL_RGBA32UI).
-// Returns GL_NONE if the PixelFormat cannot be represented in GL.
-GLenum ConvertPixelFormatToInternalFormat(PixelFormat pixel_format);
+// Parameters for GL texture functions derived from our pixel formats.
+struct ES3TextureParams {
+  // 'internalFormat' parameter.
+  GLenum internal_format = GL_NONE;
+  // 'format' parameter.
+  GLenum format = GL_NONE;
+  // 'type' parameter.
+  GLenum type = GL_NONE;
+
+  ES3TextureParams() = default;
+  ES3TextureParams(GLenum internal_format, GLenum format, GLenum type)
+      : internal_format(internal_format), format(format), type(type) {}
+};
+
+// Converts a PixelFormat to a set of GL texture parameter info.
+// Returns false if the PixelFormat cannot be represented in GL.
+bool ConvertPixelFormatToTextureParams(PixelFormat pixel_format,
+                                       ES3TextureParams* out_texture_params);
 
 }  // namespace es3
 }  // namespace gfx

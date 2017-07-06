@@ -18,7 +18,78 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-//
+ES3Sampler::ES3Sampler(ref_ptr<ES3PlatformContext> platform_context,
+                       Params params)
+    : Sampler(params), platform_context_(std::move(platform_context)) {
+  ES3PlatformContext::ThreadLock context_lock(
+      ES3PlatformContext::AcquireThreadContext(platform_context_));
+
+  // TODO(benvanik): pool ID allocation.
+  glGenSamplers(1, &sampler_id_);
+
+  static const GLenum kTextureWrapMap[4] = {
+      GL_REPEAT,           // kRepeat
+      GL_MIRRORED_REPEAT,  // kMirroredRepeat
+      GL_CLAMP_TO_EDGE,    // kClampToEdge
+      GL_CLAMP_TO_EDGE,    // kClampToBorder (not supported?)
+  };
+  glSamplerParameteri(sampler_id_, GL_TEXTURE_WRAP_S,
+                      kTextureWrapMap[static_cast<int>(params.address_mode_u)]);
+  glSamplerParameteri(sampler_id_, GL_TEXTURE_WRAP_T,
+                      kTextureWrapMap[static_cast<int>(params.address_mode_v)]);
+  glSamplerParameteri(sampler_id_, GL_TEXTURE_WRAP_R,
+                      kTextureWrapMap[static_cast<int>(params.address_mode_w)]);
+
+  GLint min_filter = GL_NEAREST;
+  switch (params.min_filter) {
+    case Filter::kNearest:
+      switch (params.mipmap_mode) {
+        case MipmapMode::kNearest:
+          min_filter = GL_NEAREST_MIPMAP_NEAREST;
+          break;
+        case MipmapMode::kLinear:
+          min_filter = GL_NEAREST_MIPMAP_LINEAR;
+          break;
+      }
+      break;
+    case Sampler::Filter::kLinear:
+      switch (params.mipmap_mode) {
+        case MipmapMode::kNearest:
+          min_filter = GL_LINEAR_MIPMAP_NEAREST;
+          break;
+        case MipmapMode::kLinear:
+          min_filter = GL_LINEAR_MIPMAP_LINEAR;
+          break;
+      }
+      break;
+  }
+  glSamplerParameteri(sampler_id_, GL_TEXTURE_MIN_FILTER, min_filter);
+
+  GLint mag_filter = GL_NEAREST;
+  switch (params.mag_filter) {
+    case Filter::kNearest:
+      mag_filter = GL_NEAREST;
+      break;
+    case Filter::kLinear:
+      mag_filter = GL_LINEAR;
+      break;
+  }
+  glSamplerParameteri(sampler_id_, GL_TEXTURE_MAG_FILTER, mag_filter);
+
+  glSamplerParameterf(sampler_id_, GL_TEXTURE_MIN_LOD, params.min_lod);
+  glSamplerParameterf(sampler_id_, GL_TEXTURE_MAX_LOD, params.max_lod);
+
+  // TODO(benvanik): params.mip_lod_bias
+  // TODO(benvanik): params.anisotropy_enable
+  // TODO(benvanik): params.max_anisotropy
+  // TODO(benvanik): params.border_color
+}
+
+ES3Sampler::~ES3Sampler() {
+  ES3PlatformContext::ThreadLock context_lock(
+      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  glDeleteSamplers(1, &sampler_id_);
+}
 
 }  // namespace es3
 }  // namespace gfx

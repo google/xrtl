@@ -18,225 +18,259 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-GLenum ConvertPixelFormatToInternalFormat(PixelFormat pixel_format) {
-  static const PixelFormatTable<GLenum, PixelFormats::kUndefined,
+bool ConvertPixelFormatToTextureParams(PixelFormat pixel_format,
+                                       ES3TextureParams* out_texture_params) {
+  static const ES3TextureParams kTable[] = {
+      {GL_NONE, GL_NONE, GL_NONE},                       // kUndefined
+                                                         //
+      {GL_NONE, GL_NONE, GL_NONE},                       // kR4G4UNorm
+      {GL_RGBA4, GL_RGBA, GL_UNSIGNED_BYTE},             // kR4G4B4A4UNorm
+      {GL_RGBA4, GL_RGBA, GL_UNSIGNED_BYTE},             // kB4G4R4A4UNorm
+      {GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},      // kR5G6B5UNorm
+      {GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},      // kB5G6R5UNorm
+      {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1},  // kR5G5B5A1UNorm
+      {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1},  // kB5G5R5A1UNorm
+      {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1},  // kA1R5G5B5UNorm
+                                                         //
+      {GL_R8, GL_RED, GL_UNSIGNED_BYTE},                 // kR8UNorm
+      {GL_R8_SNORM, GL_RED, GL_BYTE},                    // kR8SNorm
+      {GL_R8, GL_RED, GL_UNSIGNED_BYTE},                 // kR8UScaled
+      {GL_R8_SNORM, GL_RED, GL_BYTE},                    // kR8SScaled
+      {GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE},       // kR8UInt
+      {GL_R8I, GL_RED_INTEGER, GL_BYTE},                 // kR8SInt
+      {GL_NONE, GL_NONE, GL_NONE},                       // kR8Srgb
+                                                         //
+      {GL_RG8, GL_RG, GL_UNSIGNED_BYTE},                 // kR8G8UNorm
+      {GL_RG8_SNORM, GL_RG, GL_BYTE},                    // kR8G8SNorm
+      {GL_RG8, GL_RG, GL_UNSIGNED_BYTE},                 // kR8G8UScaled
+      {GL_RG8_SNORM, GL_RG, GL_BYTE},                    // kR8G8SScaled
+      {GL_RG8UI, GL_RG_INTEGER, GL_UNSIGNED_BYTE},       // kR8G8UInt
+      {GL_RG8I, GL_RG_INTEGER, GL_BYTE},                 // kR8G8SInt
+      {GL_NONE, GL_NONE, GL_NONE},                       // kR8G8Srgb
+                                                         //
+      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kR8G8B8UNorm
+      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kR8G8B8SNorm
+      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kR8G8B8UScaled
+      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kR8G8B8SScaled
+      {GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE},     // kR8G8B8UInt
+      {GL_RGB8I, GL_RGB_INTEGER, GL_BYTE},               // kR8G8B8SInt
+      {GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE},              // kR8G8B8Srgb
+                                                         //
+      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kB8G8R8UNorm
+      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kB8G8R8SNorm
+      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kB8G8R8UScaled
+      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kB8G8R8SScaled
+      {GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE},     // kB8G8R8UInt
+      {GL_RGB8I, GL_RGB_INTEGER, GL_BYTE},               // kB8G8R8SInt
+      {GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE},              // kB8G8R8Srgb
+                                                         //
+      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kR8G8B8A8UNorm
+      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kR8G8B8A8SNorm
+      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kR8G8B8A8UScaled
+      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kR8G8B8A8SScaled
+      {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE},   // kR8G8B8A8UInt
+      {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE},             // kR8G8B8A8SInt
+      {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE},      // kR8G8B8A8Srgb
+                                                         //
+      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kB8G8R8A8UNorm
+      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kB8G8R8A8SNorm
+      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kB8G8R8A8UScaled
+      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kB8G8R8A8SScaled
+      {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE},   // kB8G8R8A8UInt
+      {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE},             // kB8G8R8A8SInt
+      {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE},      // kB8G8R8A8Srgb
+                                                         //
+      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kA8B8G8R8UNorm
+      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kA8B8G8R8SNorm
+      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kA8B8G8R8UScaled
+      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kA8B8G8R8SScaled
+      {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE},   // kA8B8G8R8UInt
+      {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE},             // kA8B8G8R8SInt
+      {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE},      // kA8B8G8R8Srgb
+                                                         //
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10UNorm
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10SNorm
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10UScaled
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10SScaled
+      {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10UInt
+      {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10SInt
+                                                         //
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10UNorm
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10SNorm
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10UScaled
+      {GL_RGB10_A2, GL_RGBA,                             //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10SScaled
+      {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10UInt
+      {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
+       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10SInt
+                                                         //
+      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16UNorm
+      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16SNorm
+      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16UScaled
+      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16SScaled
+      {GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT},     // kR16UInt
+      {GL_R16I, GL_RED_INTEGER, GL_SHORT},               // kR16SInt
+      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16SFloat
+                                                         //
+      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16UNorm
+      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16SNorm
+      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16UScaled
+      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16SScaled
+      {GL_RG16UI, GL_RG_INTEGER, GL_UNSIGNED_SHORT},     // kR16G16UInt
+      {GL_RG16I, GL_RG_INTEGER, GL_SHORT},               // kR16G16SInt
+      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16SFloat
+                                                         //
+      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16UNorm
+      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16SNorm
+      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16UScaled
+      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16SScaled
+      {GL_RGB16UI, GL_RGB_INTEGER, GL_UNSIGNED_SHORT},   // kR16G16B16UInt
+      {GL_RGB16I, GL_RGB_INTEGER, GL_SHORT},             // kR16G16B16SInt
+      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16SFloat
+                                                         //
+      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16UNorm
+      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16SNorm
+      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16UScaled
+      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16SScaled
+      {GL_RGBA16UI, GL_RGBA_INTEGER, GL_UNSIGNED_SHORT},  // kR16G16B16A16UInt
+      {GL_RGBA16I, GL_RGBA_INTEGER, GL_SHORT},            // kR16G16B16A16SInt
+      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},               // kR16G16B16A16SFloat
+                                                          //
+      {GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT},        // kR32UInt
+      {GL_R32I, GL_RED_INTEGER, GL_INT},                  // kR32SInt
+      {GL_R32F, GL_RED, GL_FLOAT},                        // kR32SFloat
+                                                          //
+      {GL_RG32UI, GL_RG_INTEGER, GL_UNSIGNED_INT},        // kR32G32UInt
+      {GL_RG32I, GL_RG_INTEGER, GL_INT},                  // kR32G32SInt
+      {GL_RG32F, GL_RG, GL_FLOAT},                        // kR32G32SFloat
+                                                          //
+      {GL_RGB32UI, GL_RGB_INTEGER, GL_UNSIGNED_INT},      // kR32G32B32UInt
+      {GL_RGB32I, GL_RGB_INTEGER, GL_INT},                // kR32G32B32SInt
+      {GL_RGB32F, GL_RGB, GL_FLOAT},                      // kR32G32B32SFloat
+                                                          //
+      {GL_R32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT},       // kR32G32B32A32UInt
+      {GL_RGBA32I, GL_RGBA_INTEGER, GL_INT},              // kR32G32B32A32SInt
+      {GL_RGBA32F, GL_RGBA, GL_FLOAT},                    // kR32G32B32A32SFloat
+                                                          //
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64UInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64SInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64SFloat
+                                                          //
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64UInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64SInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64SFloat
+                                                          //
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64UInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64SInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64SFloat
+                                                          //
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64A64UInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64A64SInt
+      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64A64SFloat
+                                                          //
+      {GL_R11F_G11F_B10F, GL_RGB,                         //
+       GL_UNSIGNED_INT_10F_11F_11F_REV},                  // kB10G11R11UFloat
+      {GL_RGB9_E5, GL_RGB, GL_UNSIGNED_INT_5_9_9_9_REV},  // kE5B9G9R9UFloat
+                                                          //
+      {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT,          //
+       GL_UNSIGNED_SHORT},                                // kD16UNorm
+      {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT,          //
+       GL_UNSIGNED_INT},                                  // kX8D24UNorm
+      {GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT},  // kD32SFloat
+      {GL_NONE, GL_NONE, GL_NONE},                            // kS8UInt
+      {GL_NONE, GL_NONE, GL_NONE},                            // kD16UNormS8UInt
+      {GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL,                 //
+       GL_UNSIGNED_INT_24_8},                                 // kD24UNormS8UInt
+      {GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL,                //
+       GL_FLOAT_32_UNSIGNED_INT_24_8_REV},                   // kD32SFloatS8UInt
+                                                             //
+      {GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GL_RGB, GL_NONE},    // kBC1RGBUNorm
+      {GL_COMPRESSED_SRGB_S3TC_DXT1_NV, GL_RGB, GL_NONE},    // kBC1RGBSrgb
+      {GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, GL_RGBA, GL_NONE},  // kBC1RGBAUNorm
+      {GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_NV, GL_RGBA,       //
+       GL_NONE},                                             // kBC1RGBASrgb
+      {GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, GL_RGBA, GL_NONE},  // kBC2UNorm
+      {GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_NV, GL_RGBA, GL_NONE},  // kBC2Srgb
+      {GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, GL_RGBA, GL_NONE},       // kBC3UNorm
+      {GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_NV, GL_RGBA, GL_NONE},  // kBC3Srgb
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC4UNorm
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC4SNorm
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC5UNorm
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC5SNorm
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC6HUFloat
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC6HSFloat
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC7UNorm
+      {GL_NONE, GL_NONE, GL_NONE},                                // kBC7Srgb
+                                                                  //
+      {GL_COMPRESSED_RGB8_ETC2, GL_RGB, GL_NONE},   // kEtc2R8G8B8UNorm
+      {GL_COMPRESSED_SRGB8_ETC2, GL_RGB, GL_NONE},  // kEtc2R8G8B8Srgb
+      {GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2, GL_RGBA,  //
+       GL_NONE},  // kEtc2R8G8B8A1UNorm
+      {GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2, GL_RGBA,  //
+       GL_NONE},                                         // kEtc2R8G8B8A1Srgb
+      {GL_COMPRESSED_RGBA8_ETC2_EAC, GL_RGBA, GL_NONE},  // kEtc2R8G8B8A8UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC, GL_RGBA,     //
+       GL_NONE},                                         // kEtc2R8G8B8A8Srgb
+                                                         //
+      {GL_COMPRESSED_R11_EAC, GL_RED, GL_NONE},          // kEacR11UNorm
+      {GL_COMPRESSED_SIGNED_R11_EAC, GL_RED, GL_NONE},   // kEacR11SNorm
+      {GL_COMPRESSED_RG11_EAC, GL_RG, GL_NONE},          // kEacR11G11UNorm
+      {GL_COMPRESSED_SIGNED_RG11_EAC, GL_RED, GL_NONE},  // kEacR11G11SNorm
+                                                         //
+      {GL_COMPRESSED_RGBA_ASTC_4x4, GL_RGBA, GL_NONE},   // kAstc4x4UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4, GL_RGBA, GL_NONE},  // kAstc4x4Srgb
+      {GL_COMPRESSED_RGBA_ASTC_5x4, GL_RGBA, GL_NONE},          // kAstc5x4UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4, GL_RGBA, GL_NONE},  // kAstc5x4Srgb
+      {GL_COMPRESSED_RGBA_ASTC_5x5, GL_RGBA, GL_NONE},          // kAstc5x5UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5, GL_RGBA, GL_NONE},  // kAstc5x5Srgb
+      {GL_COMPRESSED_RGBA_ASTC_6x5, GL_RGBA, GL_NONE},          // kAstc6x5UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5, GL_RGBA, GL_NONE},  // kAstc6x5Srgb
+      {GL_COMPRESSED_RGBA_ASTC_6x6, GL_RGBA, GL_NONE},          // kAstc6x6UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6, GL_RGBA, GL_NONE},  // kAstc6x6Srgb
+      {GL_COMPRESSED_RGBA_ASTC_8x5, GL_RGBA, GL_NONE},          // kAstc8x5UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5, GL_RGBA, GL_NONE},  // kAstc8x5Srgb
+      {GL_COMPRESSED_RGBA_ASTC_8x6, GL_RGBA, GL_NONE},          // kAstc8x6UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6, GL_RGBA, GL_NONE},  // kAstc8x6Srgb
+      {GL_COMPRESSED_RGBA_ASTC_8x8, GL_RGBA, GL_NONE},          // kAstc8x8UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8, GL_RGBA, GL_NONE},  // kAstc8x8Srgb
+      {GL_COMPRESSED_RGBA_ASTC_10x5, GL_RGBA, GL_NONE},   // kAstc10x5UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5, GL_RGBA,     //
+       GL_NONE},                                          // kAstc10x5Srgb
+      {GL_COMPRESSED_RGBA_ASTC_10x6, GL_RGBA, GL_NONE},   // kAstc10x6UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6, GL_RGBA,     //
+       GL_NONE},                                          // kAstc10x6Srgb
+      {GL_COMPRESSED_RGBA_ASTC_10x8, GL_RGBA, GL_NONE},   // kAstc10x8UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8, GL_RGBA,     //
+       GL_NONE},                                          // kAstc10x8Srgb
+      {GL_COMPRESSED_RGBA_ASTC_10x10, GL_RGBA, GL_NONE},  // kAstc10x10UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10, GL_RGBA,    //
+       GL_NONE},                                          // kAstc10x10Srgb
+      {GL_COMPRESSED_RGBA_ASTC_12x10, GL_RGBA, GL_NONE},  // kAstc12x10UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10, GL_RGBA,    //
+       GL_NONE},                                          // kAstc12x10Srgb
+      {GL_COMPRESSED_RGBA_ASTC_12x12, GL_RGBA, GL_NONE},  // kAstc12x12UNorm
+      {GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12, GL_RGBA,    //
+       GL_NONE},                                          // kAstc12x12Srgb
+  };
+  static const PixelFormatTable<ES3TextureParams, PixelFormats::kUndefined,
                                 PixelFormats::kAstc12x12Srgb>
-      kInternalFormats({
-          GL_NONE,                                       // kUndefined
-                                                         //
-          GL_NONE,                                       // kR4G4UNorm
-          GL_RGBA4,                                      // kR4G4B4A4UNorm
-          GL_RGBA4,                                      // kB4G4R4A4UNorm
-          GL_RGB565,                                     // kR5G6B5UNorm
-          GL_RGB565,                                     // kB5G6R5UNorm
-          GL_RGB5_A1,                                    // kR5G5B5A1UNorm
-          GL_RGB5_A1,                                    // kB5G5R5A1UNorm
-          GL_RGB5_A1,                                    // kA1R5G5B5UNorm
-                                                         //
-          GL_R8,                                         // kR8UNorm
-          GL_R8_SNORM,                                   // kR8SNorm
-          GL_R8,                                         // kR8UScaled
-          GL_R8_SNORM,                                   // kR8SScaled
-          GL_R8UI,                                       // kR8UInt
-          GL_R8I,                                        // kR8SInt
-          GL_R8,                                         // kR8Srgb
-                                                         //
-          GL_RG8,                                        // kR8G8UNorm
-          GL_RG8_SNORM,                                  // kR8G8SNorm
-          GL_RG8,                                        // kR8G8UScaled
-          GL_RG8_SNORM,                                  // kR8G8SScaled
-          GL_RG8UI,                                      // kR8G8UInt
-          GL_RG8I,                                       // kR8G8SInt
-          GL_RG8,                                        // kR8G8Srgb
-                                                         //
-          GL_RGB8,                                       // kR8G8B8UNorm
-          GL_RGB8_SNORM,                                 // kR8G8B8SNorm
-          GL_RGB8,                                       // kR8G8B8UScaled
-          GL_RGB8_SNORM,                                 // kR8G8B8SScaled
-          GL_RGB8UI,                                     // kR8G8B8UInt
-          GL_RGB8I,                                      // kR8G8B8SInt
-          GL_SRGB8,                                      // kR8G8B8Srgb
-                                                         //
-          GL_RGB8,                                       // kB8G8R8UNorm
-          GL_RGB8_SNORM,                                 // kB8G8R8SNorm
-          GL_RGB8,                                       // kB8G8R8UScaled
-          GL_RGB8_SNORM,                                 // kB8G8R8SScaled
-          GL_RGB8UI,                                     // kB8G8R8UInt
-          GL_RGB8I,                                      // kB8G8R8SInt
-          GL_SRGB8,                                      // kB8G8R8Srgb
-                                                         //
-          GL_RGBA8,                                      // kR8G8B8A8UNorm
-          GL_RGBA8_SNORM,                                // kR8G8B8A8SNorm
-          GL_RGBA8,                                      // kR8G8B8A8UScaled
-          GL_RGBA8_SNORM,                                // kR8G8B8A8SScaled
-          GL_RGBA8UI,                                    // kR8G8B8A8UInt
-          GL_RGBA8I,                                     // kR8G8B8A8SInt
-          GL_SRGB8_ALPHA8,                               // kR8G8B8A8Srgb
-                                                         //
-          GL_RGBA8,                                      // kB8G8R8A8UNorm
-          GL_RGBA8_SNORM,                                // kB8G8R8A8SNorm
-          GL_RGBA8,                                      // kB8G8R8A8UScaled
-          GL_RGBA8_SNORM,                                // kB8G8R8A8SScaled
-          GL_RGBA8UI,                                    // kB8G8R8A8UInt
-          GL_RGBA8I,                                     // kB8G8R8A8SInt
-          GL_SRGB8_ALPHA8,                               // kB8G8R8A8Srgb
-                                                         //
-          GL_RGBA8,                                      // kA8B8G8R8UNorm
-          GL_RGBA8_SNORM,                                // kA8B8G8R8SNorm
-          GL_RGBA8,                                      // kA8B8G8R8UScaled
-          GL_RGBA8_SNORM,                                // kA8B8G8R8SScaled
-          GL_RGBA8UI,                                    // kA8B8G8R8UInt
-          GL_RGBA8I,                                     // kA8B8G8R8SInt
-          GL_SRGB8_ALPHA8,                               // kA8B8G8R8Srgb
-                                                         //
-          GL_RGB10_A2,                                   // kA2R10G10B10UNorm
-          GL_RGB10_A2,                                   // kA2R10G10B10SNorm
-          GL_RGB10_A2,                                   // kA2R10G10B10UScaled
-          GL_RGB10_A2,                                   // kA2R10G10B10SScaled
-          GL_RGB10_A2UI,                                 // kA2R10G10B10UInt
-          GL_RGB10_A2UI,                                 // kA2R10G10B10SInt
-                                                         //
-          GL_RGB10_A2,                                   // kA2B10G10R10UNorm
-          GL_RGB10_A2,                                   // kA2B10G10R10SNorm
-          GL_RGB10_A2,                                   // kA2B10G10R10UScaled
-          GL_RGB10_A2,                                   // kA2B10G10R10SScaled
-          GL_RGB10_A2UI,                                 // kA2B10G10R10UInt
-          GL_RGB10_A2UI,                                 // kA2B10G10R10SInt
-                                                         //
-          GL_R16F,                                       // kR16UNorm
-          GL_R16F,                                       // kR16SNorm
-          GL_R16F,                                       // kR16UScaled
-          GL_R16F,                                       // kR16SScaled
-          GL_R16UI,                                      // kR16UInt
-          GL_R16I,                                       // kR16SInt
-          GL_R16F,                                       // kR16SFloat
-                                                         //
-          GL_RG16F,                                      // kR16G16UNorm
-          GL_RG16F,                                      // kR16G16SNorm
-          GL_RG16F,                                      // kR16G16UScaled
-          GL_RG16F,                                      // kR16G16SScaled
-          GL_RG16UI,                                     // kR16G16UInt
-          GL_RG16I,                                      // kR16G16SInt
-          GL_RG16F,                                      // kR16G16SFloat
-                                                         //
-          GL_RGB16F,                                     // kR16G16B16UNorm
-          GL_RGB16F,                                     // kR16G16B16SNorm
-          GL_RGB16F,                                     // kR16G16B16UScaled
-          GL_RGB16F,                                     // kR16G16B16SScaled
-          GL_RGB16UI,                                    // kR16G16B16UInt
-          GL_RGB16I,                                     // kR16G16B16SInt
-          GL_RGB16F,                                     // kR16G16B16SFloat
-                                                         //
-          GL_RGBA16F,                                    // kR16G16B16A16UNorm
-          GL_RGBA16F,                                    // kR16G16B16A16SNorm
-          GL_RGBA16F,                                    // kR16G16B16A16UScaled
-          GL_RGBA16F,                                    // kR16G16B16A16SScaled
-          GL_RGBA16UI,                                   // kR16G16B16A16UInt
-          GL_RGBA16I,                                    // kR16G16B16A16SInt
-          GL_RGBA16F,                                    // kR16G16B16A16SFloat
-                                                         //
-          GL_R32UI,                                      // kR32UInt
-          GL_R32I,                                       // kR32SInt
-          GL_R32F,                                       // kR32SFloat
-                                                         //
-          GL_RG32UI,                                     // kR32G32UInt
-          GL_RG32I,                                      // kR32G32SInt
-          GL_RG32F,                                      // kR32G32SFloat
-                                                         //
-          GL_RGB32UI,                                    // kR32G32B32UInt
-          GL_RGB32I,                                     // kR32G32B32SInt
-          GL_RGB32F,                                     // kR32G32B32SFloat
-                                                         //
-          GL_R32UI,                                      // kR32G32B32A32UInt
-          GL_RGBA32I,                                    // kR32G32B32A32SInt
-          GL_RGBA32F,                                    // kR32G32B32A32SFloat
-                                                         //
-          GL_NONE,                                       // kR64UInt
-          GL_NONE,                                       // kR64SInt
-          GL_NONE,                                       // kR64SFloat
-                                                         //
-          GL_NONE,                                       // kR64G64UInt
-          GL_NONE,                                       // kR64G64SInt
-          GL_NONE,                                       // kR64G64SFloat
-                                                         //
-          GL_NONE,                                       // kR64G64B64UInt
-          GL_NONE,                                       // kR64G64B64SInt
-          GL_NONE,                                       // kR64G64B64SFloat
-                                                         //
-          GL_NONE,                                       // kR64G64B64A64UInt
-          GL_NONE,                                       // kR64G64B64A64SInt
-          GL_NONE,                                       // kR64G64B64A64SFloat
-                                                         //
-          GL_R11F_G11F_B10F,                             // kB10G11R11UFloat
-          GL_RGB9_E5,                                    // kE5B9G9R9UFloat
-                                                         //
-          GL_DEPTH_COMPONENT16,                          // kD16UNorm
-          GL_DEPTH24_STENCIL8,                           // kX8D24UNorm
-          GL_DEPTH_COMPONENT32F,                         // kD32SFloat
-          GL_NONE,                                       // kS8UInt
-          GL_NONE,                                       // kD16UNormS8UInt
-          GL_DEPTH24_STENCIL8,                           // kD24UNormS8UInt
-          GL_DEPTH32F_STENCIL8,                          // kD32SFloatS8UInt
-                                                         //
-          GL_COMPRESSED_RGB_S3TC_DXT1_EXT,               // kBC1RGBUNorm
-          GL_COMPRESSED_SRGB_S3TC_DXT1_NV,               // kBC1RGBSrgb
-          GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,              // kBC1RGBAUNorm
-          GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_NV,         // kBC1RGBASrgb
-          GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,              // kBC2UNorm
-          GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_NV,         // kBC2Srgb
-          GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,              // kBC3UNorm
-          GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_NV,         // kBC3Srgb
-          GL_NONE,                                       // kBC4UNorm
-          GL_NONE,                                       // kBC4SNorm
-          GL_NONE,                                       // kBC5UNorm
-          GL_NONE,                                       // kBC5SNorm
-          GL_NONE,                                       // kBC6HUFloat
-          GL_NONE,                                       // kBC6HSFloat
-          GL_NONE,                                       // kBC7UNorm
-          GL_NONE,                                       // kBC7Srgb
-                                                         //
-          GL_COMPRESSED_RGB8_ETC2,                       // kEtc2R8G8B8UNorm
-          GL_COMPRESSED_SRGB8_ETC2,                      // kEtc2R8G8B8Srgb
-          GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,   // kEtc2R8G8B8A1UNorm
-          GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,  // kEtc2R8G8B8A1Srgb
-          GL_COMPRESSED_RGBA8_ETC2_EAC,                  // kEtc2R8G8B8A8UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,           // kEtc2R8G8B8A8Srgb
-                                                         //
-          GL_COMPRESSED_R11_EAC,                         // kEacR11UNorm
-          GL_COMPRESSED_SIGNED_R11_EAC,                  // kEacR11SNorm
-          GL_COMPRESSED_RG11_EAC,                        // kEacR11G11UNorm
-          GL_COMPRESSED_SIGNED_RG11_EAC,                 // kEacR11G11SNorm
-                                                         //
-          GL_COMPRESSED_RGBA_ASTC_4x4,                   // kAstc4x4UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4,           // kAstc4x4Srgb
-          GL_COMPRESSED_RGBA_ASTC_5x4,                   // kAstc5x4UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4,           // kAstc5x4Srgb
-          GL_COMPRESSED_RGBA_ASTC_5x5,                   // kAstc5x5UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5,           // kAstc5x5Srgb
-          GL_COMPRESSED_RGBA_ASTC_6x5,                   // kAstc6x5UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5,           // kAstc6x5Srgb
-          GL_COMPRESSED_RGBA_ASTC_6x6,                   // kAstc6x6UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6,           // kAstc6x6Srgb
-          GL_COMPRESSED_RGBA_ASTC_8x5,                   // kAstc8x5UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5,           // kAstc8x5Srgb
-          GL_COMPRESSED_RGBA_ASTC_8x6,                   // kAstc8x6UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6,           // kAstc8x6Srgb
-          GL_COMPRESSED_RGBA_ASTC_8x8,                   // kAstc8x8UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8,           // kAstc8x8Srgb
-          GL_COMPRESSED_RGBA_ASTC_10x5,                  // kAstc10x5UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5,          // kAstc10x5Srgb
-          GL_COMPRESSED_RGBA_ASTC_10x6,                  // kAstc10x6UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6,          // kAstc10x6Srgb
-          GL_COMPRESSED_RGBA_ASTC_10x8,                  // kAstc10x8UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8,          // kAstc10x8Srgb
-          GL_COMPRESSED_RGBA_ASTC_10x10,                 // kAstc10x10UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10,         // kAstc10x10Srgb
-          GL_COMPRESSED_RGBA_ASTC_12x10,                 // kAstc12x10UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10,         // kAstc12x10Srgb
-          GL_COMPRESSED_RGBA_ASTC_12x12,                 // kAstc12x12UNorm
-          GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12,         // kAstc12x12Srgb
-      });
-  return kInternalFormats.Find(pixel_format.unique_id());
+      kLookupTable(kTable);
+  const auto& texture_params = kLookupTable.Find(pixel_format.unique_id());
+  if (texture_params.internal_format == GL_NONE) {
+    return false;
+  }
+  *out_texture_params = texture_params;
+  return true;
 }
 
 }  // namespace es3

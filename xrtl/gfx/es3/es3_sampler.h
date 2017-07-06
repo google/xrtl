@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "xrtl/gfx/es3/es3_common.h"
+#include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/sampler.h"
 
 namespace xrtl {
@@ -26,7 +27,14 @@ namespace es3 {
 
 class ES3Sampler : public Sampler {
  public:
-  explicit ES3Sampler(Params params) : Sampler(std::move(params)) {}
+  ES3Sampler(ref_ptr<ES3PlatformContext> platform_context, Params params);
+  ~ES3Sampler() override;
+
+  GLuint sampler_id() const { return sampler_id_; }
+
+ private:
+  ref_ptr<ES3PlatformContext> platform_context_;
+  GLuint sampler_id_ = 0;
 };
 
 }  // namespace es3

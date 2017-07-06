@@ -28,8 +28,8 @@ namespace es3 {
 class ES3ResourceSet : public ResourceSet {
  public:
   explicit ES3ResourceSet(ref_ptr<PipelineLayout> layout,
-                          ArrayView<Binding> bindings)
-      : ResourceSet(std::move(layout), bindings) {}
+                          ArrayView<BindingValue> binding_values)
+      : ResourceSet(std::move(layout), binding_values) {}
 };
 
 }  // namespace es3
