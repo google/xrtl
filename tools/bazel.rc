@@ -87,7 +87,7 @@ common:android --dynamic_mode=off
 
 common:android_emulator --config=android
 common:android_emulator --config=android_x86_64
-common:ios_simulator --define=XRTL_PLATFORM_ANDROID_EMULATOR=1
+common:android_emulator --define=XRTL_PLATFORM_ANDROID_EMULATOR=1
 
 common:android_arm --config=android
 common:android_arm --cpu=armeabi-v7a
