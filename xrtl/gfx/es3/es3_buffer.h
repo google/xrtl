@@ -29,6 +29,7 @@ class ES3Buffer : public Buffer {
             size_t allocation_size, Usage usage_mask);
   ~ES3Buffer() override;
 
+  GLenum target() const { return target_; }
   GLuint buffer_id() const { return buffer_id_; }
 
   bool ReadData(size_t source_offset, void* data, size_t data_length) override;

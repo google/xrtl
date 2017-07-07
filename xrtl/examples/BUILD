@@ -12,6 +12,7 @@ cc_binary(
     srcs = ["triangle_example.cc"],
     deps = [
         "//xrtl/base:logging",
+        "//xrtl/base:system_clock",
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
         "//xrtl/gfx:context",

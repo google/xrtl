@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "xrtl/base/logging.h"
+#include "xrtl/base/system_clock.h"
 #include "xrtl/base/threading/event.h"
 #include "xrtl/base/threading/thread.h"
 #include "xrtl/gfx/context.h"
@@ -42,6 +43,13 @@ using gfx::SwapChain;
 using gfx::spirv::ShaderCompiler;
 using ui::Control;
 using ui::Window;
+
+// Matches the UB block in the shader.
+// NOTE: layout is std140.
+struct UniformBlock {
+  float mix;
+  float unused[3];
+};
 
 class TriangleExample : private Control::Listener {
  public:
@@ -275,9 +283,14 @@ layout(location = 0) in vec2 v_uv;
 layout(location = 1) in vec4 v_color;
 layout(location = 0) out vec4 out_color;
 layout(binding = 0) uniform sampler2D u_image_sampler;
+layout(binding = 1, std140) uniform UniformBlock {
+  float mix;
+  vec3 unused;
+} u_uniform_block;
 void main() {
   vec4 tex_sample = texture(u_image_sampler, v_uv);
-  out_color = vec4(mix(v_color.rgb, tex_sample.rgb, v_color.a), 1.0);
+  out_color = vec4(mix(v_color.rgb, tex_sample.rgb,
+                       v_color.a * u_uniform_block.mix), 1.0);
 }
 )""");
     std::vector<uint32_t> frag_shader_data;
@@ -310,8 +323,9 @@ void main() {
     // Pipeline layout (in this case, empty).
     std::vector<PipelineLayout::BindingSlot> binding_slots;
     binding_slots.push_back(
-        {0, PipelineLayout::BindingSlot::Type::kCombinedImageSampler, 1,
-         gfx::ShaderStageFlag::kAll});
+        {0, PipelineLayout::BindingSlot::Type::kCombinedImageSampler});
+    binding_slots.push_back(
+        {1, PipelineLayout::BindingSlot::Type::kUniformBuffer});
     auto pipeline_layout = context_->CreatePipelineLayout(binding_slots, {});
     if (!pipeline_layout) {
       LOG(ERROR) << "Unable to create pipeline layout";
@@ -327,10 +341,22 @@ void main() {
       return false;
     }
 
+    // Allocate the uniform buffer.
+    auto allocation_result = memory_pool_->AllocateBuffer(
+        sizeof(UniformBlock), Buffer::Usage::kUniformBuffer, &uniform_buffer_);
+    switch (allocation_result) {
+      case MemoryPool::AllocationResult::kSuccess:
+        break;
+      default:
+        LOG(ERROR) << "Failed to allocate uniform buffer";
+        return false;
+    }
+
     // Create the resource set we'll use for the triangle.
     std::vector<ResourceSet::BindingValue> binding_values;
     binding_values.push_back(
         {grid_image_view_, Image::Layout::kGeneral, nearest_sampler_});
+    binding_values.push_back({uniform_buffer_});
     resource_set_ =
         context_->CreateResourceSet(pipeline_layout, binding_values);
     if (!resource_set_) {
@@ -373,6 +399,15 @@ void main() {
       LOG(ERROR) << "Unable to create framebuffer";
       return false;
     }
+
+    // Update uniform buffer data.
+    auto rce = command_buffer->BeginRenderCommands();
+    UniformBlock uniform_block;
+    uniform_block.mix =
+        (SystemClock::default_clock()->now_millis().count() % 1000) / 1000.0f;
+    rce->UpdateBuffer(uniform_buffer_, 0, &uniform_block,
+                      sizeof(uniform_block));
+    command_buffer->EndRenderCommands(std::move(rce));
 
     // Draw triangle.
     auto rpe = command_buffer->BeginRenderPass(
@@ -446,6 +481,7 @@ void main() {
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
 
+    uniform_buffer_.reset();
     resource_set_.reset();
     render_pipeline_.reset();
     render_pass_.reset();
@@ -508,6 +544,7 @@ void main() {
   ref_ptr<Image> grid_image_;
   ref_ptr<ImageView> grid_image_view_;
   ref_ptr<Sampler> nearest_sampler_;
+  ref_ptr<Buffer> uniform_buffer_;
 };
 
 int TriangleEntry(int argc, char** argv) {

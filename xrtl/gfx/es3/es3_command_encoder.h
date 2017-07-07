@@ -84,6 +84,22 @@ class ES3TransferCommandEncoder : public TransferCommandEncoder {
                          Image::Layout source_image_layout,
                          ref_ptr<Buffer> target_buffer,
                          ArrayView<CopyBufferImageRegion> regions) override;
+
+ protected:
+  friend class ES3ComputeCommandEncoder;
+  friend class ES3RenderCommandEncoder;
+  friend class ES3RenderPassCommandEncoder;
+
+  // These methods are not transfer related but here because we reuse this
+  // type as the common encoder.
+  void SetFence(ref_ptr<CommandFence> fence,
+                PipelineStageFlag pipeline_stage_mask);
+  void ResetFence(ref_ptr<CommandFence> fence,
+                  PipelineStageFlag pipeline_stage_mask);
+  void WaitFences(ArrayView<ref_ptr<CommandFence>> fences);
+  void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
+                       ClearColor clear_color,
+                       ArrayView<Image::LayerRange> ranges);
 };
 
 class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
@@ -165,6 +181,9 @@ class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
                 int group_count_z) override;
 
   void DispatchIndirect(ref_ptr<Buffer> buffer, size_t offset) override;
+
+ private:
+  ES3TransferCommandEncoder common_encoder_;
 };
 
 class ES3RenderCommandEncoder : public RenderCommandEncoder {
@@ -249,6 +268,9 @@ class ES3RenderCommandEncoder : public RenderCommandEncoder {
                     ArrayView<CopyImageRegion> regions) override;
 
   void GenerateMipmaps(ref_ptr<Image> image) override;
+
+ private:
+  ES3TransferCommandEncoder common_encoder_;
 };
 
 class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
@@ -357,6 +379,8 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   // Updates all vertex inputs based on the current bindings and pipeline.
   void UpdateVertexInputs();
 
+  ES3TransferCommandEncoder common_encoder_;
+
   ref_ptr<RenderPass> render_pass_;
   ref_ptr<Framebuffer> framebuffer_;
   std::vector<ClearColor> clear_colors_;
@@ -373,6 +397,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   std::vector<size_t> dynamic_offsets_;
   bool resource_set_dirty_ = true;
   uint32_t texture_binding_mask_ = 0;
+  uint32_t uniform_buffer_binding_mask_ = 0;
 
   // Array indices are binding and location, respectively.
   struct VertexBufferBinding {
@@ -381,7 +406,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
     size_t stride = 0;
     VertexInputRate input_rate = VertexInputRate::kVertex;
   };
-  FixedVector<VertexBufferBinding, kMaxVertexInputs> vertex_buffer_bindings_;
+  VertexBufferBinding vertex_buffer_bindings_[kMaxVertexInputs];
   struct VertexBufferAttribs {
     int binding = -1;  // -1 indicates unused
     size_t offset = 0;
