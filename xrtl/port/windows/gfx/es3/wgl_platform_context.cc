@@ -343,8 +343,15 @@ bool WGLPlatformContext::Initialize(HDC native_display, HWND native_window,
     return false;
   }
 
-  // Setup GL functions.
-  if (!gladLoadGLES2Loader(LoadOpenGLFunction)) {
+  // Setup GL functions. We only need to do this once.
+  // NOTE: GLAD is not thread safe! We must only be calling this from a single
+  //       thread.
+  static std::once_flag load_gles2_flag;
+  static std::atomic<bool> loaded_gles2{false};
+  std::call_once(load_gles2_flag, []() {
+    loaded_gles2 = gladLoadGLES2Loader(LoadOpenGLFunction);
+  });
+  if (!loaded_gles2) {
     LOG(ERROR) << "Failed to load GL ES dynamic functions";
     return false;
   }
