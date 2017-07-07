@@ -396,12 +396,12 @@ bool EGLPlatformContext::InitializeContext(
   }
 
   // Setup GL functions. We only need to do this once.
+  // NOTE: GLAD is not thread safe! We must only be calling this from a single
+  //       thread.
   static std::once_flag load_gles2_flag;
   static std::atomic<bool> loaded_gles2{false};
   std::call_once(load_gles2_flag, []() {
-    if (gladLoadGLES2Loader(LookupGlesFunction)) {
-      loaded_gles2 = true;
-    }
+    loaded_gles2 = gladLoadGLES2Loader(LookupGlesFunction);
   });
   if (!loaded_gles2) {
     LOG(ERROR) << "Failed to load GL ES dynamic functions";
