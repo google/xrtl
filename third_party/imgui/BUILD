@@ -34,3 +34,9 @@ cc_library(
         "@com_github_nothings_stb//:stb_truetype",
     ],
 )
+
+cc_binary(
+    name = "binary_to_compressed_c",
+    srcs = ["extra_fonts/binary_to_compressed_c.cpp"],
+    visibility = ["//visibility:public"],
+)
