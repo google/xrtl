@@ -177,7 +177,7 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
     if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
       int binding =
           compiler.get_decoration(resource.id, spv::DecorationBinding);
-      uniform_bindings_.push_back({resource.name, binding});
+      uniform_block_bindings_.push_back({resource.name, binding});
       compiler.unset_decoration(resource.id, spv::DecorationBinding);
     }
   }
@@ -234,6 +234,12 @@ bool ES3Shader::InitializeUniformBindings(GLuint program_id) {
         glGetUniformLocation(program_id, pair.first.c_str());
     if (uniform_location != -1) {
       glUniform1i(uniform_location, pair.second);
+    }
+  }
+  for (const auto& pair : uniform_block_bindings_) {
+    GLint block_index = glGetUniformBlockIndex(program_id, pair.first.c_str());
+    if (block_index != -1) {
+      glUniformBlockBinding(program_id, block_index, pair.second);
     }
   }
   return true;

@@ -81,12 +81,14 @@ void ES3TransferCommandEncoder::FillBuffer(ref_ptr<Buffer> buffer,
   LOG(WARNING) << "FillBuffer not yet implemented";
 }
 
-void ES3TransferCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
+void ES3TransferCommandEncoder::UpdateBuffer(ref_ptr<Buffer> base_target_buffer,
                                              size_t target_offset,
                                              const void* source_data,
                                              size_t source_data_length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "UpdateBuffer not yet implemented";
+  auto target_buffer = base_target_buffer.As<ES3Buffer>();
+  glBindBuffer(target_buffer->target(), target_buffer->buffer_id());
+  glBufferSubData(target_buffer->target(), target_offset, source_data_length,
+                  source_data);
 }
 
 void ES3TransferCommandEncoder::CopyBuffer(
@@ -120,25 +122,51 @@ void ES3TransferCommandEncoder::CopyImageToBuffer(
   LOG(WARNING) << "CopyImageToBuffer not yet implemented";
 }
 
+void ES3TransferCommandEncoder::SetFence(
+    ref_ptr<CommandFence> fence, PipelineStageFlag pipeline_stage_mask) {
+  // TODO(benvanik): this.
+  LOG(WARNING) << "SetFence not yet implemented";
+}
+
+void ES3TransferCommandEncoder::ResetFence(
+    ref_ptr<CommandFence> fence, PipelineStageFlag pipeline_stage_mask) {
+  // TODO(benvanik): this.
+  LOG(WARNING) << "ResetFence not yet implemented";
+}
+
+void ES3TransferCommandEncoder::WaitFences(
+    ArrayView<ref_ptr<CommandFence>> fences) {
+  // TODO(benvanik): this.
+  LOG(WARNING) << "WaitFences not yet implemented";
+}
+
+void ES3TransferCommandEncoder::ClearColorImage(
+    ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
+    ArrayView<Image::LayerRange> ranges) {
+  // TODO(benvanik): this.
+  LOG(WARNING) << "ClearColorImage not yet implemented";
+}
+
 ES3ComputeCommandEncoder::ES3ComputeCommandEncoder(
     CommandBuffer* command_buffer)
-    : ComputeCommandEncoder(command_buffer) {}
+    : ComputeCommandEncoder(command_buffer), common_encoder_(command_buffer) {}
 
 ES3ComputeCommandEncoder::~ES3ComputeCommandEncoder() = default;
 
 void ES3ComputeCommandEncoder::PipelineBarrier(
     PipelineStageFlag source_stage_mask, PipelineStageFlag target_stage_mask,
     PipelineDependencyFlag dependency_flags) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "PipelineBarrier not yet implemented";
+  common_encoder_.PipelineBarrier(source_stage_mask, target_stage_mask,
+                                  dependency_flags);
 }
 
 void ES3ComputeCommandEncoder::MemoryBarrier(
     PipelineStageFlag source_stage_mask, PipelineStageFlag target_stage_mask,
     PipelineDependencyFlag dependency_flags, AccessFlag source_access_mask,
     AccessFlag target_access_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "MemoryBarrier not yet implemented";
+  common_encoder_.MemoryBarrier(source_stage_mask, target_stage_mask,
+                                dependency_flags, source_access_mask,
+                                target_access_mask);
 }
 
 void ES3ComputeCommandEncoder::BufferBarrier(
@@ -146,8 +174,10 @@ void ES3ComputeCommandEncoder::BufferBarrier(
     PipelineDependencyFlag dependency_flags, AccessFlag source_access_mask,
     AccessFlag target_access_mask, ref_ptr<Buffer> buffer, size_t offset,
     size_t length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "BufferBarrier not yet implemented";
+  common_encoder_.BufferBarrier(source_stage_mask, target_stage_mask,
+                                dependency_flags, source_access_mask,
+                                target_access_mask, std::move(buffer), offset,
+                                length);
 }
 
 void ES3ComputeCommandEncoder::ImageBarrier(
@@ -156,29 +186,30 @@ void ES3ComputeCommandEncoder::ImageBarrier(
     AccessFlag target_access_mask, Image::Layout source_layout,
     Image::Layout target_layout, ref_ptr<Image> image,
     Image::LayerRange layer_range) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ImageBarrier not yet implemented";
+  common_encoder_.ImageBarrier(source_stage_mask, target_stage_mask,
+                               dependency_flags, source_access_mask,
+                               target_access_mask, source_layout, target_layout,
+                               std::move(image), layer_range);
 }
 
 void ES3ComputeCommandEncoder::FillBuffer(ref_ptr<Buffer> buffer, size_t offset,
                                           size_t length, uint8_t value) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "FillBuffer not yet implemented";
+  common_encoder_.FillBuffer(std::move(buffer), offset, length, value);
 }
 
 void ES3ComputeCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
                                             size_t target_offset,
                                             const void* source_data,
                                             size_t source_data_length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "UpdateBuffer not yet implemented";
+  common_encoder_.UpdateBuffer(std::move(target_buffer), target_offset,
+                               source_data, source_data_length);
 }
 
 void ES3ComputeCommandEncoder::CopyBuffer(ref_ptr<Buffer> source_buffer,
                                           ref_ptr<Buffer> target_buffer,
                                           ArrayView<CopyBufferRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyBuffer not yet implemented";
+  common_encoder_.CopyBuffer(std::move(source_buffer), std::move(target_buffer),
+                             regions);
 }
 
 void ES3ComputeCommandEncoder::CopyImage(ref_ptr<Image> source_image,
@@ -186,48 +217,48 @@ void ES3ComputeCommandEncoder::CopyImage(ref_ptr<Image> source_image,
                                          ref_ptr<Image> target_image,
                                          Image::Layout target_image_layout,
                                          ArrayView<CopyImageRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyImage not yet implemented";
+  common_encoder_.CopyImage(std::move(source_image), source_image_layout,
+                            std::move(target_image), target_image_layout,
+                            regions);
 }
 
 void ES3ComputeCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
     ArrayView<CopyBufferImageRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyBufferToImage not yet implemented";
+  common_encoder_.CopyBufferToImage(std::move(source_buffer),
+                                    std::move(target_image),
+                                    target_image_layout, regions);
 }
 
 void ES3ComputeCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
     ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyImageToBuffer not yet implemented";
+  common_encoder_.CopyImageToBuffer(std::move(source_image),
+                                    source_image_layout,
+                                    std::move(target_buffer), regions);
 }
 
 void ES3ComputeCommandEncoder::SetFence(ref_ptr<CommandFence> fence,
                                         PipelineStageFlag pipeline_stage_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "SetFence not yet implemented";
+  common_encoder_.SetFence(std::move(fence), pipeline_stage_mask);
 }
 
 void ES3ComputeCommandEncoder::ResetFence(
     ref_ptr<CommandFence> fence, PipelineStageFlag pipeline_stage_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ResetFence not yet implemented";
+  common_encoder_.ResetFence(std::move(fence), pipeline_stage_mask);
 }
 
 void ES3ComputeCommandEncoder::WaitFences(
     ArrayView<ref_ptr<CommandFence>> fences) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "WaitFences not yet implemented";
+  common_encoder_.WaitFences(fences);
 }
 
 void ES3ComputeCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
     ArrayView<Image::LayerRange> ranges) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ClearColorImage not yet implemented";
+  common_encoder_.ClearColorImage(std::move(image), image_layout, clear_color,
+                                  ranges);
 }
 
 void ES3ComputeCommandEncoder::BindPipeline(ref_ptr<ComputePipeline> pipeline) {
@@ -261,23 +292,24 @@ void ES3ComputeCommandEncoder::DispatchIndirect(ref_ptr<Buffer> buffer,
 }
 
 ES3RenderCommandEncoder::ES3RenderCommandEncoder(CommandBuffer* command_buffer)
-    : RenderCommandEncoder(command_buffer) {}
+    : RenderCommandEncoder(command_buffer), common_encoder_(command_buffer) {}
 
 ES3RenderCommandEncoder::~ES3RenderCommandEncoder() = default;
 
 void ES3RenderCommandEncoder::PipelineBarrier(
     PipelineStageFlag source_stage_mask, PipelineStageFlag target_stage_mask,
     PipelineDependencyFlag dependency_flags) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "PipelineBarrier not yet implemented";
+  common_encoder_.PipelineBarrier(source_stage_mask, target_stage_mask,
+                                  dependency_flags);
 }
 
 void ES3RenderCommandEncoder::MemoryBarrier(
     PipelineStageFlag source_stage_mask, PipelineStageFlag target_stage_mask,
     PipelineDependencyFlag dependency_flags, AccessFlag source_access_mask,
     AccessFlag target_access_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "MemoryBarrier not yet implemented";
+  common_encoder_.MemoryBarrier(source_stage_mask, target_stage_mask,
+                                dependency_flags, source_access_mask,
+                                target_access_mask);
 }
 
 void ES3RenderCommandEncoder::BufferBarrier(
@@ -285,8 +317,10 @@ void ES3RenderCommandEncoder::BufferBarrier(
     PipelineDependencyFlag dependency_flags, AccessFlag source_access_mask,
     AccessFlag target_access_mask, ref_ptr<Buffer> buffer, size_t offset,
     size_t length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "BufferBarrier not yet implemented";
+  common_encoder_.BufferBarrier(source_stage_mask, target_stage_mask,
+                                dependency_flags, source_access_mask,
+                                target_access_mask, std::move(buffer), offset,
+                                length);
 }
 
 void ES3RenderCommandEncoder::ImageBarrier(
@@ -295,29 +329,30 @@ void ES3RenderCommandEncoder::ImageBarrier(
     AccessFlag target_access_mask, Image::Layout source_layout,
     Image::Layout target_layout, ref_ptr<Image> image,
     Image::LayerRange layer_range) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ImageBarrier not yet implemented";
+  common_encoder_.ImageBarrier(source_stage_mask, target_stage_mask,
+                               dependency_flags, source_access_mask,
+                               target_access_mask, source_layout, target_layout,
+                               std::move(image), layer_range);
 }
 
 void ES3RenderCommandEncoder::FillBuffer(ref_ptr<Buffer> buffer, size_t offset,
                                          size_t length, uint8_t value) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "FillBuffer not yet implemented";
+  common_encoder_.FillBuffer(std::move(buffer), offset, length, value);
 }
 
 void ES3RenderCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
                                            size_t target_offset,
                                            const void* source_data,
                                            size_t source_data_length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "UpdateBuffer not yet implemented";
+  common_encoder_.UpdateBuffer(std::move(target_buffer), target_offset,
+                               source_data, source_data_length);
 }
 
 void ES3RenderCommandEncoder::CopyBuffer(ref_ptr<Buffer> source_buffer,
                                          ref_ptr<Buffer> target_buffer,
                                          ArrayView<CopyBufferRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyBuffer not yet implemented";
+  common_encoder_.CopyBuffer(std::move(source_buffer), std::move(target_buffer),
+                             regions);
 }
 
 void ES3RenderCommandEncoder::CopyImage(ref_ptr<Image> source_image,
@@ -325,48 +360,48 @@ void ES3RenderCommandEncoder::CopyImage(ref_ptr<Image> source_image,
                                         ref_ptr<Image> target_image,
                                         Image::Layout target_image_layout,
                                         ArrayView<CopyImageRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyImage not yet implemented";
+  common_encoder_.CopyImage(std::move(source_image), source_image_layout,
+                            std::move(target_image), target_image_layout,
+                            regions);
 }
 
 void ES3RenderCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
     ArrayView<CopyBufferImageRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyBufferToImage not yet implemented";
+  common_encoder_.CopyBufferToImage(std::move(source_buffer),
+                                    std::move(target_image),
+                                    target_image_layout, regions);
 }
 
 void ES3RenderCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
     ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "CopyImageToBuffer not yet implemented";
+  common_encoder_.CopyImageToBuffer(std::move(source_image),
+                                    source_image_layout,
+                                    std::move(target_buffer), regions);
 }
 
 void ES3RenderCommandEncoder::SetFence(ref_ptr<CommandFence> fence,
                                        PipelineStageFlag pipeline_stage_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "SetFence not yet implemented";
+  common_encoder_.SetFence(std::move(fence), pipeline_stage_mask);
 }
 
 void ES3RenderCommandEncoder::ResetFence(
     ref_ptr<CommandFence> fence, PipelineStageFlag pipeline_stage_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ResetFence not yet implemented";
+  common_encoder_.ResetFence(std::move(fence), pipeline_stage_mask);
 }
 
 void ES3RenderCommandEncoder::WaitFences(
     ArrayView<ref_ptr<CommandFence>> fences) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "WaitFences not yet implemented";
+  common_encoder_.WaitFences(fences);
 }
 
 void ES3RenderCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
     ArrayView<Image::LayerRange> ranges) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ClearColorImage not yet implemented";
+  common_encoder_.ClearColorImage(std::move(image), image_layout, clear_color,
+                                  ranges);
 }
 
 void ES3RenderCommandEncoder::ClearDepthStencilImage(
@@ -402,23 +437,25 @@ void ES3RenderCommandEncoder::GenerateMipmaps(ref_ptr<Image> image) {
 
 ES3RenderPassCommandEncoder::ES3RenderPassCommandEncoder(
     CommandBuffer* command_buffer)
-    : RenderPassCommandEncoder(command_buffer) {}
+    : RenderPassCommandEncoder(command_buffer),
+      common_encoder_(command_buffer) {}
 
 ES3RenderPassCommandEncoder::~ES3RenderPassCommandEncoder() = default;
 
 void ES3RenderPassCommandEncoder::PipelineBarrier(
     PipelineStageFlag source_stage_mask, PipelineStageFlag target_stage_mask,
     PipelineDependencyFlag dependency_flags) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "PipelineBarrier not yet implemented";
+  common_encoder_.PipelineBarrier(source_stage_mask, target_stage_mask,
+                                  dependency_flags);
 }
 
 void ES3RenderPassCommandEncoder::MemoryBarrier(
     PipelineStageFlag source_stage_mask, PipelineStageFlag target_stage_mask,
     PipelineDependencyFlag dependency_flags, AccessFlag source_access_mask,
     AccessFlag target_access_mask) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "MemoryBarrier not yet implemented";
+  common_encoder_.MemoryBarrier(source_stage_mask, target_stage_mask,
+                                dependency_flags, source_access_mask,
+                                target_access_mask);
 }
 
 void ES3RenderPassCommandEncoder::BufferBarrier(
@@ -426,8 +463,10 @@ void ES3RenderPassCommandEncoder::BufferBarrier(
     PipelineDependencyFlag dependency_flags, AccessFlag source_access_mask,
     AccessFlag target_access_mask, ref_ptr<Buffer> buffer, size_t offset,
     size_t length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "BufferBarrier not yet implemented";
+  common_encoder_.BufferBarrier(source_stage_mask, target_stage_mask,
+                                dependency_flags, source_access_mask,
+                                target_access_mask, std::move(buffer), offset,
+                                length);
 }
 
 void ES3RenderPassCommandEncoder::ImageBarrier(
@@ -436,14 +475,15 @@ void ES3RenderPassCommandEncoder::ImageBarrier(
     AccessFlag target_access_mask, Image::Layout source_layout,
     Image::Layout target_layout, ref_ptr<Image> image,
     Image::LayerRange layer_range) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "ImageBarrier not yet implemented";
+  common_encoder_.ImageBarrier(source_stage_mask, target_stage_mask,
+                               dependency_flags, source_access_mask,
+                               target_access_mask, source_layout, target_layout,
+                               std::move(image), layer_range);
 }
 
 void ES3RenderPassCommandEncoder::WaitFences(
     ArrayView<ref_ptr<CommandFence>> fences) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "WaitFences not yet implemented";
+  common_encoder_.WaitFences(fences);
 }
 
 void ES3RenderPassCommandEncoder::ClearColorAttachment(
@@ -643,7 +683,6 @@ void ES3RenderPassCommandEncoder::BindPipeline(
   // Setup our vertex input mirror state. This may reuse previous buffer
   // bindings (if any) and get updated by future BindVertexBuffers calls.
   const auto& vertex_bindings = render_state.vertex_input_state.vertex_bindings;
-  vertex_buffer_bindings_.resize(kMaxVertexInputs);
   for (const auto& vertex_binding : vertex_bindings) {
     auto& binding_slot = vertex_buffer_bindings_[vertex_binding.binding];
     binding_slot.stride = vertex_binding.stride;
@@ -774,6 +813,7 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
   resource_set_dirty_ = false;
 
   uint32_t new_texture_binding_mask = 0;
+  uint32_t new_uniform_buffer_binding_mask = 0;
   if (resource_set_) {
     const auto& binding_slots = resource_set_->layout()->binding_slots();
     for (int i = 0; i < binding_slots.size(); ++i) {
@@ -795,6 +835,20 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
           glBindTexture(image->target(), image->texture_id());
           glBindSampler(binding_slot.binding, sampler->sampler_id());
           new_texture_binding_mask |= 1 << binding_slot.binding;
+          break;
+        }
+        case PipelineLayout::BindingSlot::Type::kUniformBuffer: {
+          // TODO(benvanik): validate during ResourceSet init.
+          DCHECK(binding_value.buffer);
+          auto buffer = binding_value.buffer.As<ES3Buffer>();
+          glBindBuffer(GL_UNIFORM_BUFFER, buffer->buffer_id());
+          size_t bind_offset = binding_value.buffer_offset;
+          size_t bind_length = binding_value.buffer_length != -1
+                                   ? binding_value.buffer_length
+                                   : buffer->allocation_size();
+          glBindBufferRange(GL_UNIFORM_BUFFER, binding_slot.binding,
+                            buffer->buffer_id(), bind_offset, bind_length);
+          new_uniform_buffer_binding_mask |= 1 << binding_slot.binding;
           break;
         }
         default:
@@ -822,6 +876,21 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
       }
     }
     texture_binding_mask_ = new_texture_binding_mask;
+  }
+  if (new_uniform_buffer_binding_mask != uniform_buffer_binding_mask_) {
+    uint32_t unused_mask =
+        (new_uniform_buffer_binding_mask ^ uniform_buffer_binding_mask_) &
+        uniform_buffer_binding_mask_;
+    if (unused_mask) {
+      const int kMaxBindingUnit = 32;
+      for (int i = 0; i < kMaxBindingUnit; ++i) {
+        if (unused_mask & (1 << i)) {
+          // This slot is now unused.
+          glBindBufferBase(GL_UNIFORM_BUFFER, i, 0);
+        }
+      }
+    }
+    uniform_buffer_binding_mask_ = new_uniform_buffer_binding_mask;
   }
 }
 

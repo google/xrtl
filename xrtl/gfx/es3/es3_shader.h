@@ -65,6 +65,7 @@ class ES3Shader : public RefObject<ES3Shader> {
   std::string info_log_;
 
   std::vector<std::pair<std::string, int>> uniform_bindings_;
+  std::vector<std::pair<std::string, int>> uniform_block_bindings_;
 };
 
 }  // namespace es3
