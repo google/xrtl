@@ -39,6 +39,10 @@ class LeakCheckDisabler {
   ~LeakCheckDisabler() { XRTL_ENABLE_LEAK_CHECKS(); }
 };
 
+// Turns on heap debugging features on the platform, if present.
+// This may cause asserts and should only be enabled in debug builds.
+void EnableDebugHeap();
+
 // Returns true if a user-visible output console is attached.
 // If false the user will not see anything written to the logs.
 bool is_console_attached();

@@ -17,6 +17,10 @@
 namespace xrtl {
 namespace debugging {
 
+void EnableDebugHeap() {
+  // TODO(benvanik): something with tcmalloc?
+}
+
 bool is_console_attached() {
   // TODO(benvanik): console detection.
   return true;
