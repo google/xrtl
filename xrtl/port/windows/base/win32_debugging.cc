@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <crtdbg.h>
 #include <fcntl.h>
 #include <io.h>
 
@@ -53,6 +54,21 @@ FILE* RedirectOutputHandle(DWORD std_handle, const char* name) {
 }
 
 }  // namespace
+
+void EnableDebugHeap() {
+  int flag_value = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+  // Enable debug heap allocations:
+  flag_value |= _CRTDBG_ALLOC_MEM_DF;
+  // Check heap integrity on every memory operation:
+  flag_value |= _CRTDBG_CHECK_ALWAYS_DF;
+  // Check CRT memory (not just app memory):
+  // flag_value |= _CRTDBG_CHECK_CRT_DF;
+  // Delay frees for a bit:
+  // flag_value |= _CRTDBG_DELAY_FREE_MEM_DF;
+  // Print leak checking on exit:
+  flag_value |= _CRTDBG_LEAK_CHECK_DF;
+  _CrtSetDbgFlag(flag_value);
+}
 
 bool is_console_attached() {
   return ::GetFileType(::GetStdHandle(STD_OUTPUT_HANDLE)) != 0;
