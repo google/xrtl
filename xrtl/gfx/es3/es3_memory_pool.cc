@@ -43,7 +43,8 @@ MemoryPool::AllocationResult ES3MemoryPool::AllocateBuffer(
   WTF_SCOPE0("ES3MemoryPool#AllocateBuffer");
 
   // Create the buffer and allocate underlying storage.
-  *out_buffer = make_ref<ES3Buffer>(platform_context_, size, usage_mask);
+  *out_buffer = make_ref<ES3Buffer>(platform_context_, memory_type_mask_, size,
+                                    usage_mask);
 
   return AllocationResult::kSuccess;
 }
