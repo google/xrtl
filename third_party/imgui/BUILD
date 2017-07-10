@@ -8,6 +8,7 @@ licenses(["notice"])  # MIT
 cc_library(
     name = "imgui",
     srcs = [
+        "imconfig.cpp",
         "imconfig.h",
         "imgui.cpp",
         "imgui_draw.cpp",
