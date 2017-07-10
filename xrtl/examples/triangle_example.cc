@@ -44,10 +44,17 @@ using gfx::spirv::ShaderCompiler;
 using ui::Control;
 using ui::Window;
 
-// Matches the UB block in the shader.
+// Matches the push constants block in the shader.
+// NOTE: layout is std140.
+struct PushConstants {
+  float mix_value;
+  float unused[3];
+};
+
+// Matches the uniform buffer block in the shader.
 // NOTE: layout is std140.
 struct UniformBlock {
-  float mix;
+  float mix_base;
   float unused[3];
 };
 
@@ -279,18 +286,21 @@ void main() {
                                     ShaderCompiler::ShaderStage::kFragment);
     frag_shader_compiler->AddSource(R"""(#version 310 es
 precision highp float;
+layout(push_constant, std140) uniform PushConstants {
+  float mix_value;
+} push_constants;
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) in vec4 v_color;
 layout(location = 0) out vec4 out_color;
-layout(binding = 0) uniform sampler2D u_image_sampler;
+layout(binding = 0) uniform sampler2D image_sampler;
 layout(binding = 1, std140) uniform UniformBlock {
-  float mix;
-  vec3 unused;
-} u_uniform_block;
+  float mix_base;
+} uniform_block;
 void main() {
-  vec4 tex_sample = texture(u_image_sampler, v_uv);
-  out_color = vec4(mix(v_color.rgb, tex_sample.rgb,
-                       v_color.a * u_uniform_block.mix), 1.0);
+  float mix_value = push_constants.mix_value * uniform_block.mix_base;
+  vec4 tex_sample = texture(image_sampler, v_uv);
+  out_color = vec4(mix(v_color.rgb, tex_sample.rgb, v_color.a * mix_value),
+                   1.0);
 }
 )""");
     std::vector<uint32_t> frag_shader_data;
@@ -320,13 +330,17 @@ void main() {
     shader_stages.fragment_shader_module = fragment_shader_module;
     shader_stages.fragment_entry_point = "main";
 
-    // Pipeline layout (in this case, empty).
+    // Pipeline layout.
     std::vector<PipelineLayout::BindingSlot> binding_slots;
     binding_slots.push_back(
         {0, PipelineLayout::BindingSlot::Type::kCombinedImageSampler});
     binding_slots.push_back(
         {1, PipelineLayout::BindingSlot::Type::kUniformBuffer});
-    auto pipeline_layout = context_->CreatePipelineLayout(binding_slots, {});
+    std::vector<PipelineLayout::PushConstantRange> push_constant_ranges;
+    push_constant_ranges.push_back(
+        {offsetof(PushConstants, mix_value), sizeof(PushConstants::mix_value)});
+    auto pipeline_layout =
+        context_->CreatePipelineLayout(binding_slots, push_constant_ranges);
     if (!pipeline_layout) {
       LOG(ERROR) << "Unable to create pipeline layout";
       return false;
@@ -403,8 +417,7 @@ void main() {
     // Update uniform buffer data.
     auto rce = command_buffer->BeginRenderCommands();
     UniformBlock uniform_block;
-    uniform_block.mix =
-        (SystemClock::default_clock()->now_millis().count() % 1000) / 1000.0f;
+    uniform_block.mix_base = 0.75f;
     rce->UpdateBuffer(uniform_buffer_, 0, &uniform_block,
                       sizeof(uniform_block));
     command_buffer->EndRenderCommands(std::move(rce));
@@ -417,6 +430,12 @@ void main() {
     rpe->BindPipeline(render_pipeline_);
     rpe->BindResourceSet(resource_set_);
     rpe->BindVertexBuffers(0, {triangle_buffer_});
+    PushConstants push_constants;
+    push_constants.mix_value =
+        (SystemClock::default_clock()->now_millis().count() % 1000) / 1000.0f;
+    rpe->PushConstants(
+        render_pipeline_->pipeline_layout(), gfx::ShaderStageFlag::kFragment, 0,
+        &push_constants.mix_value, sizeof(push_constants.mix_value));
     rpe->Draw(3);
     command_buffer->EndRenderPass(std::move(rpe));
 

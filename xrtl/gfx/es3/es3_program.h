@@ -40,6 +40,12 @@ class ES3Program : public RefObject<ES3Program> {
   // during linking.
   const std::string& info_log() const { return info_log_; }
 
+  // Returns a list of all used push constant members across all shaders.
+  const std::vector<ES3Shader::PushConstantMember>& push_constant_members()
+      const {
+    return push_constant_members_;
+  }
+
   // Attempts to link the shaders into a program.
   // Returns false if the link failed. info_log can be used to get the
   // detailed error logs.
@@ -51,6 +57,8 @@ class ES3Program : public RefObject<ES3Program> {
   GLuint program_id_ = 0;
 
   std::string info_log_;
+
+  std::vector<ES3Shader::PushConstantMember> push_constant_members_;
 };
 
 }  // namespace es3

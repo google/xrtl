@@ -50,7 +50,7 @@ ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
 
   // TODO(benvanik): better usage mask. This can make a big difference on some
   //                 implementations (like WebGL).
-  GLenum usage = GL_STREAM_DRAW;
+  GLenum usage = GL_DYNAMIC_DRAW;
 
   glBindBuffer(target_, buffer_id_);
   glBufferData(target_, allocation_size, nullptr, usage);

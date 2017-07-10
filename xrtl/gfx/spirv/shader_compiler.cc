@@ -220,9 +220,9 @@ bool ShaderCompiler::Compile(std::vector<uint32_t>* spirv_data) {
   shader_->setSourceEntryPoint("main");
 
   EShMessages messages = EShMsgDefault;
-  messages = (EShMessages)(messages | EShMsgSpvRules);
+  messages = static_cast<EShMessages>(messages | EShMsgSpvRules);
   // TODO(benvanik): do we want this? may cause issues with spirv-cross?
-  messages = (EShMessages)(messages | EShMsgVulkanRules);
+  messages = static_cast<EShMessages>(messages | EShMsgVulkanRules);
 
   // Parse the shader.
   bool did_parse;

@@ -26,6 +26,10 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
+namespace {
+using spirv_cross::SPIRType;
+}  // namespace
+
 ES3Shader::ES3Shader(ref_ptr<ES3PlatformContext> platform_context,
                      std::string entry_point)
     : platform_context_(std::move(platform_context)),
@@ -205,6 +209,56 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
       compiler.unset_decoration(resource.id, spv::DecorationBinding);
     }
   }
+  // * Record and reflect push constant buffers.
+  for (const auto& resource : shader_resources.push_constant_buffers) {
+    push_constant_block_name_ = resource.name;
+    const SPIRType& type = compiler.get_type(resource.base_type_id);
+    push_constant_members_.resize(type.member_types.size());
+    for (int i = 0; i < type.member_types.size(); ++i) {
+      PushConstantMember& member = push_constant_members_[i];
+      member.member_name = compiler.get_member_name(type.self, i);
+      // For now we only support primitives (float/vecN/matN/etc), and only
+      // sizes we know about.
+      const SPIRType& member_type = compiler.get_type(type.member_types[i]);
+      member.member_offset = compiler.type_struct_member_offset(type, i);
+      member.array_size = 1;  // TODO(benvanik): arrays.
+      member.transpose = compiler.get_decoration(member_type.self,
+                                                 spv::DecorationRowMajor) != 0;
+      switch (member_type.basetype) {
+        case SPIRType::Float:
+          DCHECK_EQ(member_type.width, 32);
+          if (member_type.columns > 1) {
+            // Matrix types.
+            static const GLenum kMatrixTypes[5][5] = {
+                {GL_NONE, GL_NONE, GL_NONE, GL_NONE},  // 0 unused
+                {GL_NONE, GL_NONE, GL_NONE, GL_NONE},  // 1 unused
+                {GL_NONE, GL_NONE, GL_FLOAT_MAT2, GL_FLOAT_MAT2x3,
+                 GL_FLOAT_MAT2x4},
+                {GL_NONE, GL_NONE, GL_FLOAT_MAT3x2, GL_FLOAT_MAT3,
+                 GL_FLOAT_MAT3x4},
+                {GL_NONE, GL_NONE, GL_FLOAT_MAT4x2, GL_FLOAT_MAT4x3,
+                 GL_FLOAT_MAT4},
+            };
+            DCHECK_LE(member_type.columns, 4);
+            DCHECK_LE(member_type.vecsize, 4);
+            member.member_type =
+                kMatrixTypes[member_type.columns][member_type.vecsize];
+          } else {
+            // Scalar/vector types.
+            static const GLenum kVectorTypes[5] = {
+                GL_NONE, GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4};
+            DCHECK_LE(member_type.vecsize, 4);
+            member.member_type = kVectorTypes[member_type.vecsize];
+          }
+          break;
+        default:
+          // TODO(benvanik): richer type support.
+          LOG(ERROR) << "Unsupported push constant member type";
+          DCHECK(false);
+          return false;
+      }
+    }
+  }
 
   // Add common code and extension requirements.
   // TODO(benvanik): figure out what is required here.
@@ -229,6 +283,7 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
 }
 
 bool ES3Shader::InitializeUniformBindings(GLuint program_id) {
+  // Setup generic uniform bindings for samplers/textures/etc.
   for (const auto& pair : uniform_bindings_) {
     GLint uniform_location =
         glGetUniformLocation(program_id, pair.first.c_str());
@@ -236,11 +291,22 @@ bool ES3Shader::InitializeUniformBindings(GLuint program_id) {
       glUniform1i(uniform_location, pair.second);
     }
   }
+
+  // Setup uniform block bindings. These will be provided by ResourceSet
+  // values.
   for (const auto& pair : uniform_block_bindings_) {
     GLint block_index = glGetUniformBlockIndex(program_id, pair.first.c_str());
     if (block_index != -1) {
       glUniformBlockBinding(program_id, block_index, pair.second);
     }
+  }
+
+  // Retrieve locations for push constant members (which have been flattened).
+  for (auto& member : push_constant_members_) {
+    std::string full_name =
+        push_constant_block_name_ + "." + member.member_name;
+    member.uniform_location =
+        glGetUniformLocation(program_id, full_name.c_str());
   }
   return true;
 }

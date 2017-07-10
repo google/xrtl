@@ -595,6 +595,7 @@ class RenderPassCommandEncoder : public CommandEncoder {
   //
   // Queue: render
   virtual void SetScissors(int first_scissor, ArrayView<Rect2D> scissors) = 0;
+  void SetScissor(Rect2D rect) { SetScissors(0, {rect}); }
 
   // Sets the viewports on a command buffer.
   //
