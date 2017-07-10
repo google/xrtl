@@ -72,14 +72,20 @@ class PipelineLayout : public RefObject<PipelineLayout> {
 
   // Describes a range of push constant data within the pipeline.
   struct PushConstantRange {
-    // A set of stage flags describing the shader stages that will access a
-    // range of push constants.
-    ShaderStageFlag stage_mask = ShaderStageFlag::kNone;
-
     // Start offset and size, respectively, consumed by the range.
     // Both offset and size are in units of bytes and must be a multiple of 4.
     size_t offset = 0;
     size_t size = 0;
+
+    // A set of stage flags describing the shader stages that will access a
+    // range of push constants.
+    ShaderStageFlag stage_mask = ShaderStageFlag::kAll;
+
+    PushConstantRange() = default;
+    PushConstantRange(size_t offset, size_t size)
+        : offset(offset), size(size) {}
+    PushConstantRange(size_t offset, size_t size, ShaderStageFlag stage_mask)
+        : offset(offset), size(size), stage_mask(stage_mask) {}
   };
 
   virtual ~PipelineLayout() = default;

@@ -374,6 +374,8 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   // Prepares the current subpass state.
   void PrepareSubpass();
 
+  // Updates push constant data for the current pipeline.
+  void UpdatePushConstants();
   // Updates the resource set binding based on the current pipeline and set.
   void UpdateResourceSet();
   // Updates all vertex inputs based on the current bindings and pipeline.
@@ -398,6 +400,8 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   bool resource_set_dirty_ = true;
   uint32_t texture_binding_mask_ = 0;
   uint32_t uniform_buffer_binding_mask_ = 0;
+  std::vector<uint8_t> push_constant_data_;
+  bool push_constants_dirty_ = true;
 
   // Array indices are binding and location, respectively.
   struct VertexBufferBinding {

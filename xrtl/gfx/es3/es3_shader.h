@@ -30,6 +30,22 @@ namespace es3 {
 
 class ES3Shader : public RefObject<ES3Shader> {
  public:
+  // Defines a push constant struct member as reflected from the shader.
+  struct PushConstantMember {
+    // The local name of the push constant member.
+    std::string member_name;
+    // Offset of the member in the struct, in bytes.
+    int member_offset;
+    // The GL type of the push constant member (such as GL_FLOAT_VEC3).
+    GLenum member_type;
+    // True when the member is a matrix and should be transposed.
+    bool transpose;
+    // Array size, in elements. Will be 1 if not an array.
+    int array_size;
+    // The uniform location assigned to the uniform or -1 if not assigned.
+    GLint uniform_location;
+  };
+
   ES3Shader(ref_ptr<ES3PlatformContext> platform_context,
             std::string entry_point);
   ~ES3Shader();
@@ -37,6 +53,11 @@ class ES3Shader : public RefObject<ES3Shader> {
   const std::string& entry_point() const { return entry_point_; }
   GLenum shader_type() const { return shader_type_; }
   GLuint shader_id() const { return shader_id_; }
+
+  // Returns a list of all push constant members.
+  const std::vector<PushConstantMember>& push_constant_members() const {
+    return push_constant_members_;
+  }
 
   // Shader compilation info log containing warnings and errors that accumulated
   // during compilation.
@@ -66,6 +87,8 @@ class ES3Shader : public RefObject<ES3Shader> {
 
   std::vector<std::pair<std::string, int>> uniform_bindings_;
   std::vector<std::pair<std::string, int>> uniform_block_bindings_;
+  std::string push_constant_block_name_;
+  std::vector<PushConstantMember> push_constant_members_;
 };
 
 }  // namespace es3

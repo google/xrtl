@@ -87,6 +87,20 @@ bool ES3Program::Link() {
   }
   glUseProgram(0);
 
+  // Merge shader push constant locations (as they should be shared, though
+  // the set of valid members may differ for each).
+  uint64_t location_set = 0;
+  for (const auto& shader : shaders_) {
+    for (const auto& member : shader->push_constant_members()) {
+      if (member.uniform_location != -1) {
+        if ((location_set & (1 << member.uniform_location)) == 0) {
+          location_set |= (1 << member.uniform_location);
+          push_constant_members_.push_back(member);
+        }
+      }
+    }
+  }
+
   return link_status == GL_TRUE;
 }
 

@@ -26,6 +26,11 @@ namespace es3 {
 
 namespace {
 
+// TODO(benvanik): make configurable/move to device.
+const int kMaxPushConstantSize = 256;
+const int kMaxTextureUnit = 32;
+const int kMaxBindingUnit = 32;
+
 constexpr GLenum GetFaceFromFaceMask(StencilFaceFlag face_mask) {
   return (face_mask == StencilFaceFlag::kFrontAndBack)
              ? GL_FRONT_AND_BACK
@@ -438,7 +443,9 @@ void ES3RenderCommandEncoder::GenerateMipmaps(ref_ptr<Image> image) {
 ES3RenderPassCommandEncoder::ES3RenderPassCommandEncoder(
     CommandBuffer* command_buffer)
     : RenderPassCommandEncoder(command_buffer),
-      common_encoder_(command_buffer) {}
+      common_encoder_(command_buffer) {
+  push_constant_data_.resize(kMaxPushConstantSize);
+}
 
 ES3RenderPassCommandEncoder::~ES3RenderPassCommandEncoder() = default;
 
@@ -672,6 +679,7 @@ void ES3RenderPassCommandEncoder::BindPipeline(
     // TODO(benvanik): try harder to dedupe.
     return;
   }
+  pipeline_ = pipeline;
 
   // Set active shader program.
   auto program = pipeline.As<ES3RenderPipeline>()->program();
@@ -750,6 +758,9 @@ void ES3RenderPassCommandEncoder::BindPipeline(
   // TODO(benvanik): depth_stencil_state
 
   // TODO(benvanik): color_blend_state
+
+  // We'll need to refresh push constants.
+  push_constants_dirty_ = true;
 }
 
 void ES3RenderPassCommandEncoder::BindResourceSet(
@@ -765,8 +776,9 @@ void ES3RenderPassCommandEncoder::BindResourceSet(
 void ES3RenderPassCommandEncoder::PushConstants(
     ref_ptr<PipelineLayout> pipeline_layout, ShaderStageFlag stage_mask,
     size_t offset, const void* data, size_t data_length) {
-  // TODO(benvanik): this.
-  LOG(WARNING) << "PushConstants not yet implemented";
+  DCHECK_LE(offset + data_length, kMaxPushConstantSize);
+  std::memcpy(push_constant_data_.data() + offset, data, data_length);
+  push_constants_dirty_ = true;
 }
 
 void ES3RenderPassCommandEncoder::BindVertexBuffers(
@@ -803,6 +815,109 @@ void ES3RenderPassCommandEncoder::BindIndexBuffer(ref_ptr<Buffer> buffer,
   }
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer.As<ES3Buffer>()->buffer_id());
+}
+
+void ES3RenderPassCommandEncoder::UpdatePushConstants() {
+  if (!push_constants_dirty_) {
+    // No push constant changes.
+    return;
+  }
+  push_constants_dirty_ = false;
+
+  auto program = pipeline_.As<ES3RenderPipeline>()->program();
+  for (const auto& member : program->push_constant_members()) {
+    // TODO(benvanik): optimized way of doing this. This is bad.
+    switch (member.member_type) {
+      case GL_FLOAT:
+        glUniform1fv(member.uniform_location, member.array_size,
+                     reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                         member.member_offset);
+        break;
+      case GL_FLOAT_VEC2:
+        glUniform2fv(member.uniform_location, member.array_size,
+                     reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                         member.member_offset);
+        break;
+      case GL_FLOAT_VEC3:
+        glUniform3fv(member.uniform_location, member.array_size,
+                     reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                         member.member_offset);
+        break;
+      case GL_FLOAT_VEC4:
+        glUniform4fv(member.uniform_location, member.array_size,
+                     reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                         member.member_offset);
+        break;
+      case GL_FLOAT_MAT2:
+        glUniformMatrix2fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT2x3:
+        glUniformMatrix2x3fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT2x4:
+        glUniformMatrix2x4fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT3x2:
+        glUniformMatrix3x2fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT3:
+        glUniformMatrix3fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT3x4:
+        glUniformMatrix3x4fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT4x2:
+        glUniformMatrix4x2fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT4x3:
+        glUniformMatrix4x3fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      case GL_FLOAT_MAT4:
+        glUniformMatrix4fv(
+            member.uniform_location, member.array_size,
+            member.transpose ? GL_TRUE : GL_FALSE,
+            reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
+                member.member_offset);
+        break;
+      default:
+        // TODO(benvanik): support more types.
+        LOG(ERROR) << "Unsupported push constant member type";
+        DCHECK(false);
+        break;
+    }
+  }
 }
 
 void ES3RenderPassCommandEncoder::UpdateResourceSet() {
@@ -865,7 +980,6 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
     uint32_t unused_mask = (new_texture_binding_mask ^ texture_binding_mask_) &
                            texture_binding_mask_;
     if (unused_mask) {
-      const int kMaxTextureUnit = 32;
       for (int i = 0; i < kMaxTextureUnit; ++i) {
         if (unused_mask & (1 << i)) {
           // This slot is now unused.
@@ -882,7 +996,6 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
         (new_uniform_buffer_binding_mask ^ uniform_buffer_binding_mask_) &
         uniform_buffer_binding_mask_;
     if (unused_mask) {
-      const int kMaxBindingUnit = 32;
       for (int i = 0; i < kMaxBindingUnit; ++i) {
         if (unused_mask & (1 << i)) {
           // This slot is now unused.
@@ -990,6 +1103,7 @@ void ES3RenderPassCommandEncoder::Draw(int vertex_count, int instance_count,
   // TODO(benvanik): modify gl_InstanceID? use CPU glDrawArraysIndirect?
   DCHECK_EQ(first_instance, 0);
 
+  UpdatePushConstants();
   UpdateResourceSet();
   UpdateVertexInputs();
 
@@ -1015,6 +1129,7 @@ void ES3RenderPassCommandEncoder::DrawIndexed(int index_count,
   DCHECK_EQ(vertex_offset, 0);
   DCHECK_EQ(first_instance, 0);
 
+  UpdatePushConstants();
   UpdateResourceSet();
   UpdateVertexInputs();
 
@@ -1036,6 +1151,7 @@ void ES3RenderPassCommandEncoder::DrawIndexed(int index_count,
 void ES3RenderPassCommandEncoder::DrawIndirect(ref_ptr<Buffer> buffer,
                                                size_t buffer_offset,
                                                int draw_count, size_t stride) {
+  UpdatePushConstants();
   UpdateResourceSet();
   UpdateVertexInputs();
 
@@ -1050,6 +1166,7 @@ void ES3RenderPassCommandEncoder::DrawIndexedIndirect(ref_ptr<Buffer> buffer,
                                                       size_t buffer_offset,
                                                       int draw_count,
                                                       size_t stride) {
+  UpdatePushConstants();
   UpdateResourceSet();
   UpdateVertexInputs();
 
