@@ -28,4 +28,10 @@
   }                            \
   operator glm::vec4() const { return glm::vec4(x, y, z, w); }
 
+struct ImGuiContext;
+extern thread_local ImGuiContext* thread_imgui_context;
+
+#define GImGui thread_imgui_context
+#define IMGUI_SET_CURRENT_CONTEXT_FUNC(ctx) thread_imgui_context = ctx
+
 #endif  // IMCONFIG_H_
