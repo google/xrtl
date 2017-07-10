@@ -106,6 +106,9 @@ cc_library(
     hdrs = ["stb_truetype.h"],
     includes = ["."],
     visibility = ["//visibility:public"],
+    deps = [
+        ":stb_rect_pack",
+    ],
 )
 
 genrule(
@@ -113,6 +116,7 @@ genrule(
     outs = ["stb_truetype.cc"],
     cmd = "\n".join([
         "cat <<'EOF' > $@",
+        "#include \"stb_rect_pack.h\"",
         "#define STB_TRUETYPE_IMPLEMENTATION",
         "#include \"stb_truetype.h\"",
         "EOF",
