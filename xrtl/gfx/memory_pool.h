@@ -24,35 +24,6 @@
 namespace xrtl {
 namespace gfx {
 
-// A bitmask specifying properties for a memory type.
-enum class MemoryType {
-  // Memory allocated with this type is the most efficient for device access.
-  kDeviceLocal = 1 << 0,
-
-  // Memory allocated with this type can be mapped for host access using
-  // Resource::MapMemory.
-  kHostVisible = 1 << 1,
-
-  // The host cache management commands Resource::FlushMappedMemory and
-  // Resource::InvalidateMappedMemory are not needed to flush host writes
-  // to the device or make device writes visible to the host, respectively.
-  kHostCoherent = 1 << 2,
-
-  // Memory allocated with this type is cached on the host. Host memory accesses
-  // to uncached memory are slower than to cached memory, however uncached
-  // memory is always host coherent.
-  kHostCached = 1 << 3,
-
-  // Memory is lazily allocated by the hardware and only exists transiently.
-  // This is the optimal mode for memory used only between subpasses in the same
-  // render pass, as it can often be kept entirely on-tile and discard when the
-  // render pass ends.
-  // The memory type only allows device access to the memory. Memory types must
-  // not have both this and kHostVisible set.
-  kLazilyAllocated = 1 << 4,
-};
-XRTL_BITMASK(MemoryType);
-
 // Memory pool for images and buffers.
 // Allocations that require reaching into the device to allocate memory are
 // expensive and there may be limits on the number of allocations that can be

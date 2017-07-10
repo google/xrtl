@@ -26,7 +26,8 @@ namespace es3 {
 class ES3Buffer : public Buffer {
  public:
   ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
-            size_t allocation_size, Usage usage_mask);
+            MemoryType memory_type_mask, size_t allocation_size,
+            Usage usage_mask);
   ~ES3Buffer() override;
 
   GLenum target() const { return target_; }
@@ -42,11 +43,13 @@ class ES3Buffer : public Buffer {
   void FlushMappedMemory(size_t byte_offset, size_t byte_length) override;
 
  private:
-  bool MapMemory(size_t* byte_offset, size_t* byte_length,
-                 void** out_data) override;
+  bool MapMemory(MemoryAccess memory_access, size_t* byte_offset,
+                 size_t* byte_length, void** out_data) override;
   void UnmapMemory(size_t byte_offset, size_t byte_length, void* data) override;
 
   ref_ptr<ES3PlatformContext> platform_context_;
+  MemoryType memory_type_mask_ = MemoryType::kDeviceLocal;
+
   GLenum target_ = GL_COPY_READ_BUFFER;
   GLuint buffer_id_ = 0;
 };
