@@ -11,6 +11,7 @@ cc_library(
         "imconfig.cpp",
         "imconfig.h",
         "imgui.cpp",
+        "imgui_demo.cpp",
         "imgui_draw.cpp",
         "imgui_internal.h",
     ],
