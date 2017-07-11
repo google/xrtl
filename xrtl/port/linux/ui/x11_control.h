@@ -100,6 +100,8 @@ class X11Control : public Control, private X11Display::Listener {
   Rect2D bounds_{{0, 0}, {128, 128}};
   gfx::rgba8_t background_color_;
   bool is_cursor_visible_ = true;
+
+  bool virtual_key_state_[kVirtualKeyCount] = {false};
 };
 
 }  // namespace ui

@@ -19,6 +19,7 @@
 
 #include "xrtl/base/geometry.h"
 #include "xrtl/base/macros.h"
+#include "xrtl/ui/key_codes.h"
 
 namespace xrtl {
 namespace ui {
@@ -61,14 +62,21 @@ class InputEvent {
 // A keyboard key event.
 class KeyboardEvent : public InputEvent {
  public:
-  KeyboardEvent(int key_code, ModifierKey modifier_key_mask)
-      : InputEvent(modifier_key_mask), key_code_(key_code) {}
+  KeyboardEvent(int key_code, VirtualKey virtual_key,
+                ModifierKey modifier_key_mask)
+      : InputEvent(modifier_key_mask),
+        key_code_(key_code),
+        virtual_key_(virtual_key) {}
 
   // TODO(benvanik): normalize into some logical keymap. Value is undefined.
   int key_code() const { return key_code_; }
 
+  // Virtual key code normalized across platforms.
+  VirtualKey virtual_key() const { return virtual_key_; }
+
  private:
   int key_code_ = 0;
+  VirtualKey virtual_key_ = VirtualKey::kNone;
 };
 
 // Mouse button enumeration.

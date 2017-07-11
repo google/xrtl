@@ -886,7 +886,11 @@ bool Win32Control::HandleKeyboardMessage(UINT message, WPARAM w_param,
     modifier_key_mask |= ModifierKey::kAlt;
   }
 
-  KeyboardEvent keyboard_event{key_code, modifier_key_mask};
+  VirtualKey virtual_key = VirtualKey::kNone;
+  if (key_code <= 255) {
+    virtual_key = static_cast<VirtualKey>(key_code);
+  }
+  KeyboardEvent keyboard_event{key_code, virtual_key, modifier_key_mask};
   switch (message) {
     case WM_KEYDOWN:
       if (!key_down_map_[key_code]) {
@@ -922,11 +926,15 @@ void Win32Control::OnFocusChanged(bool is_focused) {
   for (int key_code = 0; key_code < count_of(key_down_map_); ++key_code) {
     if (key_down_map_[key_code]) {
       key_down_map_[key_code] = 0;
-      PostInputEvent(
-          [key_code](InputListener* listener, ref_ptr<Control> control) {
-            KeyboardEvent keyboard_event{key_code, ModifierKey::kNone};
-            listener->OnKeyUp(std::move(control), keyboard_event);
-          });
+      PostInputEvent([key_code](InputListener* listener,
+                                ref_ptr<Control> control) {
+        VirtualKey virtual_key = VirtualKey::kNone;
+        if (key_code <= 255) {
+          virtual_key = static_cast<VirtualKey>(key_code);
+        }
+        KeyboardEvent keyboard_event{key_code, virtual_key, ModifierKey::kNone};
+        listener->OnKeyUp(std::move(control), keyboard_event);
+      });
     }
   }
 }
