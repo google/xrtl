@@ -29,6 +29,7 @@ enum class ModifierKey {
   kShift = 1 << 0,
   kCtrl = 1 << 1,
   kAlt = 1 << 2,
+  kSuper = 1 << 3,
 };
 XRTL_BITMASK(ModifierKey);
 

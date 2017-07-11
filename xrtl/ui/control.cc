@@ -23,7 +23,7 @@ void Control::set_listener(ListenerPtr listener) {
 }
 
 void Control::set_input_listener(InputListenerPtr input_listener) {
-  std::lock_guard<std::mutex> lock(listener_mutex_);
+  std::lock_guard<std::mutex> lock(input_listener_mutex_);
   input_listener_ = std::move(input_listener);
 }
 
@@ -128,7 +128,7 @@ void Control::PostInputEvent(
     std::function<void(InputListener*, ref_ptr<Control>)> callback) {
   auto callback_baton = MoveToLambda(callback);
   message_loop_->Defer(&pending_task_list_, [this, callback_baton]() {
-    std::lock_guard<std::mutex> lock(listener_mutex_);
+    std::lock_guard<std::mutex> lock(input_listener_mutex_);
     if (input_listener_) {
       ref_ptr<Control> control{this};
       callback_baton.value(input_listener_.get(), control);
