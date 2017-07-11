@@ -44,7 +44,7 @@ class ImGuiOverlayDemo : private Control::Listener {
 
   ref_ptr<WaitHandle> Run() {
     window_ = Window::Create(message_loop_);
-    window_->set_title("ImGui Layer Demo");
+    window_->set_title("ImGui Overlay Demo");
     auto control = window_->root_control();
     control->set_listener(this);
     control->set_size({640, 480});

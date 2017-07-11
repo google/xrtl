@@ -28,6 +28,19 @@ cc_test(
     ],
 )
 
+cc_binary(
+    name = "shader_tool",
+    srcs = ["shader_tool_cli.cc"],
+    deps = [
+        ":shader_compiler",
+        ":spirv_optimizer",
+        "//xrtl/base:cli_main",
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+        "@spirv_tools//:spirv_tools",
+    ],
+)
+
 cc_library(
     name = "spirv_optimizer",
     srcs = ["spirv_optimizer.cc"],

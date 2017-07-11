@@ -40,7 +40,7 @@ class SpirVOptimizer {
   struct Options {
     bool strip_debug_info = false;
     bool freeze_specialization_values = false;
-    bool inline_functions = false;
+    bool aggressive = false;
     bool remap_ids = false;
   };
 

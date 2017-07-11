@@ -22,7 +22,8 @@
 #include "third_party/proggy_fonts/proggy_tiny.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/base/system_clock.h"
-#include "xrtl/gfx/spirv/shader_compiler.h"
+#include "xrtl/ui/shaders/imgui_overlay_frag.h"
+#include "xrtl/ui/shaders/imgui_overlay_vert.h"
 
 namespace xrtl {
 namespace ui {
@@ -39,7 +40,6 @@ using gfx::RenderState;
 using gfx::ResourceSet;
 using gfx::Sampler;
 using gfx::ShaderModule;
-using gfx::spirv::ShaderCompiler;
 
 class ImGuiLock {
  public:
@@ -309,66 +309,17 @@ bool ImGuiOverlay::InitializePipeline() {
   blend_state.set_src_blend_factor(gfx::BlendFactor::kSrcAlpha);
   blend_state.set_dst_blend_factor(gfx::BlendFactor::kOneMinusSrcAlpha);
 
-  // Compile a shader module from GLSL.
-  // TODO(benvanik): move external when bazel rules are in.
-  auto vert_shader_compiler =
-      make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
-                                  ShaderCompiler::ShaderStage::kVertex);
-  vert_shader_compiler->AddSource(R"""(#version 310 es
-precision highp float;
-layout(push_constant, std140) uniform PushConstants {
-  mat4 proj_matrix;
-} push_constants;
-layout(location = 0) in vec2 in_pos;
-layout(location = 1) in vec2 in_uv;
-layout(location = 2) in vec4 in_color;
-layout(location = 0) out vec2 vtx_uv;
-layout(location = 1) out vec4 vtx_color;
-void main() {
-  gl_Position = push_constants.proj_matrix * vec4(in_pos.xy, 0.0, 1.0);
-  vtx_uv = in_uv;
-  vtx_color = in_color;
-}
-)""");
-  std::vector<uint32_t> vert_shader_data;
-  if (!vert_shader_compiler->Compile(&vert_shader_data)) {
-    LOG(ERROR) << "Could not compile vertex shader: " << std::endl
-               << vert_shader_compiler->compile_log();
-    return false;
-  }
-  auto frag_shader_compiler =
-      make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
-                                  ShaderCompiler::ShaderStage::kFragment);
-  frag_shader_compiler->AddSource(R"""(#version 310 es
-precision highp float;
-layout(push_constant) uniform PushConstants {
-  mat4 proj_matrix;
-} push_constants;
-layout(location = 0) in vec2 vtx_uv;
-layout(location = 1) in vec4 vtx_color;
-layout(location = 0) out vec4 out_color;
-layout(binding = 0) uniform sampler2D image_sampler;
-void main() {
-  vec4 tex_sample = texture(image_sampler, vtx_uv);
-  out_color = vtx_color * tex_sample;
-}
-)""");
-  std::vector<uint32_t> frag_shader_data;
-  if (!frag_shader_compiler->Compile(&frag_shader_data)) {
-    LOG(ERROR) << "Could not compile fragment shader: " << std::endl
-               << frag_shader_compiler->compile_log();
-    return false;
-  }
-
   // Load the shader module binaries.
   auto vertex_shader_module = context_->CreateShaderModule(
-      ShaderModule::DataFormat::kSpirV, vert_shader_data);
+      ShaderModule::DataFormat::kSpirV, shaders::kImGuiOverlayVertSpirV,
+      sizeof(shaders::kImGuiOverlayVertSpirV));
   if (!vertex_shader_module) {
     LOG(ERROR) << "Unable to load vertex shader module";
     return false;
   }
   auto fragment_shader_module = context_->CreateShaderModule(
-      ShaderModule::DataFormat::kSpirV, frag_shader_data);
+      ShaderModule::DataFormat::kSpirV, shaders::kImGuiOverlayFragSpirV,
+      sizeof(shaders::kImGuiOverlayFragSpirV));
   if (!fragment_shader_module) {
     LOG(ERROR) << "Unable to load fragment shader module";
     return false;

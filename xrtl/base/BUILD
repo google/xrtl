@@ -45,6 +45,35 @@ cc_test(
     ],
 )
 
+# CLI main() entry point.
+# This is linked in to CLI cc_binaries.
+cc_library(
+    name = "cli_main",
+    srcs = ["cli_main.cc"],
+    hdrs = ["cli_main.h"],
+    deps = [
+        ":platform_cli_main",
+        "//xrtl/base:debugging",
+        "//xrtl/base:flags",
+        "//xrtl/base:logging",
+    ],
+    alwayslink = 1,
+)
+
+cc_library(
+    name = "cli_main_hdrs",
+    hdrs = ["cli_main.h"],
+    visibility = ["//xrtl/port:ports_only"],
+)
+
+cc_library(
+    name = "platform_cli_main",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//xrtl/port/common/base:posix_cli_main",
+    ],
+)
+
 cc_library(
     name = "debugging",
     srcs = ["debugging.cc"],

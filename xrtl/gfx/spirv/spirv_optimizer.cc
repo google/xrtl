@@ -37,19 +37,29 @@ SpirVOptimizer::SpirVOptimizer(Options options) : options_(std::move(options)) {
 
   if (options_.strip_debug_info) {
     optimizer_->RegisterPass(spvtools::CreateStripDebugInfoPass());
-    optimizer_->RegisterPass(spvtools::CreateFlattenDecorationPass());
-  }
-
-  if (options_.inline_functions) {
-    optimizer_->RegisterPass(spvtools::CreateInlinePass());
   }
 
   if (options_.freeze_specialization_values) {
     optimizer_->RegisterPass(spvtools::CreateFreezeSpecConstantValuePass());
   }
 
-  optimizer_->RegisterPass(spvtools::CreateUnifyConstantPass());
-  optimizer_->RegisterPass(spvtools::CreateEliminateDeadConstantPass());
+  if (options_.aggressive) {
+    optimizer_->RegisterPass(spvtools::CreateInlinePass());
+    optimizer_->RegisterPass(spvtools::CreateLocalAccessChainConvertPass());
+    optimizer_->RegisterPass(spvtools::CreateInsertExtractElimPass());
+    optimizer_->RegisterPass(
+        spvtools::CreateLocalSingleBlockLoadStoreElimPass());
+    optimizer_->RegisterPass(spvtools::CreateLocalSingleStoreElimPass());
+    optimizer_->RegisterPass(spvtools::CreateBlockMergePass());
+    optimizer_->RegisterPass(spvtools::CreateEliminateDeadConstantPass());
+    optimizer_->RegisterPass(
+        spvtools::CreateFoldSpecConstantOpAndCompositePass());
+    optimizer_->RegisterPass(spvtools::CreateUnifyConstantPass());
+  }
+
+  if (options_.strip_debug_info) {
+    optimizer_->RegisterPass(spvtools::CreateFlattenDecorationPass());
+  }
 
   if (options_.remap_ids) {
     optimizer_->RegisterPass(spvtools::CreateCompactIdsPass());
