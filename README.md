@@ -78,6 +78,8 @@ $ ./xtool setup
 * Set the bazel binary to `xtool` (or `xtool.bat` on Windows).
 * Import the project view from the workspace `.bazelproject` file.
 
+If clang is not your default CC you should start CLion with CC=clang.
+
 ## Developing
 
 * Build/test/run/query for host platform:
@@ -93,6 +95,16 @@ $ bazel build --config=macos_x86_64 //xrtl/base/...
 * Run linter and fix common errors:
 ```
 $ ./xtool fix
+```
+
+### Debugging Notes
+
+GDB may need the following commands run at startup to resolve some third party
+source code. Replace directories with your workspace location:
+```
+dir $HOME/xrtl/bazel-xrtl
+set substitute-path external/com_github_google_swiftshader $HOME/xrtl/third_party/swiftshader/
+set substitute-path external/com_github_khronosgroup_glslang $HOME/xrtl/third_party/glslang/
 ```
 
 ## Committing Code
