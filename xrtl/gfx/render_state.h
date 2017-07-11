@@ -49,13 +49,6 @@ enum class PrimitiveTopology {
 };
 constexpr int kPrimitiveTopologyBits = 4;
 
-enum class PolygonMode {
-  kFill = 0,
-  kLine = 1,
-  kPoint = 2,
-};
-constexpr int kPolygonModeBits = 2;
-
 enum class CullMode {
   kNone = 0,
   kFront = 1,
@@ -131,20 +124,8 @@ enum class BlendFactor {
   // Color: (f,f,f); f = min(As0,1-Ad)
   // Alpha: 1
   kSrcAlphaSaturate = 14,
-  // Color: (Rs1,Gs1,Bs1)
-  // Alpha: As1
-  kSrc1Color = 15,
-  // Color: (1-Rs1,1-Gs1,1-Bs1)
-  // Alpha: 1-As1
-  kOneMinusSrc1Color = 16,
-  // Color: (As1,As1,As1)
-  // Alpha: As1
-  kSrc1Alpha = 17,
-  // Color: (1-As1,1-As1,1-As1)
-  // Alpha: 1-As1
-  kOneMinusSrc1Alpha = 18,
 };
-constexpr int kBlendFactorBits = 5;
+constexpr int kBlendFactorBits = 4;
 
 // Reference:
 // https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkBlendOp.html
@@ -304,18 +285,11 @@ class RenderState {
   class RasterizationState {
    public:
     RasterizationState() {
-      depth_clamp_enabled_ = false;
       rasterizer_discard_enabled_ = false;
-      polygon_mode_ = PolygonMode::kFill;
       cull_mode_ = CullMode::kNone;
       front_face_ = FrontFace::kCounterClockwise;
       depth_bias_enabled_ = false;
     }
-
-    // Controls whether to clamp the fragment’s depth values instead of clipping
-    // primitives to the z planes of the frustum.
-    bool is_depth_clamp_enabled() const { return depth_clamp_enabled_; }
-    void set_depth_clamp_enabled(bool value) { depth_clamp_enabled_ = value; }
 
     // Controls whether primitives are discarded immediately before the
     // rasterization stage.
@@ -325,10 +299,6 @@ class RenderState {
     void set_rasterizer_discard_enabled(bool value) {
       rasterizer_discard_enabled_ = value;
     }
-
-    // Polygon rendering mode.
-    PolygonMode polygon_mode() const { return polygon_mode_; }
-    void set_polygon_mode(PolygonMode value) { polygon_mode_ = value; }
 
     // The triangle facing direction used for primitive culling.
     CullMode cull_mode() const { return cull_mode_; }
@@ -343,9 +313,7 @@ class RenderState {
     void set_depth_bias_enabled(bool value) { depth_bias_enabled_ = value; }
 
    private:
-    bool depth_clamp_enabled_ : 1;
     bool rasterizer_discard_enabled_ : 1;
-    PolygonMode polygon_mode_ : kPolygonModeBits;
     CullMode cull_mode_ : kCullModeBits;
     FrontFace front_face_ : kFrontFaceBits;
     bool depth_bias_enabled_ : 1;
@@ -597,6 +565,24 @@ class RenderState {
     BlendOp alpha_blend_op() const { return alpha_blend_op_; }
     void set_alpha_blend_op(BlendOp value) { alpha_blend_op_ = value; }
 
+    // Sets the src blend factor used by both color and alpha.
+    void set_src_blend_factor(BlendFactor value) {
+      set_src_color_blend_factor(value);
+      set_src_alpha_blend_factor(value);
+    }
+
+    // Sets the dst blend factor used by both color and alpha.
+    void set_dst_blend_factor(BlendFactor value) {
+      set_dst_color_blend_factor(value);
+      set_dst_alpha_blend_factor(value);
+    }
+
+    // Sets the blend op used by both color and alpha.
+    void set_blend_op(BlendOp value) {
+      set_color_blend_op(value);
+      set_alpha_blend_op(value);
+    }
+
     // A bitmask selecting which of the R, G, B, and/or A components are enabled
     // for writing.
     ColorComponentMask color_write_mask() const { return color_write_mask_; }
@@ -621,6 +607,11 @@ class RenderState {
 
     // An array of states, one for each subpass attachment.
     // The indices match with the subpass color attachments.
+    // If no attachment settings are specified all attachments will have the
+    // default blend mode.
+    //
+    // Compatibility note:
+    // - OpenGL ES: all attachments must have the same state.
     FixedVector<ColorBlendAttachmentState, kMaxColorAttachments> attachments;
 
    private:

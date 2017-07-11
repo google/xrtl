@@ -687,31 +687,61 @@ void ES3RenderPassCommandEncoder::BindPipeline(
 
   // Set render state and cache values we'll use frequently.
   const auto& render_state = pipeline->render_state();
+  RefreshVertexInputState(render_state.vertex_input_state);
+  RefreshInputAssemblyState(render_state.input_assembly_state);
+  RefreshTessellationState(render_state.tessellation_state);
+  RefreshViewportState(render_state.viewport_state);
+  RefreshRasterizationState(render_state.rasterization_state);
+  RefreshMultisampleState(render_state.multisample_state);
+  RefreshDepthStencilState(render_state.depth_stencil_state);
+  if (render_state.color_blend_state.attachments.empty()) {
+    // Default state.
+    RenderState::ColorBlendAttachmentState default_state;
+    RefreshColorBlendState(0, default_state);
+  } else {
+    // Use the first state.
+    // TODO(benvanik): assert all are the same.
+    RefreshColorBlendState(0, render_state.color_blend_state.attachments[0]);
+  }
 
+  // We'll need to refresh push constants (if they are used).
+  push_constants_dirty_ = true;
+}
+
+void ES3RenderPassCommandEncoder::RefreshVertexInputState(
+    const RenderState::VertexInputState& vertex_input_state) {
   // Setup our vertex input mirror state. This may reuse previous buffer
   // bindings (if any) and get updated by future BindVertexBuffers calls.
-  const auto& vertex_bindings = render_state.vertex_input_state.vertex_bindings;
+
+  const auto& vertex_bindings = vertex_input_state.vertex_bindings;
   for (const auto& vertex_binding : vertex_bindings) {
     auto& binding_slot = vertex_buffer_bindings_[vertex_binding.binding];
     binding_slot.stride = vertex_binding.stride;
     binding_slot.input_rate = vertex_binding.input_rate;
   }
-  const auto& vertex_attributes =
-      render_state.vertex_input_state.vertex_attributes;
+
+  const auto& vertex_attributes = vertex_input_state.vertex_attributes;
   vertex_buffer_attribs_.resize(kMaxVertexInputs);
   for (auto& attrib_slot : vertex_buffer_attribs_) {
     attrib_slot.binding = -1;
   }
+
+  // Prepare attribute slots.
   for (const auto& vertex_attribute : vertex_attributes) {
     auto& attrib_slot = vertex_buffer_attribs_[vertex_attribute.location];
     attrib_slot.binding = vertex_attribute.binding;
     attrib_slot.offset = vertex_attribute.offset;
     attrib_slot.format = vertex_attribute.format;
+
+    // Set the instance divisor.
     const auto& binding_slot = vertex_buffer_bindings_[attrib_slot.binding];
     glVertexAttribDivisor(
         vertex_attribute.location,
         binding_slot.input_rate == VertexInputRate::kVertex ? 0 : 1);
   }
+
+  // Toggle attributes. We keep only those the program uses active as some GL
+  // implementations may try validating the attached buffers.
   for (int i = 0; i < vertex_buffer_attribs_.size(); ++i) {
     const auto& attrib_slot = vertex_buffer_attribs_[i];
     if (attrib_slot.binding == -1) {
@@ -726,9 +756,14 @@ void ES3RenderPassCommandEncoder::BindPipeline(
       }
     }
   }
-  vertex_inputs_dirty_ = true;
 
+  vertex_inputs_dirty_ = true;
+}
+
+void ES3RenderPassCommandEncoder::RefreshInputAssemblyState(
+    const RenderState::InputAssemblyState& input_assembly_state) {
   // TODO(benvanik): input_assembly_state.is_primitive_restart_enabled()
+
   static const GLenum kPrimitiveTopologyLookup[] = {
       GL_POINTS,                    // kPointList
       GL_LINES,                     // kLineList
@@ -743,24 +778,134 @@ void ES3RenderPassCommandEncoder::BindPipeline(
       GL_PATCHES,                   // kPatchList
   };
   int primitive_topology_index =
-      static_cast<int>(render_state.input_assembly_state.primitive_topology());
-  DCHECK_LE(primitive_topology_index, count_of(kPrimitiveTopologyLookup));
+      static_cast<int>(input_assembly_state.primitive_topology());
+  DCHECK_LT(primitive_topology_index, count_of(kPrimitiveTopologyLookup));
   draw_primitive_mode_ = kPrimitiveTopologyLookup[primitive_topology_index];
+}
 
+void ES3RenderPassCommandEncoder::RefreshTessellationState(
+    const RenderState::TessellationState& tessellation_state) {
   // TODO(benvanik): tessellation_state.patch_control_points
+}
 
+void ES3RenderPassCommandEncoder::RefreshViewportState(
+    const RenderState::ViewportState& viewport_state) {
   // TODO(benvanik): viewport_state.count
+}
 
-  // TODO(benvanik): rasterization_state
+void ES3RenderPassCommandEncoder::RefreshRasterizationState(
+    const RenderState::RasterizationState& rasterization_state) {
+  if (rasterization_state.is_rasterizer_discard_enabled()) {
+    glEnable(GL_RASTERIZER_DISCARD);
+  } else {
+    glDisable(GL_RASTERIZER_DISCARD);
+  }
 
-  // TODO(benvanik): multisample_state
+  switch (rasterization_state.cull_mode()) {
+    case CullMode::kNone:
+      glDisable(GL_CULL_FACE);
+      break;
+    case CullMode::kFront:
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_FRONT);
+      break;
+    case CullMode::kBack:
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+      break;
+    case CullMode::kFrontAndBack:
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_FRONT_AND_BACK);
+      break;
+  }
 
-  // TODO(benvanik): depth_stencil_state
+  switch (rasterization_state.front_face()) {
+    case FrontFace::kClockwise:
+      glFrontFace(GL_CW);
+      break;
+    case FrontFace::kCounterClockwise:
+      glFrontFace(GL_CCW);
+      break;
+  }
+}
 
-  // TODO(benvanik): color_blend_state
+void ES3RenderPassCommandEncoder::RefreshMultisampleState(
+    const RenderState::MultisampleState& multisample_state) {
+  // TODO(benvanik): multisample state.
+}
 
-  // We'll need to refresh push constants.
-  push_constants_dirty_ = true;
+void ES3RenderPassCommandEncoder::RefreshDepthStencilState(
+    const RenderState::DepthStencilState& depth_stencil_state) {
+  // TODO(benvanik): depth/stencil state.
+}
+
+void ES3RenderPassCommandEncoder::RefreshColorBlendState(
+    int attachment_index,
+    const RenderState::ColorBlendAttachmentState& attachment_state) {
+  // Early out if blending is disabled.
+  if (!attachment_state.is_blend_enabled()) {
+    glDisable(GL_BLEND);
+    return;
+  }
+  glEnable(GL_BLEND);
+
+  static const GLenum kBlendFactorLookup[15] = {
+      GL_ZERO,                      // BlendFactor::kZero
+      GL_ONE,                       // BlendFactor::kOne
+      GL_SRC_COLOR,                 // BlendFactor::kSrcColor
+      GL_ONE_MINUS_SRC_COLOR,       // BlendFactor::kOneMinusSrcColor
+      GL_DST_COLOR,                 // BlendFactor::kDstColor
+      GL_ONE_MINUS_DST_COLOR,       // BlendFactor::kOneMinusDstColor
+      GL_SRC_ALPHA,                 // BlendFactor::kSrcAlpha
+      GL_ONE_MINUS_SRC_ALPHA,       // BlendFactor::kOneMinusSrcAlpha
+      GL_DST_ALPHA,                 // BlendFactor::kDstAlpha
+      GL_ONE_MINUS_DST_ALPHA,       // BlendFactor::kOneMinusDstAlpha
+      GL_CONSTANT_COLOR,            // BlendFactor::kConstantColor
+      GL_ONE_MINUS_CONSTANT_COLOR,  // BlendFactor::kOneMinusConstantColor
+      GL_CONSTANT_ALPHA,            // BlendFactor::kConstantAlpha
+      GL_ONE_MINUS_CONSTANT_ALPHA,  // BlendFactor::kOneMinusConstantAlpha
+      GL_SRC_ALPHA_SATURATE,        // BlendFactor::kSrcAlphaSaturate
+  };
+  DCHECK_LT(static_cast<int>(attachment_state.src_color_blend_factor()),
+            count_of(kBlendFactorLookup));
+  DCHECK_LT(static_cast<int>(attachment_state.dst_color_blend_factor()),
+            count_of(kBlendFactorLookup));
+  DCHECK_LT(static_cast<int>(attachment_state.src_alpha_blend_factor()),
+            count_of(kBlendFactorLookup));
+  DCHECK_LT(static_cast<int>(attachment_state.dst_alpha_blend_factor()),
+            count_of(kBlendFactorLookup));
+  GLenum src_rgb = kBlendFactorLookup[static_cast<int>(
+      attachment_state.src_color_blend_factor())];
+  GLenum dst_rgb = kBlendFactorLookup[static_cast<int>(
+      attachment_state.dst_color_blend_factor())];
+  GLenum src_alpha = kBlendFactorLookup[static_cast<int>(
+      attachment_state.src_alpha_blend_factor())];
+  GLenum dst_alpha = kBlendFactorLookup[static_cast<int>(
+      attachment_state.dst_alpha_blend_factor())];
+  glBlendFuncSeparate(src_rgb, dst_rgb, src_alpha, dst_alpha);
+
+  static const GLenum kBlendEquationLookup[5] = {
+      GL_FUNC_ADD,               // BlendOp::kAdd
+      GL_FUNC_SUBTRACT,          // BlendOp::kSubtract
+      GL_FUNC_REVERSE_SUBTRACT,  // BlendOp::kReverseSubtract
+      GL_MIN,                    // BlendOp::kMin
+      GL_MAX,                    // BlendOp::kMax
+  };
+  DCHECK_LT(static_cast<int>(attachment_state.color_blend_op()),
+            count_of(kBlendEquationLookup));
+  DCHECK_LT(static_cast<int>(attachment_state.alpha_blend_op()),
+            count_of(kBlendEquationLookup));
+  GLenum mode_rgb =
+      kBlendEquationLookup[static_cast<int>(attachment_state.color_blend_op())];
+  GLenum mode_alpha =
+      kBlendEquationLookup[static_cast<int>(attachment_state.alpha_blend_op())];
+  glBlendEquationSeparate(mode_rgb, mode_alpha);
+
+  glColorMask(
+      any(attachment_state.color_write_mask() & ColorComponentMask::kR),
+      any(attachment_state.color_write_mask() & ColorComponentMask::kG),
+      any(attachment_state.color_write_mask() & ColorComponentMask::kB),
+      any(attachment_state.color_write_mask() & ColorComponentMask::kA));
 }
 
 void ES3RenderPassCommandEncoder::BindResourceSet(
@@ -956,7 +1101,6 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
           // TODO(benvanik): validate during ResourceSet init.
           DCHECK(binding_value.buffer);
           auto buffer = binding_value.buffer.As<ES3Buffer>();
-          glBindBuffer(GL_UNIFORM_BUFFER, buffer->buffer_id());
           size_t bind_offset = binding_value.buffer_offset;
           size_t bind_length = binding_value.buffer_length != -1
                                    ? binding_value.buffer_length
@@ -1125,7 +1269,6 @@ void ES3RenderPassCommandEncoder::DrawIndexed(int index_count,
                                               int vertex_offset,
                                               int first_instance) {
   // TODO(benvanik): modify gl_InstanceID? use CPU glDrawArraysIndirect?
-  DCHECK_EQ(first_index, 0);
   DCHECK_EQ(vertex_offset, 0);
   DCHECK_EQ(first_instance, 0);
 
