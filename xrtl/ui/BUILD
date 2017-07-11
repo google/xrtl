@@ -73,7 +73,8 @@ cc_library(
         "//xrtl/base:macros",
         "//xrtl/base:system_clock",
         "//xrtl/gfx:context",
-        "//xrtl/gfx/spirv:shader_compiler",
+        "//xrtl/ui/shaders:imgui_overlay_frag",
+        "//xrtl/ui/shaders:imgui_overlay_vert",
         "@com_github_gtruc_glm//:glm",
     ],
 )

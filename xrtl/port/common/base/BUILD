@@ -35,6 +35,24 @@ cc_library(
 )
 
 cc_library(
+    name = "posix_cli_main",
+    srcs = ["posix_cli_main.cc"],
+    linkopts = select({
+        # TODO(benvanik): find a way to remove this requirement.
+        "//xrtl/tools/target_platform:ios": [
+            "-framework CoreFoundation",
+        ],
+        "//xrtl/tools/target_platform:macos": [
+            "-framework CoreFoundation",
+        ],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "//xrtl/base:cli_main_hdrs",
+    ],
+)
+
+cc_library(
     name = "posix_debugging",
     srcs = ["posix_debugging.cc"],
     deps = [
