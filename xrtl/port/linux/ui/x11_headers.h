@@ -20,6 +20,8 @@
 
 #include <X11/keysym.h>
 
+#include <X11/XF86keysym.h>
+
 #undef Bool
 #undef None
 

@@ -97,9 +97,15 @@ cc_library(
     name = "input_events",
     hdrs = ["input_events.h"],
     deps = [
+        ":key_codes",
         "//xrtl/base:geometry",
         "//xrtl/base:macros",
     ],
+)
+
+cc_library(
+    name = "key_codes",
+    hdrs = ["key_codes.h"],
 )
 
 cc_library(

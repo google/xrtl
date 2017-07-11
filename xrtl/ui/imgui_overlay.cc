@@ -602,10 +602,11 @@ ref_ptr<gfx::QueueFence> ImGuiOverlay::EndFrame(
 namespace {
 
 void PopulateEventData(const KeyboardEvent& ev, bool is_down, ImGuiIO* io) {
-  if (ev.key_code() >= count_of(io->KeysDown)) {
+  if (ev.virtual_key() == VirtualKey::kNone) {
+    // Not a key that imgui will recognize.
     return;
   }
-  io->KeysDown[ev.key_code()] = is_down;
+  io->KeysDown[static_cast<int>(ev.virtual_key())] = is_down;
 
   io->KeyCtrl = any(ev.modifier_key_mask() & ModifierKey::kCtrl);
   io->KeyShift = any(ev.modifier_key_mask() & ModifierKey::kShift);
