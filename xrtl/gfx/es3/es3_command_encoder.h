@@ -374,6 +374,24 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   // Prepares the current subpass state.
   void PrepareSubpass();
 
+  // Refreshes the GL state machine with the given XRTL state.
+  void RefreshVertexInputState(
+      const RenderState::VertexInputState& vertex_input_state);
+  void RefreshInputAssemblyState(
+      const RenderState::InputAssemblyState& input_assembly_state);
+  void RefreshTessellationState(
+      const RenderState::TessellationState& tessellation_state);
+  void RefreshViewportState(const RenderState::ViewportState& viewport_state);
+  void RefreshRasterizationState(
+      const RenderState::RasterizationState& rasterization_state);
+  void RefreshMultisampleState(
+      const RenderState::MultisampleState& multisample_state);
+  void RefreshDepthStencilState(
+      const RenderState::DepthStencilState& depth_stencil_state);
+  void RefreshColorBlendState(
+      int attachment_index,
+      const RenderState::ColorBlendAttachmentState& attachment_state);
+
   // Updates push constant data for the current pipeline.
   void UpdatePushConstants();
   // Updates the resource set binding based on the current pipeline and set.
