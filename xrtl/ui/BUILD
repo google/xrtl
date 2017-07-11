@@ -63,6 +63,37 @@ cc_test(
 )
 
 cc_library(
+    name = "imgui_overlay",
+    srcs = ["imgui_overlay.cc"],
+    hdrs = ["imgui_overlay.h"],
+    deps = [
+        ":control",
+        "//third_party/imgui",
+        "//third_party/proggy_fonts:proggy_tiny_embedded",
+        "//xrtl/base:macros",
+        "//xrtl/base:system_clock",
+        "//xrtl/gfx:context",
+        "//xrtl/gfx/spirv:shader_compiler",
+        "@com_github_gtruc_glm//:glm",
+    ],
+)
+
+cc_binary(
+    name = "imgui_overlay_demo",
+    srcs = ["imgui_overlay_demo.cc"],
+    deps = [
+        ":imgui_overlay",
+        ":window",
+        "//xrtl/base:logging",
+        "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
+        "//xrtl/gfx:context",
+        "//xrtl/gfx:context_factory",
+        "//xrtl/testing:demo_main",
+    ],
+)
+
+cc_library(
     name = "input_events",
     hdrs = ["input_events.h"],
     deps = [

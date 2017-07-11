@@ -261,6 +261,7 @@ class Control : public RefObject<Control> {
 
   std::mutex listener_mutex_;
   ListenerPtr listener_{nullptr, [](Listener*) {}};
+  std::mutex input_listener_mutex_;
   InputListenerPtr input_listener_{nullptr, [](InputListener*) {}};
 
   bool has_posted_suspended_ = false;
