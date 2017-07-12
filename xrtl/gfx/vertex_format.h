@@ -184,22 +184,6 @@ constexpr static VertexFormat kX32Y32Z32W32UInt    = { 48, 16, ComponentFormat::
 constexpr static VertexFormat kX32Y32Z32W32SInt    = { 49, 16, ComponentFormat::kSInt,   32, 32, 32, 32};
 constexpr static VertexFormat kX32Y32Z32W32SFloat  = { 50, 16, ComponentFormat::kSFloat, 32, 32, 32, 32};
 
-constexpr static VertexFormat kX64UInt             = { 51,  8, ComponentFormat::kUInt,   64,  0,  0,  0};
-constexpr static VertexFormat kX64SInt             = { 52,  8, ComponentFormat::kSInt,   64,  0,  0,  0};
-constexpr static VertexFormat kX64SFloat           = { 53,  8, ComponentFormat::kSFloat, 64,  0,  0,  0};
-
-constexpr static VertexFormat kX64Y64UInt          = { 54, 16, ComponentFormat::kUInt,   64, 64,  0,  0};
-constexpr static VertexFormat kX64Y64SInt          = { 55, 16, ComponentFormat::kSInt,   64, 64,  0,  0};
-constexpr static VertexFormat kX64Y64SFloat        = { 56, 16, ComponentFormat::kSFloat, 64, 64,  0,  0};
-
-constexpr static VertexFormat kX64Y64Z64UInt       = { 57, 24, ComponentFormat::kUInt,   64, 64, 64,  0};
-constexpr static VertexFormat kX64Y64Z64SInt       = { 58, 24, ComponentFormat::kSInt,   64, 64, 64,  0};
-constexpr static VertexFormat kX64Y64Z64SFloat     = { 59, 24, ComponentFormat::kSFloat, 64, 64, 64,  0};
-
-constexpr static VertexFormat kX64Y64Z64W64UInt    = { 60, 32, ComponentFormat::kUInt,   64, 64, 64, 64};
-constexpr static VertexFormat kX64Y64Z64W64SInt    = { 61, 32, ComponentFormat::kSInt,   64, 64, 64, 64};
-constexpr static VertexFormat kX64Y64Z64W64SFloat  = { 62, 32, ComponentFormat::kSFloat, 64, 64, 64, 64};
-
 // Something missing from this list? Append only! IDs must be dense and you'll
 // likely get some compile warnings about tables that need updating.
 //

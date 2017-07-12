@@ -23,92 +23,33 @@ bool ConvertPixelFormatToTextureParams(PixelFormat pixel_format,
   static const ES3TextureParams kTable[] = {
       {GL_NONE, GL_NONE, GL_NONE},                       // kUndefined
                                                          //
-      {GL_NONE, GL_NONE, GL_NONE},                       // kR4G4UNorm
       {GL_RGBA4, GL_RGBA, GL_UNSIGNED_BYTE},             // kR4G4B4A4UNorm
-      {GL_RGBA4, GL_RGBA, GL_UNSIGNED_BYTE},             // kB4G4R4A4UNorm
       {GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},      // kR5G6B5UNorm
-      {GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},      // kB5G6R5UNorm
       {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1},  // kR5G5B5A1UNorm
-      {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1},  // kB5G5R5A1UNorm
-      {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1},  // kA1R5G5B5UNorm
                                                          //
       {GL_R8, GL_RED, GL_UNSIGNED_BYTE},                 // kR8UNorm
       {GL_R8_SNORM, GL_RED, GL_BYTE},                    // kR8SNorm
-      {GL_R8, GL_RED, GL_UNSIGNED_BYTE},                 // kR8UScaled
-      {GL_R8_SNORM, GL_RED, GL_BYTE},                    // kR8SScaled
       {GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE},       // kR8UInt
       {GL_R8I, GL_RED_INTEGER, GL_BYTE},                 // kR8SInt
-      {GL_NONE, GL_NONE, GL_NONE},                       // kR8Srgb
                                                          //
       {GL_RG8, GL_RG, GL_UNSIGNED_BYTE},                 // kR8G8UNorm
       {GL_RG8_SNORM, GL_RG, GL_BYTE},                    // kR8G8SNorm
-      {GL_RG8, GL_RG, GL_UNSIGNED_BYTE},                 // kR8G8UScaled
-      {GL_RG8_SNORM, GL_RG, GL_BYTE},                    // kR8G8SScaled
       {GL_RG8UI, GL_RG_INTEGER, GL_UNSIGNED_BYTE},       // kR8G8UInt
       {GL_RG8I, GL_RG_INTEGER, GL_BYTE},                 // kR8G8SInt
-      {GL_NONE, GL_NONE, GL_NONE},                       // kR8G8Srgb
-                                                         //
-      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kR8G8B8UNorm
-      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kR8G8B8SNorm
-      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kR8G8B8UScaled
-      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kR8G8B8SScaled
-      {GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE},     // kR8G8B8UInt
-      {GL_RGB8I, GL_RGB_INTEGER, GL_BYTE},               // kR8G8B8SInt
-      {GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE},              // kR8G8B8Srgb
-                                                         //
-      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kB8G8R8UNorm
-      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kB8G8R8SNorm
-      {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},               // kB8G8R8UScaled
-      {GL_RGB8_SNORM, GL_RGB, GL_BYTE},                  // kB8G8R8SScaled
-      {GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE},     // kB8G8R8UInt
-      {GL_RGB8I, GL_RGB_INTEGER, GL_BYTE},               // kB8G8R8SInt
-      {GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE},              // kB8G8R8Srgb
                                                          //
       {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kR8G8B8A8UNorm
       {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kR8G8B8A8SNorm
-      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kR8G8B8A8UScaled
-      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kR8G8B8A8SScaled
       {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE},   // kR8G8B8A8UInt
       {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE},             // kR8G8B8A8SInt
       {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE},      // kR8G8B8A8Srgb
                                                          //
       {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kB8G8R8A8UNorm
-      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kB8G8R8A8SNorm
-      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kB8G8R8A8UScaled
-      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kB8G8R8A8SScaled
-      {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE},   // kB8G8R8A8UInt
-      {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE},             // kB8G8R8A8SInt
       {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE},      // kB8G8R8A8Srgb
-                                                         //
-      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kA8B8G8R8UNorm
-      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kA8B8G8R8SNorm
-      {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},             // kA8B8G8R8UScaled
-      {GL_RGBA8_SNORM, GL_RGBA, GL_BYTE},                // kA8B8G8R8SScaled
-      {GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE},   // kA8B8G8R8UInt
-      {GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE},             // kA8B8G8R8SInt
-      {GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE},      // kA8B8G8R8Srgb
-                                                         //
-      {GL_RGB10_A2, GL_RGBA,                             //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10UNorm
-      {GL_RGB10_A2, GL_RGBA,                             //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10SNorm
-      {GL_RGB10_A2, GL_RGBA,                             //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10UScaled
-      {GL_RGB10_A2, GL_RGBA,                             //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10SScaled
-      {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10UInt
-      {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2R10G10B10SInt
                                                          //
       {GL_RGB10_A2, GL_RGBA,                             //
        GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10UNorm
       {GL_RGB10_A2, GL_RGBA,                             //
        GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10SNorm
-      {GL_RGB10_A2, GL_RGBA,                             //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10UScaled
-      {GL_RGB10_A2, GL_RGBA,                             //
-       GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10SScaled
       {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
        GL_UNSIGNED_INT_2_10_10_10_REV},                  // kA2B10G10R10UInt
       {GL_RGB10_A2UI, GL_RGBA_INTEGER,                   //
@@ -116,32 +57,18 @@ bool ConvertPixelFormatToTextureParams(PixelFormat pixel_format,
                                                          //
       {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16UNorm
       {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16SNorm
-      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16UScaled
-      {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16SScaled
       {GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT},     // kR16UInt
       {GL_R16I, GL_RED_INTEGER, GL_SHORT},               // kR16SInt
       {GL_R16F, GL_RED, GL_HALF_FLOAT},                  // kR16SFloat
                                                          //
       {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16UNorm
       {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16SNorm
-      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16UScaled
-      {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16SScaled
       {GL_RG16UI, GL_RG_INTEGER, GL_UNSIGNED_SHORT},     // kR16G16UInt
       {GL_RG16I, GL_RG_INTEGER, GL_SHORT},               // kR16G16SInt
       {GL_RG16F, GL_RG, GL_HALF_FLOAT},                  // kR16G16SFloat
                                                          //
-      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16UNorm
-      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16SNorm
-      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16UScaled
-      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16SScaled
-      {GL_RGB16UI, GL_RGB_INTEGER, GL_UNSIGNED_SHORT},   // kR16G16B16UInt
-      {GL_RGB16I, GL_RGB_INTEGER, GL_SHORT},             // kR16G16B16SInt
-      {GL_RGB16F, GL_RGB, GL_HALF_FLOAT},                // kR16G16B16SFloat
-                                                         //
       {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16UNorm
       {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16SNorm
-      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16UScaled
-      {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},              // kR16G16B16A16SScaled
       {GL_RGBA16UI, GL_RGBA_INTEGER, GL_UNSIGNED_SHORT},  // kR16G16B16A16UInt
       {GL_RGBA16I, GL_RGBA_INTEGER, GL_SHORT},            // kR16G16B16A16SInt
       {GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT},               // kR16G16B16A16SFloat
@@ -162,40 +89,16 @@ bool ConvertPixelFormatToTextureParams(PixelFormat pixel_format,
       {GL_RGBA32I, GL_RGBA_INTEGER, GL_INT},              // kR32G32B32A32SInt
       {GL_RGBA32F, GL_RGBA, GL_FLOAT},                    // kR32G32B32A32SFloat
                                                           //
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64UInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64SInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64SFloat
-                                                          //
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64UInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64SInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64SFloat
-                                                          //
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64UInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64SInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64SFloat
-                                                          //
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64A64UInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64A64SInt
-      {GL_NONE, GL_NONE, GL_NONE},                        // kR64G64B64A64SFloat
-                                                          //
       {GL_R11F_G11F_B10F, GL_RGB,                         //
        GL_UNSIGNED_INT_10F_11F_11F_REV},                  // kB10G11R11UFloat
       {GL_RGB9_E5, GL_RGB, GL_UNSIGNED_INT_5_9_9_9_REV},  // kE5B9G9R9UFloat
                                                           //
-      {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT,          //
-       GL_UNSIGNED_SHORT},                                // kD16UNorm
-      {GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT,          //
-       GL_UNSIGNED_INT},                                  // kX8D24UNorm
       {GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT},  // kD32SFloat
-      {GL_NONE, GL_NONE, GL_NONE},                            // kS8UInt
-      {GL_NONE, GL_NONE, GL_NONE},                            // kD16UNormS8UInt
       {GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL,                 //
        GL_UNSIGNED_INT_24_8},                                 // kD24UNormS8UInt
       {GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL,                //
        GL_FLOAT_32_UNSIGNED_INT_24_8_REV},                   // kD32SFloatS8UInt
                                                              //
-      {GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GL_RGB, GL_NONE},    // kBC1RGBUNorm
-      {GL_COMPRESSED_SRGB_S3TC_DXT1_NV, GL_RGB, GL_NONE},    // kBC1RGBSrgb
       {GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, GL_RGBA, GL_NONE},  // kBC1RGBAUNorm
       {GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_NV, GL_RGBA,       //
        GL_NONE},                                             // kBC1RGBASrgb

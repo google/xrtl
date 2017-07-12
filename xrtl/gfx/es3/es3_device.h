@@ -27,6 +27,10 @@ class ES3Device : public Device {
 
   // Adopts the device parameters of the currently bound GL platform context.
   bool AdoptCurrentContext();
+
+ private:
+  // Queries available pixel formats and populates the given struct.
+  void QuerySupportedPixelFormats(Features::PixelFormats* pixel_formats);
 };
 
 }  // namespace es3

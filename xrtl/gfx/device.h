@@ -44,6 +44,17 @@ XRTL_BITMASK(DeviceType);
 // A device available for use by the backend graphics API.
 // This may represent a physical device in the system or a logical device as
 // exposed by the API.
+//
+// For more information on device limits on each API/platform, see:
+//   OpenGL ES 3.0:
+//     http://opengles.gpuinfo.org/gles_devicefeatures.php
+//     https://www.g-truc.net/doc/OpenGL%20ES%203%20Hardware%20Matrix.pdf
+//   Vulkan:
+//     http://vulkan.gpuinfo.org/listlimits.php
+//   Metal:
+//     https://developer.apple.com/metal/Metal-Feature-Set-Tables.pdf
+//   D3D12:
+//     https://msdn.microsoft.com/en-us/library/windows/desktop/mt186615(v=vs.85).aspx
 class Device : public RefObject<Device> {
  public:
   virtual ~Device() = default;
@@ -60,11 +71,44 @@ class Device : public RefObject<Device> {
   // When passed to CreateContext it is used to enable specific features on the
   // created context.
   //
+  // Key:
+  //   .: not supported
+  //   ~: optional, but practically not supported
+  //   ?: optional, often supported
+  //   ✔: always supported
+  //
   // Maps to:
   //  https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkPhysicalDeviceFeatures.html
   struct Features {
     // TODO(benvanik): robust buffer access, full draw index uint32, extensions.
     // TODO(benvanik): render or compute.
+
+    // Defines which pixel formats are available for use on the device.
+    // Any format not covered by the flags below can be assumed always present.
+    // Note that not all formats support use as a render target.
+    struct PixelFormats {
+      // Supports the packed kD24UNormS8UInt format.
+      // | ES3 ✔ | VK ✔ | MTL ~ | D3D ✔ |
+      bool packed_depth_stencil = false;
+      // Supports the BC1, BC2, and BC3 formats.
+      // | ES3 ~ | VK ✔ | MTL ~ | D3D ✔ |
+      bool bc1_2_3 = false;
+      // Supports the BC4, BC5, BC6, and BC7 formats.
+      // | ES3 . | VK ✔ | MTL ~ | D3D ✔ |
+      bool bc4_5_6_7 = false;
+      // Supports the ETC2 compressed texture formats.
+      // | ES3 ✔ | VK ~ | MTL . | D3D . |
+      bool etc2 = false;
+      // Supports the EAC compressed texture formats.
+      // | ES3 ✔ | VK ~ | MTL ? | D3D . |
+      bool eac = false;
+      // Supports the ASTC compressed texture formats.
+      // | ES3 ~ | VK ~ | MTL ? | D3D . |
+      bool astc = false;
+      // Supports the PVRTC(1) compressed texture formats.
+      // | ES3 ~ | VK . | MTL ✔ | D3D . |
+      bool pvrtc = false;
+    } pixel_formats;
   };
 
   // Describes a queue family available on the device.

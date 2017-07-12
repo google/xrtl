@@ -23,9 +23,9 @@ namespace {
 // Tests the comparison operations on pixel formats.
 TEST(PixelFormatTest, Comparisons) {
   EXPECT_FALSE(PixelFormats::kUndefined);
-  EXPECT_TRUE(PixelFormats::kA2R10G10B10UNorm);
+  EXPECT_TRUE(PixelFormats::kA2B10G10R10UNorm);
   EXPECT_EQ(PixelFormats::kUndefined, PixelFormats::kUndefined);
-  EXPECT_NE(PixelFormats::kUndefined, PixelFormats::kA2R10G10B10UNorm);
+  EXPECT_NE(PixelFormats::kUndefined, PixelFormats::kA2B10G10R10UNorm);
 }
 
 // Tests the basic usage of PixelFormatTable.
@@ -68,8 +68,8 @@ TEST(PixelFormatTest, PixelFormatTableStride) {
 
 // Tests some uncompressed types and their math.
 TEST(PixelFormatTest, UncompressedTypes) {
-  PixelFormat format = PixelFormats::kA2R10G10B10UNorm;
-  EXPECT_EQ(58, format.unique_id());
+  PixelFormat format = PixelFormats::kA2B10G10R10UNorm;
+  EXPECT_EQ(19, format.unique_id());
   EXPECT_EQ(PixelPacking::kUncompressed, format.packing_format());
   EXPECT_EQ(ComponentFormat::kUNorm, format.component_format());
   EXPECT_EQ(4, format.component_count());
@@ -88,7 +88,7 @@ TEST(PixelFormatTest, UncompressedTypes) {
 // Tests some depth stencil types and their math.
 TEST(PixelFormatTest, DepthStencilTypes) {
   PixelFormat format = PixelFormats::kD24UNormS8UInt;
-  EXPECT_EQ(129, format.unique_id());
+  EXPECT_EQ(53, format.unique_id());
   EXPECT_EQ(PixelPacking::kDepthStencil, format.packing_format());
   EXPECT_EQ(ComponentFormat::kUNorm, format.component_format());
   EXPECT_EQ(2, format.component_count());
@@ -105,7 +105,7 @@ TEST(PixelFormatTest, DepthStencilTypes) {
 // Tests some compressed types and their math.
 TEST(PixelFormatTest, CompressedTypes) {
   PixelFormat format = PixelFormats::kAstc4x4Srgb;
-  EXPECT_EQ(158, format.unique_id());
+  EXPECT_EQ(80, format.unique_id());
   EXPECT_EQ(PixelPacking::kAstc, format.packing_format());
   EXPECT_EQ(ComponentFormat::kSrgb, format.component_format());
   EXPECT_EQ(4, format.component_count());
@@ -121,7 +121,7 @@ TEST(PixelFormatTest, CompressedTypes) {
   EXPECT_EQ(100 * 100, format.ComputeDataSize(100, 100));
 
   // Some more for code coverage.
-  EXPECT_EQ(5000, PixelFormats::kBC1RGBUNorm.ComputeDataSize(100, 100));
+  EXPECT_EQ(5000, PixelFormats::kBC1RGBAUNorm.ComputeDataSize(100, 100));
   EXPECT_EQ(10000, PixelFormats::kBC2UNorm.ComputeDataSize(100, 100));
   EXPECT_EQ(5000, PixelFormats::kEtc2R8G8B8UNorm.ComputeDataSize(100, 100));
   EXPECT_EQ(10000, PixelFormats::kEtc2R8G8B8A8UNorm.ComputeDataSize(100, 100));
