@@ -193,9 +193,15 @@ int ShaderToolMain(int argc, char** argv) {
     input_file.seekg(0, std::ios::end);
     std::string input_contents;
     input_contents.resize(input_file.tellg());
+    DCHECK(!input_contents.empty());
     input_file.seekg(0, std::ios::beg);
     input_file.read(&input_contents[0], input_contents.size());
     input_file.close();
+
+    // Strip trailing NUL characters that can sometimes creep in.
+    while (input_contents[input_contents.size() - 1] == 0) {
+      input_contents.resize(input_contents.size() - 1);
+    }
 
     // Add with file name so we'll get good error messages.
     shader_compiler.AddSource(input_path, input_contents);
