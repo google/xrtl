@@ -1584,6 +1584,9 @@ class GenerateSlnCommand(Command):
     # This is what we have Visual Studio invoke for build/etc.
     xtool_path = '%s\\xtool.bat' % (convert_path_cygwin_to_win32(self_path))
 
+    # Root where file paths will be in most cases.
+    execution_root = bazel_info('execution_root', config = 'windows_x86_64')
+
     # Load template files.
     with open(os.path.join('tools', 'visual_studio', 'sln.template'),
               'r') as template_file:
@@ -1613,6 +1616,10 @@ class GenerateSlnCommand(Command):
       # This may be a .cc or .h.
       source_file = action_command['file']
       source_path = os.path.join(action_command['directory'], source_file)
+      # If the source path exists in the workspace root use that instead.
+      workspace_source_file = source_file.replace(execution_root, '')
+      if os.path.exists(workspace_source_file):
+        source_path = os.path.abspath(workspace_source_file)
       source_map[source_path] = source_file
       # Extract CL command options.
       (defines, include_paths) = self._extract_command_options(
