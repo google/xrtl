@@ -352,218 +352,139 @@ namespace PixelFormats {
 //                                                     v  v                             v  v                          v   v   v   v
 constexpr static PixelFormat kUndefined           = {  0, PixelPacking::kOpaque,        0, ComponentFormat::kSFloat,  0,  0,  0,  0};
 
-constexpr static PixelFormat kR4G4UNorm           = {  1, PixelPacking::kUncompressed,  1, ComponentFormat::kUNorm,   4,  4,  0,  0};
-constexpr static PixelFormat kR4G4B4A4UNorm       = {  2, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   4,  4,  4,  4};
-constexpr static PixelFormat kB4G4R4A4UNorm       = {  3, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   4,  4,  4,  4};
-constexpr static PixelFormat kR5G6B5UNorm         = {  4, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  6,  5,  0};
-constexpr static PixelFormat kB5G6R5UNorm         = {  5, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  6,  5,  0};
-constexpr static PixelFormat kR5G5B5A1UNorm       = {  6, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  5,  5,  1};
-constexpr static PixelFormat kB5G5R5A1UNorm       = {  7, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  5,  5,  1};
-constexpr static PixelFormat kA1R5G5B5UNorm       = {  8, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  5,  5,  1};
+constexpr static PixelFormat kR4G4B4A4UNorm       = {  1, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   4,  4,  4,  4};
+constexpr static PixelFormat kR5G6B5UNorm         = {  2, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  6,  5,  0};
+constexpr static PixelFormat kR5G5B5A1UNorm       = {  3, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   5,  5,  5,  1};
 
-constexpr static PixelFormat kR8UNorm             = {  9, PixelPacking::kUncompressed,  1, ComponentFormat::kUNorm,   8,  0,  0,  0};
-constexpr static PixelFormat kR8SNorm             = { 10, PixelPacking::kUncompressed,  1, ComponentFormat::kSNorm,   8,  0,  0,  0};
-constexpr static PixelFormat kR8UScaled           = { 11, PixelPacking::kUncompressed,  1, ComponentFormat::kUFloat,  8,  0,  0,  0};
-constexpr static PixelFormat kR8SScaled           = { 12, PixelPacking::kUncompressed,  1, ComponentFormat::kSFloat,  8,  0,  0,  0};
-constexpr static PixelFormat kR8UInt              = { 13, PixelPacking::kUncompressed,  1, ComponentFormat::kUInt,    8,  0,  0,  0};
-constexpr static PixelFormat kR8SInt              = { 14, PixelPacking::kUncompressed,  1, ComponentFormat::kSInt,    8,  0,  0,  0};
-constexpr static PixelFormat kR8Srgb              = { 15, PixelPacking::kUncompressed,  1, ComponentFormat::kSrgb,    8,  0,  0,  0};
+constexpr static PixelFormat kR8UNorm             = {  4, PixelPacking::kUncompressed,  1, ComponentFormat::kUNorm,   8,  0,  0,  0};
+constexpr static PixelFormat kR8SNorm             = {  5, PixelPacking::kUncompressed,  1, ComponentFormat::kSNorm,   8,  0,  0,  0};
+constexpr static PixelFormat kR8UInt              = {  6, PixelPacking::kUncompressed,  1, ComponentFormat::kUInt,    8,  0,  0,  0};
+constexpr static PixelFormat kR8SInt              = {  7, PixelPacking::kUncompressed,  1, ComponentFormat::kSInt,    8,  0,  0,  0};
 
-constexpr static PixelFormat kR8G8UNorm           = { 16, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   8,  8,  0,  0};
-constexpr static PixelFormat kR8G8SNorm           = { 17, PixelPacking::kUncompressed,  2, ComponentFormat::kSNorm,   8,  8,  0,  0};
-constexpr static PixelFormat kR8G8UScaled         = { 18, PixelPacking::kUncompressed,  2, ComponentFormat::kUFloat,  8,  8,  0,  0};
-constexpr static PixelFormat kR8G8SScaled         = { 19, PixelPacking::kUncompressed,  2, ComponentFormat::kSFloat,  8,  8,  0,  0};
-constexpr static PixelFormat kR8G8UInt            = { 20, PixelPacking::kUncompressed,  2, ComponentFormat::kUInt,    8,  8,  0,  0};
-constexpr static PixelFormat kR8G8SInt            = { 21, PixelPacking::kUncompressed,  2, ComponentFormat::kSInt,    8,  8,  0,  0};
-constexpr static PixelFormat kR8G8Srgb            = { 22, PixelPacking::kUncompressed,  2, ComponentFormat::kSrgb,    8,  8,  0,  0};
+constexpr static PixelFormat kR8G8UNorm           = {  8, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,   8,  8,  0,  0};
+constexpr static PixelFormat kR8G8SNorm           = {  9, PixelPacking::kUncompressed,  2, ComponentFormat::kSNorm,   8,  8,  0,  0};
+constexpr static PixelFormat kR8G8UInt            = { 10, PixelPacking::kUncompressed,  2, ComponentFormat::kUInt,    8,  8,  0,  0};
+constexpr static PixelFormat kR8G8SInt            = { 11, PixelPacking::kUncompressed,  2, ComponentFormat::kSInt,    8,  8,  0,  0};
 
-constexpr static PixelFormat kR8G8B8UNorm         = { 23, PixelPacking::kUncompressed,  3, ComponentFormat::kUNorm,   8,  8,  8,  0};
-constexpr static PixelFormat kR8G8B8SNorm         = { 24, PixelPacking::kUncompressed,  3, ComponentFormat::kSNorm,   8,  8,  8,  0};
-constexpr static PixelFormat kR8G8B8UScaled       = { 25, PixelPacking::kUncompressed,  3, ComponentFormat::kUFloat,  8,  8,  8,  0};
-constexpr static PixelFormat kR8G8B8SScaled       = { 26, PixelPacking::kUncompressed,  3, ComponentFormat::kSFloat,  8,  8,  8,  0};
-constexpr static PixelFormat kR8G8B8UInt          = { 27, PixelPacking::kUncompressed,  3, ComponentFormat::kUInt,    8,  8,  8,  0};
-constexpr static PixelFormat kR8G8B8SInt          = { 28, PixelPacking::kUncompressed,  3, ComponentFormat::kSInt,    8,  8,  8,  0};
-constexpr static PixelFormat kR8G8B8Srgb          = { 29, PixelPacking::kUncompressed,  3, ComponentFormat::kSrgb,    8,  8,  8,  0};
+constexpr static PixelFormat kR8G8B8A8UNorm       = { 12, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,   8,  8,  8,  8};
+constexpr static PixelFormat kR8G8B8A8SNorm       = { 13, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,   8,  8,  8,  8};
+constexpr static PixelFormat kR8G8B8A8UInt        = { 14, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,    8,  8,  8,  8};
+constexpr static PixelFormat kR8G8B8A8SInt        = { 15, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,    8,  8,  8,  8};
+constexpr static PixelFormat kR8G8B8A8Srgb        = { 16, PixelPacking::kUncompressed,  4, ComponentFormat::kSrgb,    8,  8,  8,  8};
 
-constexpr static PixelFormat kB8G8R8UNorm         = { 30, PixelPacking::kUncompressed,  3, ComponentFormat::kUNorm,   8,  8,  8,  0};
-constexpr static PixelFormat kB8G8R8SNorm         = { 31, PixelPacking::kUncompressed,  3, ComponentFormat::kSNorm,   8,  8,  8,  0};
-constexpr static PixelFormat kB8G8R8UScaled       = { 32, PixelPacking::kUncompressed,  3, ComponentFormat::kUFloat,  8,  8,  8,  0};
-constexpr static PixelFormat kB8G8R8SScaled       = { 33, PixelPacking::kUncompressed,  3, ComponentFormat::kSFloat,  8,  8,  8,  0};
-constexpr static PixelFormat kB8G8R8UInt          = { 34, PixelPacking::kUncompressed,  3, ComponentFormat::kUInt,    8,  8,  8,  0};
-constexpr static PixelFormat kB8G8R8SInt          = { 35, PixelPacking::kUncompressed,  3, ComponentFormat::kSInt,    8,  8,  8,  0};
-constexpr static PixelFormat kB8G8R8Srgb          = { 36, PixelPacking::kUncompressed,  3, ComponentFormat::kSrgb,    8,  8,  8,  0};
+constexpr static PixelFormat kB8G8R8A8UNorm       = { 17, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,   8,  8,  8,  8};
+constexpr static PixelFormat kB8G8R8A8Srgb        = { 18, PixelPacking::kUncompressed,  4, ComponentFormat::kSrgb,    8,  8,  8,  8};
 
-constexpr static PixelFormat kR8G8B8A8UNorm       = { 37, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kR8G8B8A8SNorm       = { 38, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kR8G8B8A8UScaled     = { 39, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat,  8,  8,  8,  8};
-constexpr static PixelFormat kR8G8B8A8SScaled     = { 40, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat,  8,  8,  8,  8};
-constexpr static PixelFormat kR8G8B8A8UInt        = { 41, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,    8,  8,  8,  8};
-constexpr static PixelFormat kR8G8B8A8SInt        = { 42, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,    8,  8,  8,  8};
-constexpr static PixelFormat kR8G8B8A8Srgb        = { 43, PixelPacking::kUncompressed,  4, ComponentFormat::kSrgb,    8,  8,  8,  8};
+constexpr static PixelFormat kA2B10G10R10UNorm    = { 19, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,  10, 10, 10,  2};
+constexpr static PixelFormat kA2B10G10R10SNorm    = { 20, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,  10, 10, 10,  2};
+constexpr static PixelFormat kA2B10G10R10UInt     = { 21, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   10, 10, 10,  2};
+constexpr static PixelFormat kA2B10G10R10SInt     = { 22, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   10, 10, 10,  2};
 
-constexpr static PixelFormat kB8G8R8A8UNorm       = { 44, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kB8G8R8A8SNorm       = { 45, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kB8G8R8A8UScaled     = { 46, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat,  8,  8,  8,  8};
-constexpr static PixelFormat kB8G8R8A8SScaled     = { 47, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat,  8,  8,  8,  8};
-constexpr static PixelFormat kB8G8R8A8UInt        = { 48, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,    8,  8,  8,  8};
-constexpr static PixelFormat kB8G8R8A8SInt        = { 49, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,    8,  8,  8,  8};
-constexpr static PixelFormat kB8G8R8A8Srgb        = { 50, PixelPacking::kUncompressed,  4, ComponentFormat::kSrgb,    8,  8,  8,  8};
+constexpr static PixelFormat kR16UNorm            = { 23, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,  16,  0,  0,  0};
+constexpr static PixelFormat kR16SNorm            = { 24, PixelPacking::kUncompressed,  2, ComponentFormat::kSNorm,  16,  0,  0,  0};
+constexpr static PixelFormat kR16UInt             = { 25, PixelPacking::kUncompressed,  2, ComponentFormat::kUInt,   16,  0,  0,  0};
+constexpr static PixelFormat kR16SInt             = { 26, PixelPacking::kUncompressed,  2, ComponentFormat::kSInt,   16,  0,  0,  0};
+constexpr static PixelFormat kR16SFloat           = { 27, PixelPacking::kUncompressed,  2, ComponentFormat::kSFloat, 16,  0,  0,  0};
 
-constexpr static PixelFormat kA8B8G8R8UNorm       = { 51, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kA8B8G8R8SNorm       = { 52, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kA8B8G8R8UScaled     = { 53, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat,  8,  8,  8,  8};
-constexpr static PixelFormat kA8B8G8R8SScaled     = { 54, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat,  8,  8,  8,  8};
-constexpr static PixelFormat kA8B8G8R8UInt        = { 55, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,    8,  8,  8,  8};
-constexpr static PixelFormat kA8B8G8R8SInt        = { 56, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,    8,  8,  8,  8};
-constexpr static PixelFormat kA8B8G8R8Srgb        = { 57, PixelPacking::kUncompressed,  4, ComponentFormat::kSrgb,    8,  8,  8,  8};
+constexpr static PixelFormat kR16G16UNorm         = { 28, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,  16, 16,  0,  0};
+constexpr static PixelFormat kR16G16SNorm         = { 29, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,  16, 16,  0,  0};
+constexpr static PixelFormat kR16G16UInt          = { 30, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   16, 16,  0,  0};
+constexpr static PixelFormat kR16G16SInt          = { 31, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   16, 16,  0,  0};
+constexpr static PixelFormat kR16G16SFloat        = { 32, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 16, 16,  0,  0};
 
-constexpr static PixelFormat kA2R10G10B10UNorm    = { 58, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,  10, 10, 10,  2};
-constexpr static PixelFormat kA2R10G10B10SNorm    = { 59, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,  10, 10, 10,  2};
-constexpr static PixelFormat kA2R10G10B10UScaled  = { 60, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat, 10, 10, 10,  2};
-constexpr static PixelFormat kA2R10G10B10SScaled  = { 61, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 10, 10, 10,  2};
-constexpr static PixelFormat kA2R10G10B10UInt     = { 62, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   10, 10, 10,  2};
-constexpr static PixelFormat kA2R10G10B10SInt     = { 63, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   10, 10, 10,  2};
+constexpr static PixelFormat kR16G16B16A16UNorm   = { 33, PixelPacking::kUncompressed,  8, ComponentFormat::kUNorm,  16, 16, 16, 16};
+constexpr static PixelFormat kR16G16B16A16SNorm   = { 34, PixelPacking::kUncompressed,  8, ComponentFormat::kSNorm,  16, 16, 16, 16};
+constexpr static PixelFormat kR16G16B16A16UInt    = { 35, PixelPacking::kUncompressed,  8, ComponentFormat::kUInt,   16, 16, 16, 16};
+constexpr static PixelFormat kR16G16B16A16SInt    = { 36, PixelPacking::kUncompressed,  8, ComponentFormat::kSInt,   16, 16, 16, 16};
+constexpr static PixelFormat kR16G16B16A16SFloat  = { 37, PixelPacking::kUncompressed,  8, ComponentFormat::kSFloat, 16, 16, 16, 16};
 
-constexpr static PixelFormat kA2B10G10R10UNorm    = { 64, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,  10, 10, 10,  2};
-constexpr static PixelFormat kA2B10G10R10SNorm    = { 65, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,  10, 10, 10,  2};
-constexpr static PixelFormat kA2B10G10R10UScaled  = { 66, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat, 10, 10, 10,  2};
-constexpr static PixelFormat kA2B10G10R10SScaled  = { 67, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 10, 10, 10,  2};
-constexpr static PixelFormat kA2B10G10R10UInt     = { 68, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   10, 10, 10,  2};
-constexpr static PixelFormat kA2B10G10R10SInt     = { 69, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   10, 10, 10,  2};
+constexpr static PixelFormat kR32UInt             = { 38, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   32,  0,  0,  0};
+constexpr static PixelFormat kR32SInt             = { 39, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   32,  0,  0,  0};
+constexpr static PixelFormat kR32SFloat           = { 40, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 32,  0,  0,  0};
 
-constexpr static PixelFormat kR16UNorm            = { 70, PixelPacking::kUncompressed,  2, ComponentFormat::kUNorm,  16,  0,  0,  0};
-constexpr static PixelFormat kR16SNorm            = { 71, PixelPacking::kUncompressed,  2, ComponentFormat::kSNorm,  16,  0,  0,  0};
-constexpr static PixelFormat kR16UScaled          = { 72, PixelPacking::kUncompressed,  2, ComponentFormat::kUFloat, 16,  0,  0,  0};
-constexpr static PixelFormat kR16SScaled          = { 73, PixelPacking::kUncompressed,  2, ComponentFormat::kSFloat, 16,  0,  0,  0};
-constexpr static PixelFormat kR16UInt             = { 74, PixelPacking::kUncompressed,  2, ComponentFormat::kUInt,   16,  0,  0,  0};
-constexpr static PixelFormat kR16SInt             = { 75, PixelPacking::kUncompressed,  2, ComponentFormat::kSInt,   16,  0,  0,  0};
-constexpr static PixelFormat kR16SFloat           = { 76, PixelPacking::kUncompressed,  2, ComponentFormat::kSFloat, 16,  0,  0,  0};
+constexpr static PixelFormat kR32G32UInt          = { 41, PixelPacking::kUncompressed,  8, ComponentFormat::kUInt,   32, 32,  0,  0};
+constexpr static PixelFormat kR32G32SInt          = { 42, PixelPacking::kUncompressed,  8, ComponentFormat::kSInt,   32, 32,  0,  0};
+constexpr static PixelFormat kR32G32SFloat        = { 43, PixelPacking::kUncompressed,  8, ComponentFormat::kSFloat, 32, 32,  0,  0};
 
-constexpr static PixelFormat kR16G16UNorm         = { 77, PixelPacking::kUncompressed,  4, ComponentFormat::kUNorm,  16, 16,  0,  0};
-constexpr static PixelFormat kR16G16SNorm         = { 78, PixelPacking::kUncompressed,  4, ComponentFormat::kSNorm,  16, 16,  0,  0};
-constexpr static PixelFormat kR16G16UScaled       = { 79, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat, 16, 16,  0,  0};
-constexpr static PixelFormat kR16G16SScaled       = { 80, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 16, 16,  0,  0};
-constexpr static PixelFormat kR16G16UInt          = { 81, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   16, 16,  0,  0};
-constexpr static PixelFormat kR16G16SInt          = { 82, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   16, 16,  0,  0};
-constexpr static PixelFormat kR16G16SFloat        = { 83, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 16, 16,  0,  0};
+constexpr static PixelFormat kR32G32B32UInt       = { 44, PixelPacking::kUncompressed, 12, ComponentFormat::kUInt,   32, 32, 32,  0};
+constexpr static PixelFormat kR32G32B32SInt       = { 45, PixelPacking::kUncompressed, 12, ComponentFormat::kSInt,   32, 32, 32,  0};
+constexpr static PixelFormat kR32G32B32SFloat     = { 46, PixelPacking::kUncompressed, 12, ComponentFormat::kSFloat, 32, 32, 32,  0};
 
-constexpr static PixelFormat kR16G16B16UNorm      = { 84, PixelPacking::kUncompressed,  6, ComponentFormat::kUNorm,  16, 16, 16,  0};
-constexpr static PixelFormat kR16G16B16SNorm      = { 85, PixelPacking::kUncompressed,  6, ComponentFormat::kSNorm,  16, 16, 16,  0};
-constexpr static PixelFormat kR16G16B16UScaled    = { 86, PixelPacking::kUncompressed,  6, ComponentFormat::kUFloat, 16, 16, 16,  0};
-constexpr static PixelFormat kR16G16B16SScaled    = { 87, PixelPacking::kUncompressed,  6, ComponentFormat::kSFloat, 16, 16, 16,  0};
-constexpr static PixelFormat kR16G16B16UInt       = { 88, PixelPacking::kUncompressed,  6, ComponentFormat::kUInt,   16, 16, 16,  0};
-constexpr static PixelFormat kR16G16B16SInt       = { 89, PixelPacking::kUncompressed,  6, ComponentFormat::kSInt,   16, 16, 16,  0};
-constexpr static PixelFormat kR16G16B16SFloat     = { 90, PixelPacking::kUncompressed,  6, ComponentFormat::kSFloat, 16, 16, 16,  0};
+constexpr static PixelFormat kR32G32B32A32UInt    = { 47, PixelPacking::kUncompressed, 16, ComponentFormat::kUInt,   32, 32, 32, 32};
+constexpr static PixelFormat kR32G32B32A32SInt    = { 48, PixelPacking::kUncompressed, 16, ComponentFormat::kSInt,   32, 32, 32, 32};
+constexpr static PixelFormat kR32G32B32A32SFloat  = { 49, PixelPacking::kUncompressed, 16, ComponentFormat::kSFloat, 32, 32, 32, 32};
 
-constexpr static PixelFormat kR16G16B16A16UNorm   = { 91, PixelPacking::kUncompressed,  8, ComponentFormat::kUNorm,  16, 16, 16, 16};
-constexpr static PixelFormat kR16G16B16A16SNorm   = { 92, PixelPacking::kUncompressed,  8, ComponentFormat::kSNorm,  16, 16, 16, 16};
-constexpr static PixelFormat kR16G16B16A16UScaled = { 93, PixelPacking::kUncompressed,  8, ComponentFormat::kUFloat, 16, 16, 16, 16};
-constexpr static PixelFormat kR16G16B16A16SScaled = { 94, PixelPacking::kUncompressed,  8, ComponentFormat::kSFloat, 16, 16, 16, 16};
-constexpr static PixelFormat kR16G16B16A16UInt    = { 95, PixelPacking::kUncompressed,  8, ComponentFormat::kUInt,   16, 16, 16, 16};
-constexpr static PixelFormat kR16G16B16A16SInt    = { 96, PixelPacking::kUncompressed,  8, ComponentFormat::kSInt,   16, 16, 16, 16};
-constexpr static PixelFormat kR16G16B16A16SFloat  = { 97, PixelPacking::kUncompressed,  8, ComponentFormat::kSFloat, 16, 16, 16, 16};
+constexpr static PixelFormat kB10G11R11UFloat     = { 50, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat, 11, 11, 10,  0};
+constexpr static PixelFormat kE5B9G9R9UFloat      = { 51, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat,  9,  9,  9,  5};
 
-constexpr static PixelFormat kR32UInt             = { 98, PixelPacking::kUncompressed,  4, ComponentFormat::kUInt,   32,  0,  0,  0};
-constexpr static PixelFormat kR32SInt             = { 99, PixelPacking::kUncompressed,  4, ComponentFormat::kSInt,   32,  0,  0,  0};
-constexpr static PixelFormat kR32SFloat           = {100, PixelPacking::kUncompressed,  4, ComponentFormat::kSFloat, 32,  0,  0,  0};
+constexpr static PixelFormat kD32SFloat           = { 52, PixelPacking::kDepthStencil,  4, ComponentFormat::kSFloat, 32,  0,  0,  0};
+// Requires Device::Features pixel_formats.packed_depth_stencil.
+constexpr static PixelFormat kD24UNormS8UInt      = { 53, PixelPacking::kDepthStencil,  4, ComponentFormat::kUNorm,  24,  8,  0,  0};
+constexpr static PixelFormat kD32SFloatS8UInt     = { 54, PixelPacking::kDepthStencil,  4, ComponentFormat::kSFloat, 32,  8,  0,  0};
 
-constexpr static PixelFormat kR32G32UInt          = {101, PixelPacking::kUncompressed,  8, ComponentFormat::kUInt,   32, 32,  0,  0};
-constexpr static PixelFormat kR32G32SInt          = {102, PixelPacking::kUncompressed,  8, ComponentFormat::kSInt,   32, 32,  0,  0};
-constexpr static PixelFormat kR32G32SFloat        = {103, PixelPacking::kUncompressed,  8, ComponentFormat::kSFloat, 32, 32,  0,  0};
+// Requires Device::Features pixel_formats.bc1_2_3.
+constexpr static PixelFormat kBC1RGBAUNorm        = { 55, PixelPacking::kBC1,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kBC1RGBASrgb         = { 56, PixelPacking::kBC1,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kBC2UNorm            = { 57, PixelPacking::kBC2,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kBC2Srgb             = { 58, PixelPacking::kBC2,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kBC3UNorm            = { 59, PixelPacking::kBC3,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kBC3Srgb             = { 60, PixelPacking::kBC3,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
 
-constexpr static PixelFormat kR32G32B32UInt       = {104, PixelPacking::kUncompressed, 12, ComponentFormat::kUInt,   32, 32, 32,  0};
-constexpr static PixelFormat kR32G32B32SInt       = {105, PixelPacking::kUncompressed, 12, ComponentFormat::kSInt,   32, 32, 32,  0};
-constexpr static PixelFormat kR32G32B32SFloat     = {106, PixelPacking::kUncompressed, 12, ComponentFormat::kSFloat, 32, 32, 32,  0};
+// Requires Device::Features pixel_formats.bc4_5_6_7.
+constexpr static PixelFormat kBC4UNorm            = { 61, PixelPacking::kBC4,           0, ComponentFormat::kUNorm,   1,  0,  0,  0};
+constexpr static PixelFormat kBC4SNorm            = { 62, PixelPacking::kBC4,           0, ComponentFormat::kSNorm,   1,  0,  0,  0};
+constexpr static PixelFormat kBC5UNorm            = { 63, PixelPacking::kBC5,           0, ComponentFormat::kUNorm,   1,  1,  0,  0};
+constexpr static PixelFormat kBC5SNorm            = { 64, PixelPacking::kBC5,           0, ComponentFormat::kSNorm,   1,  1,  0,  0};
+constexpr static PixelFormat kBC6HUFloat          = { 65, PixelPacking::kBC6,           0, ComponentFormat::kUFloat,  1,  1,  1,  0};
+constexpr static PixelFormat kBC6HSFloat          = { 66, PixelPacking::kBC6,           0, ComponentFormat::kSFloat,  1,  1,  1,  0};
+constexpr static PixelFormat kBC7UNorm            = { 67, PixelPacking::kBC7,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kBC7Srgb             = { 68, PixelPacking::kBC7,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
 
-constexpr static PixelFormat kR32G32B32A32UInt    = {107, PixelPacking::kUncompressed, 16, ComponentFormat::kUInt,   32, 32, 32, 32};
-constexpr static PixelFormat kR32G32B32A32SInt    = {108, PixelPacking::kUncompressed, 16, ComponentFormat::kSInt,   32, 32, 32, 32};
-constexpr static PixelFormat kR32G32B32A32SFloat  = {109, PixelPacking::kUncompressed, 16, ComponentFormat::kSFloat, 32, 32, 32, 32};
+// Requires Device::Features pixel_formats.etc2.
+constexpr static PixelFormat kEtc2R8G8B8UNorm     = { 69, PixelPacking::kEtc2,          0, ComponentFormat::kUNorm,   8,  8,  8,  0};
+constexpr static PixelFormat kEtc2R8G8B8Srgb      = { 70, PixelPacking::kEtc2,          0, ComponentFormat::kSrgb,    8,  8,  8,  0};
+constexpr static PixelFormat kEtc2R8G8B8A1UNorm   = { 71, PixelPacking::kEtc2,          0, ComponentFormat::kUNorm,   8,  8,  8,  1};
+constexpr static PixelFormat kEtc2R8G8B8A1Srgb    = { 72, PixelPacking::kEtc2,          0, ComponentFormat::kSrgb,    8,  8,  8,  1};
+constexpr static PixelFormat kEtc2R8G8B8A8UNorm   = { 73, PixelPacking::kEtc2,          0, ComponentFormat::kUNorm,   8,  8,  8,  8};
+constexpr static PixelFormat kEtc2R8G8B8A8Srgb    = { 74, PixelPacking::kEtc2,          0, ComponentFormat::kSrgb,    8,  8,  8,  8};
 
-constexpr static PixelFormat kR64UInt             = {110, PixelPacking::kUncompressed,  8, ComponentFormat::kUInt,   64,  0,  0,  0};
-constexpr static PixelFormat kR64SInt             = {111, PixelPacking::kUncompressed,  8, ComponentFormat::kSInt,   64,  0,  0,  0};
-constexpr static PixelFormat kR64SFloat           = {112, PixelPacking::kUncompressed,  8, ComponentFormat::kSFloat, 64,  0,  0,  0};
+// Requires Device::Features pixel_formats.eac.
+constexpr static PixelFormat kEacR11UNorm         = { 75, PixelPacking::kEac,           0, ComponentFormat::kUNorm,  11,  0,  0,  0};
+constexpr static PixelFormat kEacR11SNorm         = { 76, PixelPacking::kEac,           0, ComponentFormat::kSNorm,  11,  0,  0,  0};
+constexpr static PixelFormat kEacR11G11UNorm      = { 77, PixelPacking::kEac,           0, ComponentFormat::kUNorm,  11, 11,  0,  0};
+constexpr static PixelFormat kEacR11G11SNorm      = { 78, PixelPacking::kEac,           0, ComponentFormat::kSNorm,  11, 11,  0,  0};
 
-constexpr static PixelFormat kR64G64UInt          = {113, PixelPacking::kUncompressed, 16, ComponentFormat::kUInt,   64, 64,  0,  0};
-constexpr static PixelFormat kR64G64SInt          = {114, PixelPacking::kUncompressed, 16, ComponentFormat::kSInt,   64, 64,  0,  0};
-constexpr static PixelFormat kR64G64SFloat        = {115, PixelPacking::kUncompressed, 16, ComponentFormat::kSFloat, 64, 64,  0,  0};
+// Requires Device::Features pixel_formats.astc.
+constexpr static PixelFormat kAstc4x4UNorm        = { 79, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc4x4Srgb         = { 80, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc5x4UNorm        = { 81, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc5x4Srgb         = { 82, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc5x5UNorm        = { 83, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc5x5Srgb         = { 84, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc6x5UNorm        = { 85, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc6x5Srgb         = { 86, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc6x6UNorm        = { 87, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc6x6Srgb         = { 88, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc8x5UNorm        = { 89, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc8x5Srgb         = { 90, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc8x6UNorm        = { 91, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc8x6Srgb         = { 92, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc8x8UNorm        = { 93, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc8x8Srgb         = { 94, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x5UNorm       = { 95, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x5Srgb        = { 96, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x6UNorm       = { 97, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x6Srgb        = { 98, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x8UNorm       = { 99, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x8Srgb        = {100, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x10UNorm      = {101, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc10x10Srgb       = {102, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc12x10UNorm      = {103, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc12x10Srgb       = {104, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
+constexpr static PixelFormat kAstc12x12UNorm      = {105, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
+constexpr static PixelFormat kAstc12x12Srgb       = {106, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
 
-constexpr static PixelFormat kR64G64B64UInt       = {116, PixelPacking::kUncompressed, 24, ComponentFormat::kUInt,   64, 64, 64,  0};
-constexpr static PixelFormat kR64G64B64SInt       = {117, PixelPacking::kUncompressed, 24, ComponentFormat::kSInt,   64, 64, 64,  0};
-constexpr static PixelFormat kR64G64B64SFloat     = {118, PixelPacking::kUncompressed, 24, ComponentFormat::kSFloat, 64, 64, 64,  0};
-
-constexpr static PixelFormat kR64G64B64A64UInt    = {119, PixelPacking::kUncompressed, 32, ComponentFormat::kUInt,   64, 64, 64, 64};
-constexpr static PixelFormat kR64G64B64A64SInt    = {120, PixelPacking::kUncompressed, 32, ComponentFormat::kSInt,   64, 64, 64, 64};
-constexpr static PixelFormat kR64G64B64A64SFloat  = {121, PixelPacking::kUncompressed, 32, ComponentFormat::kSFloat, 64, 64, 64, 64};
-
-constexpr static PixelFormat kB10G11R11UFloat     = {122, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat, 11, 11, 10,  0};
-constexpr static PixelFormat kE5B9G9R9UFloat      = {123, PixelPacking::kUncompressed,  4, ComponentFormat::kUFloat,  9,  9,  9,  5};
-
-constexpr static PixelFormat kD16UNorm            = {124, PixelPacking::kDepthStencil,  2, ComponentFormat::kUNorm,  16,  0,  0,  0};
-constexpr static PixelFormat kX8D24UNorm          = {125, PixelPacking::kDepthStencil,  3, ComponentFormat::kUNorm,  24,  8,  0,  0};
-constexpr static PixelFormat kD32SFloat           = {126, PixelPacking::kDepthStencil,  4, ComponentFormat::kSFloat, 32,  0,  0,  0};
-constexpr static PixelFormat kS8UInt              = {127, PixelPacking::kDepthStencil,  1, ComponentFormat::kUInt,    0,  8,  0,  0};
-constexpr static PixelFormat kD16UNormS8UInt      = {128, PixelPacking::kDepthStencil,  3, ComponentFormat::kUNorm,  16,  8,  0,  0};
-constexpr static PixelFormat kD24UNormS8UInt      = {129, PixelPacking::kDepthStencil,  4, ComponentFormat::kUNorm,  24,  8,  0,  0};
-constexpr static PixelFormat kD32SFloatS8UInt     = {130, PixelPacking::kDepthStencil,  4, ComponentFormat::kSFloat, 32,  8,  0,  0};
-
-constexpr static PixelFormat kBC1RGBUNorm         = {131, PixelPacking::kBC1,           0, ComponentFormat::kUNorm,   1,  1,  1,  0};
-constexpr static PixelFormat kBC1RGBSrgb          = {132, PixelPacking::kBC1,           0, ComponentFormat::kSrgb,    1,  1,  1,  0};
-constexpr static PixelFormat kBC1RGBAUNorm        = {133, PixelPacking::kBC1,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kBC1RGBASrgb         = {134, PixelPacking::kBC1,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kBC2UNorm            = {135, PixelPacking::kBC2,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kBC2Srgb             = {136, PixelPacking::kBC2,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kBC3UNorm            = {137, PixelPacking::kBC3,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kBC3Srgb             = {138, PixelPacking::kBC3,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kBC4UNorm            = {139, PixelPacking::kBC4,           0, ComponentFormat::kUNorm,   1,  0,  0,  0};
-constexpr static PixelFormat kBC4SNorm            = {140, PixelPacking::kBC4,           0, ComponentFormat::kSNorm,   1,  0,  0,  0};
-constexpr static PixelFormat kBC5UNorm            = {141, PixelPacking::kBC5,           0, ComponentFormat::kUNorm,   1,  1,  0,  0};
-constexpr static PixelFormat kBC5SNorm            = {142, PixelPacking::kBC5,           0, ComponentFormat::kSNorm,   1,  1,  0,  0};
-constexpr static PixelFormat kBC6HUFloat          = {143, PixelPacking::kBC6,           0, ComponentFormat::kUFloat,  1,  1,  1,  0};
-constexpr static PixelFormat kBC6HSFloat          = {144, PixelPacking::kBC6,           0, ComponentFormat::kSFloat,  1,  1,  1,  0};
-constexpr static PixelFormat kBC7UNorm            = {145, PixelPacking::kBC7,           0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kBC7Srgb             = {146, PixelPacking::kBC7,           0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-
-constexpr static PixelFormat kEtc2R8G8B8UNorm     = {147, PixelPacking::kEtc2,          0, ComponentFormat::kUNorm,   8,  8,  8,  0};
-constexpr static PixelFormat kEtc2R8G8B8Srgb      = {148, PixelPacking::kEtc2,          0, ComponentFormat::kSrgb,    8,  8,  8,  0};
-constexpr static PixelFormat kEtc2R8G8B8A1UNorm   = {149, PixelPacking::kEtc2,          0, ComponentFormat::kUNorm,   8,  8,  8,  1};
-constexpr static PixelFormat kEtc2R8G8B8A1Srgb    = {150, PixelPacking::kEtc2,          0, ComponentFormat::kSrgb,    8,  8,  8,  1};
-constexpr static PixelFormat kEtc2R8G8B8A8UNorm   = {151, PixelPacking::kEtc2,          0, ComponentFormat::kUNorm,   8,  8,  8,  8};
-constexpr static PixelFormat kEtc2R8G8B8A8Srgb    = {152, PixelPacking::kEtc2,          0, ComponentFormat::kSrgb,    8,  8,  8,  8};
-
-constexpr static PixelFormat kEacR11UNorm         = {153, PixelPacking::kEac,           0, ComponentFormat::kUNorm,  11,  0,  0,  0};
-constexpr static PixelFormat kEacR11SNorm         = {154, PixelPacking::kEac,           0, ComponentFormat::kSNorm,  11,  0,  0,  0};
-constexpr static PixelFormat kEacR11G11UNorm      = {155, PixelPacking::kEac,           0, ComponentFormat::kUNorm,  11, 11,  0,  0};
-constexpr static PixelFormat kEacR11G11SNorm      = {156, PixelPacking::kEac,           0, ComponentFormat::kSNorm,  11, 11,  0,  0};
-
-constexpr static PixelFormat kAstc4x4UNorm        = {157, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc4x4Srgb         = {158, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc5x4UNorm        = {159, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc5x4Srgb         = {160, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc5x5UNorm        = {161, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc5x5Srgb         = {162, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc6x5UNorm        = {163, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc6x5Srgb         = {164, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc6x6UNorm        = {165, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc6x6Srgb         = {166, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc8x5UNorm        = {167, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc8x5Srgb         = {168, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc8x6UNorm        = {169, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc8x6Srgb         = {170, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc8x8UNorm        = {171, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc8x8Srgb         = {172, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x5UNorm       = {173, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x5Srgb        = {174, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x6UNorm       = {175, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x6Srgb        = {176, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x8UNorm       = {177, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x8Srgb        = {178, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x10UNorm      = {179, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc10x10Srgb       = {180, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc12x10UNorm      = {181, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc12x10Srgb       = {182, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-constexpr static PixelFormat kAstc12x12UNorm      = {183, PixelPacking::kAstc,          0, ComponentFormat::kUNorm,   1,  1,  1,  1};
-constexpr static PixelFormat kAstc12x12Srgb       = {184, PixelPacking::kAstc,          0, ComponentFormat::kSrgb,    1,  1,  1,  1};
-
+// Requires Device::Features pixel_formats.pvrtc.
 // TODO(benvanik): PVRTC formats.
 
 // Something missing from this list? Append only! IDs must be dense and you'll
