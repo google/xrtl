@@ -50,4 +50,15 @@
 #define DCHECK_CONTEXT_IS_CURRENT(context)
 #endif  // DEBUG_GL
 
+namespace xrtl {
+namespace gfx {
+namespace es3 {
+
+// TODO(benvanik): use device limits resource_set_count.
+constexpr int kMaxResourceSetCount = 4;
+
+}  // namespace es3
+}  // namespace gfx
+}  // namespace xrtl
+
 #endif  // XRTL_GFX_ES3_ES3_COMMON_H_

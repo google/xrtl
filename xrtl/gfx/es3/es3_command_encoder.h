@@ -31,9 +31,6 @@ namespace es3 {
 // called by the MemoryCommandBuffer implementation decoding a previously
 // generated command buffer.
 
-// TODO(benvanik): use device limits resource_set_count.
-constexpr int kMaxResourceSetCount = 4;
-
 class ES3TransferCommandEncoder : public TransferCommandEncoder {
  public:
   explicit ES3TransferCommandEncoder(CommandBuffer* command_buffer);

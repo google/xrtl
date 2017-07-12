@@ -16,6 +16,8 @@
 
 #include <spirv_glsl.hpp>
 
+#include <algorithm>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -157,8 +159,8 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
       return false;
   }
 
-  // Perform some fixup for GLSL ES 300.
-  // * Remove layout location specifiers on varyings:
+  // Remove layout location specifiers on varyings as they are matched by name
+  // in GL.
   auto shader_resources = compiler.get_shader_resources();
   if (shader_type != GL_VERTEX_SHADER) {
     // Remove location specifiers from shader inputs (except vertex shaders).
@@ -176,40 +178,38 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
       }
     }
   }
-  // * Record and then remove uniform binding locations.
-  for (const auto& resource : shader_resources.uniform_buffers) {
+
+  // Record and then remove uniform binding sets/locations.
+  // We'll later assign the explicit bindings in ApplyBindings per-program.
+  auto ExtractUniformAssignment = [this, &compiler](
+      const spirv_cross::Resource& resource, bool is_block) {
+    int set = 0;
+    int binding = 0;
+    if (compiler.has_decoration(resource.id, spv::DecorationDescriptorSet)) {
+      set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+      compiler.unset_decoration(resource.id, spv::DecorationDescriptorSet);
+    }
     if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
-      int binding =
-          compiler.get_decoration(resource.id, spv::DecorationBinding);
-      uniform_block_bindings_.push_back({resource.name, binding});
+      binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
       compiler.unset_decoration(resource.id, spv::DecorationBinding);
     }
+    uniform_assignments_.push_back({resource.name, is_block, set, binding});
+  };
+  for (const auto& resource : shader_resources.uniform_buffers) {
+    ExtractUniformAssignment(resource, true);
   }
   for (const auto& resource : shader_resources.storage_buffers) {
-    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
-      int binding =
-          compiler.get_decoration(resource.id, spv::DecorationBinding);
-      uniform_bindings_.push_back({resource.name, binding});
-      compiler.unset_decoration(resource.id, spv::DecorationBinding);
-    }
+    ExtractUniformAssignment(resource, false);
   }
   for (const auto& resource : shader_resources.storage_images) {
-    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
-      int binding =
-          compiler.get_decoration(resource.id, spv::DecorationBinding);
-      uniform_bindings_.push_back({resource.name, binding});
-      compiler.unset_decoration(resource.id, spv::DecorationBinding);
-    }
+    ExtractUniformAssignment(resource, false);
   }
   for (const auto& resource : shader_resources.sampled_images) {
-    if (compiler.has_decoration(resource.id, spv::DecorationBinding)) {
-      int binding =
-          compiler.get_decoration(resource.id, spv::DecorationBinding);
-      uniform_bindings_.push_back({resource.name, binding});
-      compiler.unset_decoration(resource.id, spv::DecorationBinding);
-    }
+    ExtractUniformAssignment(resource, false);
   }
-  // * Record and reflect push constant buffers.
+
+  // Record and reflect push constant buffers. We emulate push constants with
+  // normal nested GL struct uniform locations.
   for (const auto& resource : shader_resources.push_constant_buffers) {
     push_constant_block_name_ = resource.name;
     const SPIRType& type = compiler.get_type(resource.base_type_id);
@@ -260,6 +260,18 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
     }
   }
 
+  // Sort uniform assignments to make binding reservation easier in ES3Program.
+  std::sort(uniform_assignments_.begin(), uniform_assignments_.end(),
+            [](const UniformAssignment& a, const UniformAssignment& b) {
+              if (a.set < b.set) {
+                return true;
+              } else if (a.set == b.set) {
+                return a.binding < b.binding;
+              } else {
+                return false;
+              }
+            });
+
   // Add common code and extension requirements.
   // TODO(benvanik): figure out what is required here.
   //   compiler.add_header_line("");
@@ -282,33 +294,32 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
   return CompileSource(shader_type, ArrayView<std::string>{translated_source});
 }
 
-bool ES3Shader::InitializeUniformBindings(GLuint program_id) {
-  // Setup generic uniform bindings for samplers/textures/etc.
-  for (const auto& pair : uniform_bindings_) {
-    GLint uniform_location =
-        glGetUniformLocation(program_id, pair.first.c_str());
-    if (uniform_location != -1) {
-      glUniform1i(uniform_location, pair.second);
+bool ES3Shader::ApplyBindings(GLuint program_id,
+                              const SetBindingMaps& set_binding_maps) const {
+  for (const UniformAssignment& assignment : uniform_assignments_) {
+    GLuint gl_binding =
+        set_binding_maps.set_bindings[assignment.set][assignment.binding];
+    if (assignment.is_block) {
+      GLint block_index =
+          glGetUniformBlockIndex(program_id, assignment.uniform_name.c_str());
+      if (block_index != -1) {
+        glUniformBlockBinding(program_id, block_index, gl_binding);
+      }
+    } else {
+      GLint uniform_location =
+          glGetUniformLocation(program_id, assignment.uniform_name.c_str());
+      if (uniform_location != -1) {
+        glUniform1i(uniform_location, gl_binding);
+      }
     }
-  }
-
-  // Setup uniform block bindings. These will be provided by ResourceSet
-  // values.
-  for (const auto& pair : uniform_block_bindings_) {
-    GLint block_index = glGetUniformBlockIndex(program_id, pair.first.c_str());
-    if (block_index != -1) {
-      glUniformBlockBinding(program_id, block_index, pair.second);
-    }
-  }
-
-  // Retrieve locations for push constant members (which have been flattened).
-  for (auto& member : push_constant_members_) {
-    std::string full_name =
-        push_constant_block_name_ + "." + member.member_name;
-    member.uniform_location =
-        glGetUniformLocation(program_id, full_name.c_str());
   }
   return true;
+}
+
+GLint ES3Shader::QueryPushConstantLocation(
+    GLuint program_id, const PushConstantMember& member) const {
+  std::string full_name = push_constant_block_name_ + "." + member.member_name;
+  return glGetUniformLocation(program_id, full_name.c_str());
 }
 
 }  // namespace es3

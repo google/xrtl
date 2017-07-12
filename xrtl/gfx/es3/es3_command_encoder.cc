@@ -972,88 +972,90 @@ void ES3RenderPassCommandEncoder::UpdatePushConstants() {
   push_constants_dirty_ = false;
 
   auto program = pipeline_.As<ES3RenderPipeline>()->program();
-  for (const auto& member : program->push_constant_members()) {
+  for (const auto& member_pair : program->push_constant_members()) {
     // TODO(benvanik): optimized way of doing this. This is bad.
+    const auto& member = *member_pair.first;
+    GLuint uniform_location = member_pair.second;
     switch (member.member_type) {
       case GL_FLOAT:
-        glUniform1fv(member.uniform_location, member.array_size,
+        glUniform1fv(uniform_location, member.array_size,
                      reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                          member.member_offset);
         break;
       case GL_FLOAT_VEC2:
-        glUniform2fv(member.uniform_location, member.array_size,
+        glUniform2fv(uniform_location, member.array_size,
                      reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                          member.member_offset);
         break;
       case GL_FLOAT_VEC3:
-        glUniform3fv(member.uniform_location, member.array_size,
+        glUniform3fv(uniform_location, member.array_size,
                      reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                          member.member_offset);
         break;
       case GL_FLOAT_VEC4:
-        glUniform4fv(member.uniform_location, member.array_size,
+        glUniform4fv(uniform_location, member.array_size,
                      reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                          member.member_offset);
         break;
       case GL_FLOAT_MAT2:
         glUniformMatrix2fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT2x3:
         glUniformMatrix2x3fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT2x4:
         glUniformMatrix2x4fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT3x2:
         glUniformMatrix3x2fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT3:
         glUniformMatrix3fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT3x4:
         glUniformMatrix3x4fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT4x2:
         glUniformMatrix4x2fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT4x3:
         glUniformMatrix4x3fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
         break;
       case GL_FLOAT_MAT4:
         glUniformMatrix4fv(
-            member.uniform_location, member.array_size,
+            uniform_location, member.array_size,
             member.transpose ? GL_TRUE : GL_FALSE,
             reinterpret_cast<GLfloat*>(push_constant_data_.data()) +
                 member.member_offset);
@@ -1074,18 +1076,24 @@ void ES3RenderPassCommandEncoder::UpdateResourceSets() {
   }
   resource_sets_dirty_ = false;
 
+  auto program = pipeline_.As<ES3RenderPipeline>()->program();
+
   uint32_t new_texture_binding_mask = 0;
   uint32_t new_uniform_buffer_binding_mask = 0;
   for (int set_index = 0; set_index < count_of(resource_sets_); ++set_index) {
     if (!resource_sets_[set_index]) {
       continue;
     }
-    auto resource_set = resource_sets_[set_index];
+    const auto& resource_set = resource_sets_[set_index];
     const auto& binding_slots = resource_set->layout()->binding_slots();
+    const auto& set_binding_map = program->set_binding_map(set_index);
     for (int i = 0; i < binding_slots.size(); ++i) {
       const ResourceSetLayout::BindingSlot& binding_slot = binding_slots[i];
       const ResourceSet::BindingValue& binding_value =
           resource_set->binding_values()[i];
+
+      // Translate the binding slot to a GL binding index.
+      int gl_binding = set_binding_map[binding_slot.binding];
 
       // TODO(benvanik): support binding arrays.
       DCHECK_EQ(binding_slot.array_count, 1);
@@ -1097,10 +1105,10 @@ void ES3RenderPassCommandEncoder::UpdateResourceSets() {
           DCHECK(binding_value.sampler);
           auto image = binding_value.image_view->image().As<ES3Image>();
           auto sampler = binding_value.sampler.As<ES3Sampler>();
-          glActiveTexture(GL_TEXTURE0 + binding_slot.binding);
+          glActiveTexture(GL_TEXTURE0 + gl_binding);
           glBindTexture(image->target(), image->texture_id());
-          glBindSampler(binding_slot.binding, sampler->sampler_id());
-          new_texture_binding_mask |= 1 << binding_slot.binding;
+          glBindSampler(gl_binding, sampler->sampler_id());
+          new_texture_binding_mask |= 1 << gl_binding;
           break;
         }
         case ResourceSetLayout::BindingSlot::Type::kUniformBuffer: {
@@ -1111,9 +1119,9 @@ void ES3RenderPassCommandEncoder::UpdateResourceSets() {
           size_t bind_length = binding_value.buffer_length != -1
                                    ? binding_value.buffer_length
                                    : buffer->allocation_size();
-          glBindBufferRange(GL_UNIFORM_BUFFER, binding_slot.binding,
-                            buffer->buffer_id(), bind_offset, bind_length);
-          new_uniform_buffer_binding_mask |= 1 << binding_slot.binding;
+          glBindBufferRange(GL_UNIFORM_BUFFER, gl_binding, buffer->buffer_id(),
+                            bind_offset, bind_length);
+          new_uniform_buffer_binding_mask |= 1 << gl_binding;
           break;
         }
         default:
