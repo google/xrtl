@@ -265,7 +265,7 @@ def convert_path_cygwin_to_win32(cygwin_path):
     windows_path = windows_path[2:].replace('/', '\\\\')
     windows_path = '%s%s' % (drive_name, windows_path)
   elif sys.platform == 'cygwin' or sys.platform == 'win32':
-    windows_path = cygwin_path.replace('/', '\\\\')
+    windows_path = cygwin_path.replace('/', '\\')
   else:
     windows_path = cygwin_path
   return windows_path
@@ -1612,6 +1612,11 @@ class GenerateSlnCommand(Command):
     source_map = {}
     all_defines = []
     all_include_paths = []
+    all_include_paths.append('.')
+    all_include_paths.append(
+        convert_path_cygwin_to_win32(os.path.abspath('.')) + os.sep)
+    all_include_paths.append(
+        convert_path_cygwin_to_win32(execution_root) + os.sep)
     for action_command in compile_json_data:
       # This may be a .cc or .h.
       source_file = action_command['file']
@@ -1635,6 +1640,7 @@ class GenerateSlnCommand(Command):
         if define not in all_defines:
           all_defines.append(define)
       for include_path in include_paths:
+        include_path = convert_path_cygwin_to_win32(include_path) + os.sep
         if include_path not in all_include_paths:
           all_include_paths.append(include_path)
 
@@ -1792,6 +1798,7 @@ class GenerateSlnCommand(Command):
     print('')
     print('Visual Studio solution written to:')
     print('  %s' % (convert_path_cygwin_to_win32(sln_path)))
+    print('NOTE: you may need to relaunch VS a few times to get intellisense')
 
     return return_code
 
