@@ -78,6 +78,7 @@ cc_library(
         ":es3_queue_fence",
         ":es3_render_pass",
         ":es3_resource_set",
+        ":es3_resource_set_layout",
         ":es3_sampler",
         ":es3_shader",
         ":es3_shader_module",

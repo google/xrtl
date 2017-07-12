@@ -77,11 +77,24 @@ bool ES3Program::Link() {
     VLOG(1) << "Program linking warnings: " << info_log_;
   }
 
+  // Perform binding allocation across the shaders.
+  GLuint next_binding_index = 0;
+  for (auto& shader : shaders_) {
+    // Assignments must be sorted by set+binding.
+    for (const auto& assignment : shader->uniform_assignments()) {
+      auto& set_bindings = set_binding_maps_.set_bindings[assignment.set];
+      if (set_bindings.size() <= assignment.binding) {
+        set_bindings.resize(assignment.binding + 1);
+        set_bindings[assignment.binding] = next_binding_index++;
+      }
+    }
+  }
+
   // Initialize shader bindings.
   glUseProgram(program_id_);
   for (const auto& shader : shaders_) {
-    if (!shader->InitializeUniformBindings(program_id_)) {
-      LOG(ERROR) << "Failed to initialize shader uniform bindings";
+    if (!shader->ApplyBindings(program_id_, set_binding_maps_)) {
+      LOG(ERROR) << "Failed to apply shader uniform bindings";
       return false;
     }
   }
@@ -92,10 +105,12 @@ bool ES3Program::Link() {
   uint64_t location_set = 0;
   for (const auto& shader : shaders_) {
     for (const auto& member : shader->push_constant_members()) {
-      if (member.uniform_location != -1) {
-        if ((location_set & (1 << member.uniform_location)) == 0) {
-          location_set |= (1 << member.uniform_location);
-          push_constant_members_.push_back(member);
+      GLint uniform_location =
+          shader->QueryPushConstantLocation(program_id_, member);
+      if (uniform_location != -1) {
+        if ((location_set & (1 << uniform_location)) == 0) {
+          location_set |= (1 << uniform_location);
+          push_constant_members_.push_back({&member, uniform_location});
         }
       }
     }
