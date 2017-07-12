@@ -272,7 +272,8 @@ void ES3ComputeCommandEncoder::BindPipeline(ref_ptr<ComputePipeline> pipeline) {
 }
 
 void ES3ComputeCommandEncoder::BindResourceSet(
-    ref_ptr<ResourceSet> resource_set, ArrayView<size_t> dynamic_offsets) {
+    int set_index, ref_ptr<ResourceSet> resource_set,
+    ArrayView<size_t> dynamic_offsets) {
   // TODO(benvanik): this.
   LOG(WARNING) << "BindResourceSet not yet implemented";
 }
@@ -909,13 +910,14 @@ void ES3RenderPassCommandEncoder::RefreshColorBlendState(
 }
 
 void ES3RenderPassCommandEncoder::BindResourceSet(
-    ref_ptr<ResourceSet> resource_set, ArrayView<size_t> dynamic_offsets) {
-  resource_set_ = resource_set;
+    int set_index, ref_ptr<ResourceSet> resource_set,
+    ArrayView<size_t> dynamic_offsets) {
+  resource_sets_[set_index] = resource_set;
   // TODO(benvanik): reserve to avoid allocations.
-  dynamic_offsets_ = dynamic_offsets;
+  dynamic_offsets_[set_index] = dynamic_offsets;
 
-  // Ensure that UpdateResourceSet is called before we draw again.
-  resource_set_dirty_ = true;
+  // Ensure that UpdateResourceSets is called before we draw again.
+  resource_sets_dirty_ = true;
 }
 
 void ES3RenderPassCommandEncoder::PushConstants(
@@ -1065,27 +1067,31 @@ void ES3RenderPassCommandEncoder::UpdatePushConstants() {
   }
 }
 
-void ES3RenderPassCommandEncoder::UpdateResourceSet() {
-  if (!resource_set_dirty_) {
+void ES3RenderPassCommandEncoder::UpdateResourceSets() {
+  if (!resource_sets_dirty_) {
     // No resource set changes.
     return;
   }
-  resource_set_dirty_ = false;
+  resource_sets_dirty_ = false;
 
   uint32_t new_texture_binding_mask = 0;
   uint32_t new_uniform_buffer_binding_mask = 0;
-  if (resource_set_) {
-    const auto& binding_slots = resource_set_->layout()->binding_slots();
+  for (int set_index = 0; set_index < count_of(resource_sets_); ++set_index) {
+    if (!resource_sets_[set_index]) {
+      continue;
+    }
+    auto resource_set = resource_sets_[set_index];
+    const auto& binding_slots = resource_set->layout()->binding_slots();
     for (int i = 0; i < binding_slots.size(); ++i) {
-      const PipelineLayout::BindingSlot& binding_slot = binding_slots[i];
+      const ResourceSetLayout::BindingSlot& binding_slot = binding_slots[i];
       const ResourceSet::BindingValue& binding_value =
-          resource_set_->binding_values()[i];
+          resource_set->binding_values()[i];
 
       // TODO(benvanik): support binding arrays.
       DCHECK_EQ(binding_slot.array_count, 1);
 
       switch (binding_slot.type) {
-        case PipelineLayout::BindingSlot::Type::kCombinedImageSampler: {
+        case ResourceSetLayout::BindingSlot::Type::kCombinedImageSampler: {
           // TODO(benvanik): validate during ResourceSet init.
           DCHECK(binding_value.image_view);
           DCHECK(binding_value.sampler);
@@ -1097,7 +1103,7 @@ void ES3RenderPassCommandEncoder::UpdateResourceSet() {
           new_texture_binding_mask |= 1 << binding_slot.binding;
           break;
         }
-        case PipelineLayout::BindingSlot::Type::kUniformBuffer: {
+        case ResourceSetLayout::BindingSlot::Type::kUniformBuffer: {
           // TODO(benvanik): validate during ResourceSet init.
           DCHECK(binding_value.buffer);
           auto buffer = binding_value.buffer.As<ES3Buffer>();
@@ -1248,7 +1254,7 @@ void ES3RenderPassCommandEncoder::Draw(int vertex_count, int instance_count,
   DCHECK_EQ(first_instance, 0);
 
   UpdatePushConstants();
-  UpdateResourceSet();
+  UpdateResourceSets();
   UpdateVertexInputs();
 
   // EWW: nvidia drivers on linux leak a few statics. It'd be nice to find a
@@ -1273,7 +1279,7 @@ void ES3RenderPassCommandEncoder::DrawIndexed(int index_count,
   DCHECK_EQ(first_instance, 0);
 
   UpdatePushConstants();
-  UpdateResourceSet();
+  UpdateResourceSets();
   UpdateVertexInputs();
 
   DCHECK(index_buffer_);
@@ -1295,7 +1301,7 @@ void ES3RenderPassCommandEncoder::DrawIndirect(ref_ptr<Buffer> buffer,
                                                size_t buffer_offset,
                                                int draw_count, size_t stride) {
   UpdatePushConstants();
-  UpdateResourceSet();
+  UpdateResourceSets();
   UpdateVertexInputs();
 
   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, buffer.As<ES3Buffer>()->buffer_id());
@@ -1310,7 +1316,7 @@ void ES3RenderPassCommandEncoder::DrawIndexedIndirect(ref_ptr<Buffer> buffer,
                                                       int draw_count,
                                                       size_t stride) {
   UpdatePushConstants();
-  UpdateResourceSet();
+  UpdateResourceSets();
   UpdateVertexInputs();
 
   DCHECK(index_buffer_);

@@ -38,6 +38,7 @@ using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
 using gfx::ResourceSet;
+using gfx::ResourceSetLayout;
 using gfx::Sampler;
 using gfx::ShaderModule;
 
@@ -333,14 +334,17 @@ bool ImGuiOverlay::InitializePipeline() {
   shader_stages.fragment_entry_point = "main";
 
   // Pipeline layout.
-  std::vector<PipelineLayout::BindingSlot> binding_slots;
-  binding_slots.push_back(
-      {0, PipelineLayout::BindingSlot::Type::kCombinedImageSampler});
-  std::vector<PipelineLayout::PushConstantRange> push_constant_ranges;
-  push_constant_ranges.push_back({offsetof(PushConstants, proj_matrix),
-                                  sizeof(PushConstants::proj_matrix)});
-  render_pipeline_layout_ =
-      context_->CreatePipelineLayout(binding_slots, push_constant_ranges);
+  resource_set_layout_ = context_->CreateResourceSetLayout({
+      {0, ResourceSetLayout::BindingSlot::Type::kCombinedImageSampler},
+  });
+  render_pipeline_layout_ = context_->CreatePipelineLayout(
+      {
+          resource_set_layout_,
+      },
+      {
+          {offsetof(PushConstants, proj_matrix),
+           sizeof(PushConstants::proj_matrix)},
+      });
   if (!render_pipeline_layout_) {
     LOG(ERROR) << "Unable to create pipeline layout";
     return false;
@@ -485,16 +489,16 @@ void ImGuiOverlay::RenderDrawLists(ImDrawData* data) {
           std::vector<ResourceSet::BindingValue> binding_values;
           binding_values.push_back(
               {image_view, Image::Layout::kGeneral, nearest_sampler_});
-          auto resource_set = context_->CreateResourceSet(
-              render_pipeline_layout_, binding_values);
+          auto resource_set =
+              context_->CreateResourceSet(resource_set_layout_, binding_values);
           if (!resource_set) {
             LOG(ERROR) << "Unable to create resource set";
             return;
           }
-          rpe->BindResourceSet(resource_set);
+          rpe->BindResourceSet(0, resource_set);
         } else {
           // TODO(benvanik): a default set with a white pixel texture?
-          rpe->BindResourceSet(nullptr);
+          rpe->BindResourceSet(0, nullptr);
         }
 
         // Issue draw for the buffer range.

@@ -306,11 +306,12 @@ void MemoryComputeCommandEncoder::BindPipeline(
 }
 
 void MemoryComputeCommandEncoder::BindResourceSet(
-    ref_ptr<ResourceSet> resource_set, ArrayView<size_t> dynamic_offsets) {
+    int set_index, ref_ptr<ResourceSet> resource_set,
+    ArrayView<size_t> dynamic_offsets) {
   command_buffer_->AttachDependency(resource_set);
-  writer_->WriteCommand(
-      CommandType::kBindResourceSet,
-      BindResourceSetCommand{resource_set.get(), dynamic_offsets.size()});
+  writer_->WriteCommand(CommandType::kBindResourceSet,
+                        BindResourceSetCommand{set_index, resource_set.get(),
+                                               dynamic_offsets.size()});
   writer_->WriteArray(dynamic_offsets);
 }
 
@@ -695,11 +696,12 @@ void MemoryRenderPassCommandEncoder::BindPipeline(
 }
 
 void MemoryRenderPassCommandEncoder::BindResourceSet(
-    ref_ptr<ResourceSet> resource_set, ArrayView<size_t> dynamic_offsets) {
+    int set_index, ref_ptr<ResourceSet> resource_set,
+    ArrayView<size_t> dynamic_offsets) {
   command_buffer_->AttachDependency(resource_set);
-  writer_->WriteCommand(
-      CommandType::kBindResourceSet,
-      BindResourceSetCommand{resource_set.get(), dynamic_offsets.size()});
+  writer_->WriteCommand(CommandType::kBindResourceSet,
+                        BindResourceSetCommand{set_index, resource_set.get(),
+                                               dynamic_offsets.size()});
   writer_->WriteArray(dynamic_offsets);
 }
 

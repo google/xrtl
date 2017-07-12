@@ -31,6 +31,9 @@ namespace es3 {
 // called by the MemoryCommandBuffer implementation decoding a previously
 // generated command buffer.
 
+// TODO(benvanik): use device limits resource_set_count.
+constexpr int kMaxResourceSetCount = 4;
+
 class ES3TransferCommandEncoder : public TransferCommandEncoder {
  public:
   explicit ES3TransferCommandEncoder(CommandBuffer* command_buffer);
@@ -170,7 +173,7 @@ class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
 
   void BindPipeline(ref_ptr<ComputePipeline> pipeline) override;
 
-  void BindResourceSet(ref_ptr<ResourceSet> resource_set,
+  void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
                        ArrayView<size_t> dynamic_offsets) override;
 
   void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,
@@ -341,7 +344,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
 
   void BindPipeline(ref_ptr<RenderPipeline> pipeline) override;
 
-  void BindResourceSet(ref_ptr<ResourceSet> resource_set,
+  void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
                        ArrayView<size_t> dynamic_offsets) override;
 
   void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,
@@ -395,7 +398,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   // Updates push constant data for the current pipeline.
   void UpdatePushConstants();
   // Updates the resource set binding based on the current pipeline and set.
-  void UpdateResourceSet();
+  void UpdateResourceSets();
   // Updates all vertex inputs based on the current bindings and pipeline.
   void UpdateVertexInputs();
 
@@ -413,9 +416,9 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
 
   Rect2D scissor_rect_{0, 0, 16 * 1024, 16 * 1024};
 
-  ref_ptr<ResourceSet> resource_set_;
-  std::vector<size_t> dynamic_offsets_;
-  bool resource_set_dirty_ = true;
+  ref_ptr<ResourceSet> resource_sets_[kMaxResourceSetCount];
+  std::vector<size_t> dynamic_offsets_[kMaxResourceSetCount];
+  bool resource_sets_dirty_ = true;
   uint32_t texture_binding_mask_ = 0;
   uint32_t uniform_buffer_binding_mask_ = 0;
   std::vector<uint8_t> push_constant_data_;

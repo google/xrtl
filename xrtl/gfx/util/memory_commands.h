@@ -288,6 +288,7 @@ struct BindRenderPipelineCommand {
 };
 
 struct BindResourceSetCommand {
+  int set_index;
   ResourceSet* resource_set;
   size_t dynamic_offset_count;
   // ArrayView<size_t> dynamic_offsets;

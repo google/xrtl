@@ -19,7 +19,7 @@
 
 #include "xrtl/base/array_view.h"
 #include "xrtl/base/ref_ptr.h"
-#include "xrtl/gfx/render_pass.h"
+#include "xrtl/gfx/resource_set_layout.h"
 
 namespace xrtl {
 namespace gfx {
@@ -27,49 +27,10 @@ namespace gfx {
 // Completely describes the layout of pipeline bindings.
 // This is used to allow multiple pipelines to share the same descriptor sets.
 //
-// In Vulkan this encompasses both a PipelineLayout and set of
-// DescriptorSetLayouts.
+// PipelineLayout roughly maps to the following backend concepts:
+// - Vulkan: pipeline layouts
 class PipelineLayout : public RefObject<PipelineLayout> {
  public:
-  struct BindingSlot {
-    enum class Type {
-      kSampler = 0,
-      kCombinedImageSampler = 1,
-      kSampledImage = 2,
-      kStorageImage = 3,
-      kUniformTexelBuffer = 4,
-      kStorageTexelBuffer = 5,
-      kUniformBuffer = 6,
-      kStorageBuffer = 7,
-      kUniformBufferDynamic = 8,
-      kStorageBufferDynamic = 9,
-      kInputAttachment = 10,
-    };
-
-    // Binding number of this entry and corresponds to a resource of the same
-    // binding number in the shader stages.
-    int binding = 0;
-    // Specifies which type of resources are used for this binding.
-    Type type = Type::kCombinedImageSampler;
-    // The number of slots contained in the binding, accessed in a shader as
-    // an array.
-    int array_count = 1;
-    // A bitmask specifying which pipeline shader stages can access a resource
-    // for this binding.
-    ShaderStageFlag stage_mask = ShaderStageFlag::kAll;
-
-    BindingSlot() = default;
-    BindingSlot(int binding, Type type) : binding(binding), type(type) {}
-    BindingSlot(int binding, Type type, int array_count)
-        : binding(binding), type(type), array_count(array_count) {}
-    BindingSlot(int binding, Type type, int array_count,
-                ShaderStageFlag stage_mask)
-        : binding(binding),
-          type(type),
-          array_count(array_count),
-          stage_mask(stage_mask) {}
-  };
-
   // Describes a range of push constant data within the pipeline.
   struct PushConstantRange {
     // Start offset and size, respectively, consumed by the range.
@@ -90,8 +51,8 @@ class PipelineLayout : public RefObject<PipelineLayout> {
 
   virtual ~PipelineLayout() = default;
 
-  const std::vector<PipelineLayout::BindingSlot>& binding_slots() const {
-    return binding_slots_;
+  const std::vector<ref_ptr<ResourceSetLayout>>& resource_set_layouts() const {
+    return resource_set_layouts_;
   }
   const std::vector<PushConstantRange>& push_constant_ranges() const {
     return push_constant_ranges_;
@@ -99,12 +60,12 @@ class PipelineLayout : public RefObject<PipelineLayout> {
 
  protected:
   PipelineLayout(
-      ArrayView<PipelineLayout::BindingSlot> binding_slots,
+      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
       ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
-      : binding_slots_(binding_slots),
+      : resource_set_layouts_(resource_set_layouts),
         push_constant_ranges_(push_constant_ranges) {}
 
-  std::vector<PipelineLayout::BindingSlot> binding_slots_;
+  std::vector<ref_ptr<ResourceSetLayout>> resource_set_layouts_;
   std::vector<PipelineLayout::PushConstantRange> push_constant_ranges_;
 };
 

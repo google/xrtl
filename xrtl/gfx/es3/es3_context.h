@@ -56,7 +56,7 @@ class ES3Context : public Context {
                                            size_t data_length) override;
 
   ref_ptr<PipelineLayout> CreatePipelineLayout(
-      ArrayView<PipelineLayout::BindingSlot> binding_slots,
+      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
       ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
       override;
 
@@ -70,8 +70,11 @@ class ES3Context : public Context {
       int render_subpass, RenderState render_state,
       RenderPipeline::ShaderStages shader_stages) override;
 
+  ref_ptr<ResourceSetLayout> CreateResourceSetLayout(
+      ArrayView<ResourceSetLayout::BindingSlot> binding_slots) override;
+
   ref_ptr<ResourceSet> CreateResourceSet(
-      ref_ptr<PipelineLayout> pipeline_layout,
+      ref_ptr<ResourceSetLayout> resource_set_layout,
       ArrayView<ResourceSet::BindingValue> binding_values) override;
 
   ref_ptr<SwapChain> CreateSwapChain(

@@ -12,14 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/gfx/es3/es3_render_pass.h"
+#ifndef XRTL_GFX_ES3_ES3_RESOURCE_SET_LAYOUT_H_
+#define XRTL_GFX_ES3_ES3_RESOURCE_SET_LAYOUT_H_
+
+#include "xrtl/gfx/es3/es3_common.h"
+#include "xrtl/gfx/resource_set_layout.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-//
+class ES3ResourceSetLayout : public ResourceSetLayout {
+ public:
+  explicit ES3ResourceSetLayout(ArrayView<BindingSlot> binding_slots)
+      : ResourceSetLayout(binding_slots) {}
+};
 
 }  // namespace es3
 }  // namespace gfx
 }  // namespace xrtl
+
+#endif  // XRTL_GFX_ES3_ES3_RESOURCE_SET_LAYOUT_H_

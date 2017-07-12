@@ -115,6 +115,7 @@ class ImGuiOverlay : public Control::InputListener {
 
   // Render pipeline for normal imgui drawing.
   ref_ptr<gfx::RenderPass> render_pass_;
+  ref_ptr<gfx::ResourceSetLayout> resource_set_layout_;
   ref_ptr<gfx::PipelineLayout> render_pipeline_layout_;
   ref_ptr<gfx::RenderPipeline> render_pipeline_;
 

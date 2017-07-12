@@ -24,7 +24,7 @@
 #include "xrtl/gfx/buffer.h"
 #include "xrtl/gfx/image.h"
 #include "xrtl/gfx/image_view.h"
-#include "xrtl/gfx/pipeline_layout.h"
+#include "xrtl/gfx/resource_set_layout.h"
 #include "xrtl/gfx/sampler.h"
 
 namespace xrtl {
@@ -32,6 +32,18 @@ namespace gfx {
 
 // A set of bindings for a particular PipelineLayout.
 // Bindings can be used across multiple Pipelines that share the same layout.
+//
+// When a particular set of resource bindings is immutable it's recommended to
+// retain that ResourceSet instance and reuse it across many command buffers.
+// If the set of resource bindings may change during execution (whether within
+// the same command buffer or across command buffers) it's recommended to split
+// the immutable from the mutable and create one-shot ResourceSet instances for
+// the mutable portions.
+//
+// ResourceSet roughly maps to the following backend concepts:
+// - D3D12: descriptor tables
+// - Metal: argument buffers
+// - Vulkan: descriptor sets
 class ResourceSet : public RefObject<ResourceSet> {
  public:
   // Describes a single binding slot within the resource set.
@@ -88,8 +100,8 @@ class ResourceSet : public RefObject<ResourceSet> {
 
   virtual ~ResourceSet() = default;
 
-  // Layout the pipeline binding set uses.
-  ref_ptr<PipelineLayout> layout() const { return layout_; }
+  // Layout the resource set uses.
+  ref_ptr<ResourceSetLayout> layout() const { return layout_; }
 
   // All bindings for the resource set.
   const std::vector<BindingValue>& binding_values() const {
@@ -97,11 +109,12 @@ class ResourceSet : public RefObject<ResourceSet> {
   }
 
  protected:
-  explicit ResourceSet(ref_ptr<PipelineLayout> layout,
+  explicit ResourceSet(ref_ptr<ResourceSetLayout> resource_set_layout,
                        ArrayView<BindingValue> binding_values)
-      : layout_(std::move(layout)), binding_values_(binding_values) {}
+      : layout_(std::move(resource_set_layout)),
+        binding_values_(binding_values) {}
 
-  ref_ptr<PipelineLayout> layout_;
+  ref_ptr<ResourceSetLayout> layout_;
   std::vector<BindingValue> binding_values_;
 };
 
