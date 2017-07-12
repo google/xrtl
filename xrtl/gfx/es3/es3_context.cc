@@ -26,6 +26,7 @@
 #include "xrtl/gfx/es3/es3_queue_fence.h"
 #include "xrtl/gfx/es3/es3_render_pass.h"
 #include "xrtl/gfx/es3/es3_resource_set.h"
+#include "xrtl/gfx/es3/es3_resource_set_layout.h"
 #include "xrtl/gfx/es3/es3_sampler.h"
 #include "xrtl/gfx/es3/es3_shader.h"
 #include "xrtl/gfx/es3/es3_shader_module.h"
@@ -98,9 +99,10 @@ ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
 }
 
 ref_ptr<PipelineLayout> ES3Context::CreatePipelineLayout(
-    ArrayView<PipelineLayout::BindingSlot> binding_slots,
+    ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
     ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges) {
-  return make_ref<ES3PipelineLayout>(binding_slots, push_constant_ranges);
+  return make_ref<ES3PipelineLayout>(resource_set_layouts,
+                                     push_constant_ranges);
 }
 
 ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
@@ -204,10 +206,15 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
                                      shader_stages, program);
 }
 
+ref_ptr<ResourceSetLayout> ES3Context::CreateResourceSetLayout(
+    ArrayView<ResourceSetLayout::BindingSlot> binding_slots) {
+  return make_ref<ES3ResourceSetLayout>(binding_slots);
+}
+
 ref_ptr<ResourceSet> ES3Context::CreateResourceSet(
-    ref_ptr<PipelineLayout> pipeline_layout,
+    ref_ptr<ResourceSetLayout> resource_set_layout,
     ArrayView<ResourceSet::BindingValue> binding_values) {
-  return make_ref<ES3ResourceSet>(pipeline_layout, binding_values);
+  return make_ref<ES3ResourceSet>(resource_set_layout, binding_values);
 }
 
 ref_ptr<SwapChain> ES3Context::CreateSwapChain(

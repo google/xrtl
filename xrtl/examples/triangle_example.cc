@@ -37,6 +37,7 @@ using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
 using gfx::ResourceSet;
+using gfx::ResourceSetLayout;
 using gfx::Sampler;
 using gfx::ShaderModule;
 using gfx::SwapChain;
@@ -292,8 +293,8 @@ layout(push_constant, std140) uniform PushConstants {
 layout(location = 0) in vec2 v_uv;
 layout(location = 1) in vec4 v_color;
 layout(location = 0) out vec4 out_color;
-layout(binding = 0) uniform sampler2D image_sampler;
-layout(binding = 1, std140) uniform UniformBlock {
+layout(set = 0, binding = 0) uniform sampler2D image_sampler;
+layout(set = 0, binding = 1, std140) uniform UniformBlock {
   float mix_base;
 } uniform_block;
 void main() {
@@ -331,16 +332,18 @@ void main() {
     shader_stages.fragment_entry_point = "main";
 
     // Pipeline layout.
-    std::vector<PipelineLayout::BindingSlot> binding_slots;
-    binding_slots.push_back(
-        {0, PipelineLayout::BindingSlot::Type::kCombinedImageSampler});
-    binding_slots.push_back(
-        {1, PipelineLayout::BindingSlot::Type::kUniformBuffer});
-    std::vector<PipelineLayout::PushConstantRange> push_constant_ranges;
-    push_constant_ranges.push_back(
-        {offsetof(PushConstants, mix_value), sizeof(PushConstants::mix_value)});
-    auto pipeline_layout =
-        context_->CreatePipelineLayout(binding_slots, push_constant_ranges);
+    auto resource_set_layout = context_->CreateResourceSetLayout({
+        {0, ResourceSetLayout::BindingSlot::Type::kCombinedImageSampler},
+        {1, ResourceSetLayout::BindingSlot::Type::kUniformBuffer},
+    });
+    auto pipeline_layout = context_->CreatePipelineLayout(
+        {
+            resource_set_layout,
+        },
+        {
+            {offsetof(PushConstants, mix_value),
+             sizeof(PushConstants::mix_value)},
+        });
     if (!pipeline_layout) {
       LOG(ERROR) << "Unable to create pipeline layout";
       return false;
@@ -367,12 +370,12 @@ void main() {
     }
 
     // Create the resource set we'll use for the triangle.
-    std::vector<ResourceSet::BindingValue> binding_values;
-    binding_values.push_back(
-        {grid_image_view_, Image::Layout::kGeneral, nearest_sampler_});
-    binding_values.push_back({uniform_buffer_});
-    resource_set_ =
-        context_->CreateResourceSet(pipeline_layout, binding_values);
+    resource_set_ = context_->CreateResourceSet(
+        resource_set_layout,
+        {
+            {grid_image_view_, Image::Layout::kGeneral, nearest_sampler_},
+            {uniform_buffer_},
+        });
     if (!resource_set_) {
       LOG(ERROR) << "Unable to create resource set";
       return false;
@@ -428,7 +431,7 @@ void main() {
     rpe->SetViewport({framebuffer_image_view->size().width,
                       framebuffer_image_view->size().height});
     rpe->BindPipeline(render_pipeline_);
-    rpe->BindResourceSet(resource_set_);
+    rpe->BindResourceSet(0, resource_set_);
     rpe->BindVertexBuffers(0, {triangle_buffer_});
     PushConstants push_constants;
     push_constants.mix_value =

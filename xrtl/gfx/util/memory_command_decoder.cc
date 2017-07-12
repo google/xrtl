@@ -320,10 +320,12 @@ bool MemoryCommandDecoder::Decode(MemoryCommandBufferReader* reader,
             reader->ReadArray<size_t>(command.dynamic_offset_count);
         if (compute_encoder) {
           compute_encoder->BindResourceSet(
-              ref_ptr<ResourceSet>(command.resource_set), dynamic_offsets);
+              command.set_index, ref_ptr<ResourceSet>(command.resource_set),
+              dynamic_offsets);
         } else {
           render_pass_encoder->BindResourceSet(
-              ref_ptr<ResourceSet>(command.resource_set), dynamic_offsets);
+              command.set_index, ref_ptr<ResourceSet>(command.resource_set),
+              dynamic_offsets);
         }
         break;
       }

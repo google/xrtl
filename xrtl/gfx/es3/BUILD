@@ -44,7 +44,6 @@ cc_library(
 
 cc_library(
     name = "es3_command_fence",
-    srcs = ["es3_command_fence.cc"],
     hdrs = ["es3_command_fence.h"],
     deps = [
         ":es3_common",
@@ -154,7 +153,6 @@ cc_library(
 
 cc_library(
     name = "es3_image_view",
-    srcs = ["es3_image_view.cc"],
     hdrs = ["es3_image_view.h"],
     deps = [
         ":es3_common",
@@ -191,7 +189,6 @@ cc_library(
 
 cc_library(
     name = "es3_pipeline_layout",
-    srcs = ["es3_pipeline_layout.cc"],
     hdrs = ["es3_pipeline_layout.h"],
     deps = [
         ":es3_common",
@@ -285,7 +282,6 @@ cc_library(
 
 cc_library(
     name = "es3_render_pass",
-    srcs = ["es3_render_pass.cc"],
     hdrs = ["es3_render_pass.h"],
     deps = [
         ":es3_common",
@@ -295,11 +291,19 @@ cc_library(
 
 cc_library(
     name = "es3_resource_set",
-    srcs = ["es3_resource_set.cc"],
     hdrs = ["es3_resource_set.h"],
     deps = [
         ":es3_common",
         "//xrtl/gfx:resource_set",
+    ],
+)
+
+cc_library(
+    name = "es3_resource_set_layout",
+    hdrs = ["es3_resource_set_layout.h"],
+    deps = [
+        ":es3_common",
+        "//xrtl/gfx:resource_set_layout",
     ],
 )
 

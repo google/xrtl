@@ -153,7 +153,7 @@ class MemoryComputeCommandEncoder : public ComputeCommandEncoder {
 
   void BindPipeline(ref_ptr<ComputePipeline> pipeline) override;
 
-  void BindResourceSet(ref_ptr<ResourceSet> resource_set,
+  void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
                        ArrayView<size_t> dynamic_offsets) override;
 
   void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,
@@ -322,7 +322,7 @@ class MemoryRenderPassCommandEncoder : public RenderPassCommandEncoder {
 
   void BindPipeline(ref_ptr<RenderPipeline> pipeline) override;
 
-  void BindResourceSet(ref_ptr<ResourceSet> resource_set,
+  void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
                        ArrayView<size_t> dynamic_offsets) override;
 
   void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,

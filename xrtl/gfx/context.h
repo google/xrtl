@@ -34,6 +34,7 @@
 #include "xrtl/gfx/queue_fence.h"
 #include "xrtl/gfx/render_pass.h"
 #include "xrtl/gfx/resource_set.h"
+#include "xrtl/gfx/resource_set_layout.h"
 #include "xrtl/gfx/sampler.h"
 #include "xrtl/gfx/shader_module.h"
 #include "xrtl/gfx/swap_chain.h"
@@ -104,7 +105,7 @@ class Context : public RefObject<Context> {
 
   // Creates a pipeline layout.
   virtual ref_ptr<PipelineLayout> CreatePipelineLayout(
-      ArrayView<PipelineLayout::BindingSlot> binding_slots,
+      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
       ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges) = 0;
 
   // Creates a compute pipeline with the given shader.
@@ -118,13 +119,17 @@ class Context : public RefObject<Context> {
       int render_subpass, RenderState render_state,
       RenderPipeline::ShaderStages shader_stages) = 0;
 
+  // Creates a resource set layout.
+  virtual ref_ptr<ResourceSetLayout> CreateResourceSetLayout(
+      ArrayView<ResourceSetLayout::BindingSlot> binding_slots) = 0;
+
   // Creates a binding set used to bind resources to pipelines.
   // A binding set is only tied to a particular pipeline layout and may be used
   // with any pipeline sharing that layout.
   // The binding values provided must match 1:1 with the bindings as defined in
   // the pipeline layout.
   virtual ref_ptr<ResourceSet> CreateResourceSet(
-      ref_ptr<PipelineLayout> pipeline_layout,
+      ref_ptr<ResourceSetLayout> resource_set_layout,
       ArrayView<ResourceSet::BindingValue> binding_values) = 0;
 
   // Creates a new swap chain using the given control as a display surface.

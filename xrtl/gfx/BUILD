@@ -225,7 +225,7 @@ cc_library(
     name = "pipeline_layout",
     hdrs = ["pipeline_layout.h"],
     deps = [
-        ":render_pass",
+        ":resource_set_layout",
         "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
     ],
@@ -297,8 +297,18 @@ cc_library(
         ":buffer",
         ":image",
         ":image_view",
-        ":pipeline_layout",
+        ":resource_set_layout",
         ":sampler",
+        "//xrtl/base:array_view",
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
+    name = "resource_set_layout",
+    hdrs = ["resource_set_layout.h"],
+    deps = [
+        ":render_pass",
         "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
     ],

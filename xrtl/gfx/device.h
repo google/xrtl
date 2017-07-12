@@ -65,6 +65,11 @@ class Device : public RefObject<Device> {
   //  https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkPhysicalDeviceLimits.html
   struct Limits {
     // TODO(benvanik): texture sizes, buffer sizes, render-target counts, etc.
+
+    // Maximum number of ResourceSets that are available for binding.
+    // Shaders with set indices larger than this value will fail to bind.
+    // | ES3 4 | VK 4 | MTL ∞ | D3D ∞ |
+    int resource_set_count = 1;
   };
 
   // Describes the features available for use on the device.

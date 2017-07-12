@@ -421,14 +421,17 @@ class ComputeCommandEncoder : public TransferCommandEncoder {
   // Queue: compute.
   virtual void BindPipeline(ref_ptr<ComputePipeline> pipeline) = 0;
 
-  // Binds a pipeline binding set to a command buffer.
+  // Binds a pipeline binding set to a command buffer at the given index.
   // All future compute dispatches will use the bound set.
+  // If the resource set contains kUniformBufferDynamic or kStorageBufferDynamic
+  // slots the dynamic_offsets array should provide offsets for those slots. The
+  // order is the same as the slots in the pipeline layout.
   //
   // Queue: compute.
-  virtual void BindResourceSet(ref_ptr<ResourceSet> resource_set,
+  virtual void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
                                ArrayView<size_t> dynamic_offsets) = 0;
-  void BindResourceSet(ref_ptr<ResourceSet> resource_set) {
-    BindResourceSet(std::move(resource_set), {});
+  void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set) {
+    BindResourceSet(set_index, std::move(resource_set), {});
   }
 
   // Updates the values of push constants.
@@ -656,14 +659,14 @@ class RenderPassCommandEncoder : public CommandEncoder {
   // Queue: render.
   virtual void BindPipeline(ref_ptr<RenderPipeline> pipeline) = 0;
 
-  // Binds a pipeline binding set to a command buffer.
+  // Binds a pipeline binding set to a command buffer at the given index.
   // All future draws will use the bound set.
   //
   // Queue: render.
-  virtual void BindResourceSet(ref_ptr<ResourceSet> resource_set,
+  virtual void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
                                ArrayView<size_t> dynamic_offsets) = 0;
-  void BindResourceSet(ref_ptr<ResourceSet> resource_set) {
-    BindResourceSet(std::move(resource_set), {});
+  void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set) {
+    BindResourceSet(set_index, std::move(resource_set), {});
   }
 
   // Updates the values of push constants.
