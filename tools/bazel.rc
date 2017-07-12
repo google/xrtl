@@ -123,6 +123,7 @@ common:ios --config=clang
 common:ios --config=objc
 common:ios --dynamic_mode=off
 common:ios --experimental_enable_objc_cc_deps
+common:ios --host_cpu=darwin
 
 common:ios_simulator --config=ios
 common:ios_simulator --config=ios_x86_64
@@ -162,6 +163,7 @@ common:macos --dynamic_mode=off
 
 common:macos_x86_64 --config=macos
 common:macos_x86_64 --cpu=darwin
+common:macos_x86_64 --host_cpu=darwin
 
 #===============================================================================
 # Windows
@@ -174,3 +176,4 @@ common:windows --test_env TMP=/tmp
 
 common:windows_x86_64 --config=windows
 common:windows_x86_64 --cpu=x64_windows_msvc
+common:windows_x86_64 --host_cpu=x64_windows_msvc
