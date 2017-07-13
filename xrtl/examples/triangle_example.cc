@@ -33,7 +33,6 @@ using gfx::ContextFactory;
 using gfx::Image;
 using gfx::ImageView;
 using gfx::MemoryPool;
-using gfx::PipelineLayout;
 using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
@@ -398,13 +397,19 @@ void main() {
     auto framebuffer_ready_fence = context_->CreateQueueFence();
     ref_ptr<ImageView> framebuffer_image_view;
     auto acquire_result = swap_chain_->AcquireNextImage(
-        framebuffer_ready_fence, &framebuffer_image_view);
+        std::chrono::milliseconds(2), framebuffer_ready_fence,
+        &framebuffer_image_view);
     switch (acquire_result) {
       case SwapChain::AcquireResult::kSuccess:
         break;
       case SwapChain::AcquireResult::kResizeRequired:
         LOG(WARNING) << "Swap chain resize required";
         break;
+      case SwapChain::AcquireResult::kTimeout:
+        // TODO(benvanik): render thread so we don't block the message loop.
+        LOG(WARNING) << "Swap chain acquire timeout; running too slow and "
+                        "skipping frame";
+        return true;
       default:
         LOG(ERROR) << "Failed to acquire framebuffer";
         return false;
@@ -508,13 +513,20 @@ void main() {
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
 
+    if (swap_chain_) {
+      swap_chain_->DiscardPendingPresents();
+    }
+    if (context_) {
+      context_->WaitUntilQueuesIdle();
+    }
     uniform_buffer_.reset();
-    resource_set_.reset();
-    render_pipeline_.reset();
-    render_pass_.reset();
+    nearest_sampler_.reset();
     grid_image_view_.reset();
     grid_image_.reset();
     triangle_buffer_.reset();
+    resource_set_.reset();
+    render_pipeline_.reset();
+    render_pass_.reset();
     memory_pool_.reset();
     swap_chain_.reset();
     context_.reset();

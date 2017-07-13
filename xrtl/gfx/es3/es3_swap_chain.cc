@@ -16,6 +16,7 @@
 
 #include <utility>
 
+#include "xrtl/base/system_clock.h"
 #include "xrtl/base/threading/thread.h"
 #include "xrtl/base/tracing.h"
 #include "xrtl/gfx/es3/es3_image.h"
@@ -73,7 +74,7 @@ ES3PlatformSwapChain::~ES3PlatformSwapChain() {
 
 bool ES3PlatformSwapChain::Initialize() {
   WTF_SCOPE0("ES3PlatformSwapChain#Initialize");
-  ES3PlatformContext::ThreadLock context_lock(platform_context_);
+  ES3PlatformContext::ExclusiveLock context_lock(platform_context_);
 
   // Query the initial surface size.
   size_ = platform_context_->QuerySize();
@@ -91,7 +92,11 @@ bool ES3PlatformSwapChain::Initialize() {
 
   // Allocate initial images.
   image_views_.resize(image_count());
-  auto resize_result = Resize(size_);
+  pending_image_presents_.resize(image_count());
+  pending_acquire_fences_.resize(image_count());
+  available_images_semaphore_ =
+      Semaphore::Create(image_count() * 2, image_count() * 2);
+  auto resize_result = ResizeWithContext(size_);
   switch (resize_result) {
     case ResizeResult::kSuccess:
       break;
@@ -108,7 +113,16 @@ bool ES3PlatformSwapChain::Initialize() {
 
 SwapChain::ResizeResult ES3PlatformSwapChain::Resize(Size2D new_size) {
   WTF_SCOPE0("ES3PlatformSwapChain#Resize");
-  ES3PlatformContext::ThreadLock context_lock(platform_context_);
+  ES3PlatformContext::ExclusiveLock context_lock(platform_context_);
+  return ResizeWithContext(new_size);
+}
+
+SwapChain::ResizeResult ES3PlatformSwapChain::ResizeWithContext(
+    Size2D new_size) {
+  WTF_SCOPE0("ES3PlatformSwapChain#ResizeWithContext");
+
+  // TODO(benvanik): move this to the queue? won't have to worry about events.
+  std::lock_guard<std::mutex> lock_guard(mutex_);
 
   // Recreate the underlying surface.
   auto recreate_surface_result = platform_context_->RecreateSurface(new_size);
@@ -158,13 +172,65 @@ SwapChain::AcquireResult ES3PlatformSwapChain::AcquireNextImage(
     ref_ptr<QueueFence> signal_queue_fence,
     ref_ptr<ImageView>* out_image_view) {
   WTF_SCOPE0("ES3PlatformSwapChain#AcquireNextImage");
-  ES3PlatformContext::ThreadLock context_lock(platform_context_);
 
-  // NOTE: we always signal the fence right away, as we don't support overlap.
-  signal_queue_fence.As<ES3QueueFence>()->event()->Set();
+  std::chrono::milliseconds start_time_millis =
+      SystemClock::default_clock()->now_millis();
 
-  int image_index = next_image_index_;
-  next_image_index_ = (next_image_index_ + 1) % image_views_.size();
+  // Reserve an image index.
+  // We'll either use one that is clean or one that does not yet have a waiter.
+  int image_index = -1;
+  while (image_index == -1) {
+    std::chrono::milliseconds elapsed_time_millis =
+        SystemClock::default_clock()->now_millis() - start_time_millis;
+    if (elapsed_time_millis >= timeout_millis) {
+      // Timed out trying.
+      return AcquireResult::kTimeout;
+    }
+
+    // Wait until at least one image is available.
+    // We only wait for the time remaining if we've already tried a bit.
+    std::chrono::milliseconds try_timeout_millis =
+        timeout_millis - elapsed_time_millis;
+    if (Thread::Wait(available_images_semaphore_, try_timeout_millis) !=
+        Thread::WaitResult::kSuccess) {
+      return AcquireResult::kTimeout;
+    }
+
+    std::lock_guard<std::mutex> lock_guard(mutex_);
+    // If a discard is pending we'll just fail the acquisition.
+    if (is_discard_pending_) {
+      available_images_semaphore_->Release(1);
+      LOG(WARNING) << "Attempted to acquire an image from the swapchain with a "
+                      "discard pending";
+      return AcquireResult::kDiscardPending;
+    }
+
+    // Prepare the next image.
+    // TODO(benvanik): implement other modes (like skipping/etc).
+    // First scan for clean images.
+    for (int i = 0; i < image_views_.size(); ++i) {
+      if (pending_image_presents_[i] == false) {
+        // Image is clean - no pending present or waiting acquire.
+        // Allow the caller to use it immediately.
+        image_index = i;
+        pending_image_presents_[i] = true;
+        signal_queue_fence.As<ES3QueueFence>()->event()->Set();
+        break;
+      }
+    }
+    if (image_index == -1) {
+      // No clean images available, try to reserve an in-flight one.
+      for (int i = 0; i < image_views_.size(); ++i) {
+        if (!pending_acquire_fences_[i]) {
+          // Image is in-flight but doesn't yet have a waiter. Reserve it.
+          image_index = i;
+          pending_acquire_fences_[i] =
+              signal_queue_fence.As<ES3QueueFence>()->event();
+          break;
+        }
+      }
+    }
+  }
   *out_image_view = image_views_[image_index];
 
   return AcquireResult::kSuccess;
@@ -174,27 +240,74 @@ SwapChain::PresentResult ES3PlatformSwapChain::PresentImage(
     ref_ptr<QueueFence> wait_queue_fence, ref_ptr<ImageView> image_view,
     std::chrono::milliseconds present_time_utc_millis) {
   WTF_SCOPE0("ES3PlatformSwapChain#PresentImage");
-  ES3PlatformContext::ThreadLock context_lock(platform_context_);
 
-  // Wait for the queue fence to trigger.
-  Thread::Wait(wait_queue_fence.As<ES3QueueFence>()->event());
+  int image_index = -1;
+  {
+    std::lock_guard<std::mutex> lock_guard(mutex_);
+
+    // Map image view back to our index.
+    for (int i = 0; i < image_views_.size(); ++i) {
+      if (image_views_[i] == image_view) {
+        image_index = i;
+        break;
+      }
+    }
+    DCHECK_NE(image_index, -1);
+    if (image_index == -1) {
+      LOG(ERROR)
+          << "Attempted to present an image not acquired from the swap chain";
+      return PresentResult::kDeviceLost;
+    }
+
+    if (is_discard_pending_ && pending_image_presents_[image_index]) {
+      // A discard is pending so ignore the present request.
+      MarkPresentComplete(image_index);
+      return PresentResult::kDiscardPending;
+    }
+  }
 
   // Query current size from the context.
   Size2D surface_size = control_->size();
   bool resize_required = surface_size != size_;
 
-  // Map image view back to a GL framebuffer.
-  GLuint framebuffer_id = 0;
-  GLuint texture_id = 0;
-  for (int i = 0; i < image_views_.size(); ++i) {
-    if (image_views_[i] == image_view) {
-      framebuffer_id = framebuffers_[i];
-      texture_id = image_view->image().As<ES3Image>()->texture_id();
-      break;
+  // Submit present request to the context queue.
+  auto self = ref_ptr<ES3PlatformSwapChain>(this);
+  auto self_token = MoveToLambda(self);
+  present_queue_->EnqueueCallback({wait_queue_fence},
+                                  [self_token, surface_size, image_index,
+                                   image_view, present_time_utc_millis]() {
+                                    self_token.value->PerformPresent(
+                                        surface_size, image_index, image_view,
+                                        present_time_utc_millis);
+                                  },
+                                  {}, nullptr);
+
+  return resize_required ? PresentResult::kResizeRequired
+                         : PresentResult::kSuccess;
+}
+
+void ES3PlatformSwapChain::PerformPresent(
+    Size2D surface_size, int image_index, ref_ptr<ImageView> image_view,
+    std::chrono::milliseconds present_time_utc_millis) {
+  WTF_SCOPE0("ES3PlatformSwapChain#PerformPresent");
+
+  {
+    std::lock_guard<std::mutex> lock_guard(mutex_);
+    if (is_discard_pending_) {
+      // A discard is pending, so avoid doing the present and just pretend it
+      // completed.
+      MarkPresentComplete(image_index);
+      return;
     }
   }
+
+  // Map image view back to a GL framebuffer.
+  GLuint framebuffer_id = framebuffers_[image_index];
+  GLuint texture_id = image_view->image().As<ES3Image>()->texture_id();
   DCHECK_NE(framebuffer_id, 0);
   DCHECK_NE(texture_id, 0);
+
+  ES3PlatformContext::ExclusiveLock context_lock(platform_context_);
 
   // TODO(benvanik): multisample resolve, scaling, etc.
 
@@ -224,10 +337,48 @@ SwapChain::PresentResult ES3PlatformSwapChain::PresentImage(
                          GL_TEXTURE_2D, 0, 0);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-  platform_context_->SwapBuffers(present_time_utc_millis);
+  if (!platform_context_->SwapBuffers(present_time_utc_millis)) {
+    LOG(ERROR) << "Platform SwapBuffers failed";
+  }
 
-  return resize_required ? PresentResult::kResizeRequired
-                         : PresentResult::kSuccess;
+  // Mark the image as available.
+  std::lock_guard<std::mutex> lock_guard(mutex_);
+  MarkPresentComplete(image_index);
+}
+
+void ES3PlatformSwapChain::MarkPresentComplete(int image_index) {
+  if (pending_acquire_fences_[image_index]) {
+    // A present is still pending until the pending acquire presents.
+    pending_acquire_fences_[image_index]->Set();
+    pending_acquire_fences_[image_index].reset();
+  } else {
+    pending_image_presents_[image_index] = false;
+  }
+  available_images_semaphore_->Release(1);
+}
+
+void ES3PlatformSwapChain::DiscardPendingPresents() {
+  WTF_SCOPE0("ES3PlatformSwapChain#DiscardPendingPresents");
+
+  // Set discard flag so future acquire/present requests will abort immediately.
+  {
+    std::lock_guard<std::mutex> lock_guard(mutex_);
+    is_discard_pending_ = true;
+  }
+
+  // Wait for all presents to complete or abort.
+  for (int i = 0; i < image_count() * 2; ++i) {
+    Thread::Wait(available_images_semaphore_);
+  }
+
+  // Done with the discard; from this point on others can acquire images.
+  {
+    std::lock_guard<std::mutex> lock_guard(mutex_);
+    is_discard_pending_ = false;
+  }
+
+  // Release all images for reuse.
+  available_images_semaphore_->Release(4);
 }
 
 }  // namespace es3

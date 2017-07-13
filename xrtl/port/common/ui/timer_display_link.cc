@@ -29,7 +29,7 @@ TimerDisplayLink::TimerDisplayLink(ref_ptr<MessageLoop> message_loop)
 TimerDisplayLink::~TimerDisplayLink() {
   // Always force a full stop to ensure we are safe if a callback is executing
   // on another thread.
-  Stop();
+  TimerDisplayLink::Stop();
 }
 
 int TimerDisplayLink::max_frames_per_second() {

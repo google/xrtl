@@ -15,8 +15,11 @@
 #ifndef XRTL_GFX_ES3_ES3_SWAP_CHAIN_H_
 #define XRTL_GFX_ES3_ES3_SWAP_CHAIN_H_
 
+#include <mutex>
 #include <vector>
 
+#include "xrtl/base/threading/event.h"
+#include "xrtl/base/threading/semaphore.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_queue.h"
@@ -70,16 +73,35 @@ class ES3PlatformSwapChain : public ES3SwapChain {
       ref_ptr<QueueFence> wait_queue_fence, ref_ptr<ImageView> image_view,
       std::chrono::milliseconds present_time_utc_millis) override;
 
+  void DiscardPendingPresents() override;
+
  private:
+  // Performs a Resize assuming the context is currently locked.
+  ResizeResult ResizeWithContext(Size2D new_size);
+
+  // Performs a queued present; called from the context queue.
+  void PerformPresent(Size2D surface_size, int image_index,
+                      ref_ptr<ImageView> image_view,
+                      std::chrono::milliseconds present_time_utc_millis);
+
+  // Marks the given image as presented, possibly allowing more acquires to
+  // proceed.
+  // Assumes a lock on mutex_ is held.
+  void MarkPresentComplete(int image_index);
+
   ES3Queue* present_queue_;
   ref_ptr<MemoryPool> memory_pool_;
   ref_ptr<ui::Control> control_;
   ref_ptr<ES3PlatformContext> platform_context_;
 
+  std::mutex mutex_;
   Image::CreateParams image_create_params_;
   std::vector<ref_ptr<ImageView>> image_views_;
   std::vector<GLuint> framebuffers_;
-  int next_image_index_ = 0;
+  std::vector<bool> pending_image_presents_;
+  std::vector<ref_ptr<Event>> pending_acquire_fences_;
+  ref_ptr<Semaphore> available_images_semaphore_;
+  bool is_discard_pending_ = false;
 };
 
 }  // namespace es3

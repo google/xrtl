@@ -478,6 +478,14 @@ WGLPlatformContext::RecreateSurfaceResult WGLPlatformContext::RecreateSurface(
   // NOTE: nothing to do here, as on Windows the default framebuffer is
   // automatically resized.
 
+  // Set swap interval to -1 if supported. This will give us decent swap
+  // behavior and support variable refresh rate displays (gsync/etc).
+  // TODO(benvanik): get proper sync working so this actually works.
+  // if (GLAD_WGL_EXT_swap_control_tear) {
+  //   wglSwapIntervalEXT(-1);
+  // }
+  wglSwapIntervalEXT(0);
+
   return RecreateSurfaceResult::kSuccess;
 }
 
