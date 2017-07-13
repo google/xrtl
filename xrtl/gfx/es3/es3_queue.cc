@@ -142,8 +142,7 @@ void ES3Queue::RunQueue() {
 
     // Execute command buffers.
     if (!queue_entry.command_buffers.empty()) {
-      ES3PlatformContext::ThreadLock context_lock(
-          ES3PlatformContext::AcquireThreadContext(shared_platform_context_));
+      ES3PlatformContext::ThreadLock context_lock(queue_context);
       if (!context_lock.is_held()) {
         LOG(FATAL) << "Unable to make current the queue platform context";
       }

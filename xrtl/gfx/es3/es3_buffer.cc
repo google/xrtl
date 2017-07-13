@@ -26,8 +26,8 @@ ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
     : Buffer(allocation_size, usage_mask),
       platform_context_(std::move(platform_context)),
       memory_type_mask_(memory_type_mask) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   // TODO(benvanik): pool ID allocation.
   glGenBuffers(1, &buffer_id_);
@@ -60,8 +60,8 @@ ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
 }
 
 ES3Buffer::~ES3Buffer() {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   glDeleteBuffers(1, &buffer_id_);
 }
 
@@ -74,8 +74,8 @@ bool ES3Buffer::ReadData(size_t source_offset, void* data, size_t data_length) {
 
 bool ES3Buffer::WriteData(size_t target_offset, const void* data,
                           size_t data_length) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   DCHECK_LE(target_offset + data_length, allocation_size());
   glBindBuffer(target_, buffer_id_);
   glBufferSubData(target_, target_offset, data_length, data);
@@ -85,8 +85,8 @@ bool ES3Buffer::WriteData(size_t target_offset, const void* data,
 
 bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
                           size_t* byte_length, void** out_data) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   *out_data = nullptr;
 
@@ -144,8 +144,8 @@ bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
 
 void ES3Buffer::UnmapMemory(size_t byte_offset, size_t byte_length,
                             void* data) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   glBindBuffer(target_, buffer_id_);
   GLboolean unmapped = glUnmapBuffer(target_);
@@ -162,8 +162,8 @@ void ES3Buffer::InvalidateMappedMemory(size_t byte_offset, size_t byte_length) {
 }
 
 void ES3Buffer::FlushMappedMemory(size_t byte_offset, size_t byte_length) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   glBindBuffer(target_, buffer_id_);
   glFlushMappedBufferRange(target_, byte_offset, byte_length);

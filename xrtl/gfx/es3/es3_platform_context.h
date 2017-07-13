@@ -43,60 +43,6 @@ namespace es3 {
 // ends.
 class ES3PlatformContext : public RefObject<ES3PlatformContext> {
  public:
-  // Creates a new platform context.
-  // If a display and window is provided the context will be created compatible
-  // with that pair and otherwise it will be created for offscreen use.
-  static ref_ptr<ES3PlatformContext> Create(
-      void* native_display, void* native_window,
-      ref_ptr<ES3PlatformContext> share_group);
-  static ref_ptr<ES3PlatformContext> Create(void* native_display,
-                                            void* native_window) {
-    return Create(native_display, native_window, {});
-  }
-  static ref_ptr<ES3PlatformContext> Create(
-      ref_ptr<ES3PlatformContext> share_group) {
-    return Create(nullptr, nullptr, std::move(share_group));
-  }
-  static ref_ptr<ES3PlatformContext> Create() {
-    return Create(nullptr, nullptr, {});
-  }
-
-  // Acquires a thread-locked context that is in a share-group with the given
-  // context. Future calls to AcquireThreadContext from the same thread will
-  // return the same context. It's safe to use this context with a ThreadLock
-  // and keep it current on the calling thread. Avoid using thread-locked
-  // contexts with ExclusiveLock as it can cause undefined behavior.
-  //
-  // The context will be retained for the life of the calling thread or until
-  // ReleaseThreadContext is called.
-  //
-  // Returns the thread-locked context, if one could be created. If the given
-  // context happens to already be the thread-locked context for the current
-  // thread that will be returned.
-  static ref_ptr<ES3PlatformContext> AcquireThreadContext(
-      ref_ptr<ES3PlatformContext> existing_context);
-
-  // Releases a thread-locked context for the current thread, if any exists.
-  // Calling AcquireThreadContext will recreate a new context for the thread.
-  static void ReleaseThreadContext();
-
-  virtual ~ES3PlatformContext();
-
-  // Native platform context handle (such as EGLContext).
-  virtual void* native_handle() const = 0;
-
-  // Checks whether this render device is attached to the current thread.
-  virtual bool IsCurrent() = 0;
-  // Binds the context to the current thread.
-  // Only one thread may interact with the GL device at any given time.
-  // To ensure sanity, try to only ever interact with the GL device from one
-  // thread.
-  // Returns false when the context fails to bind. No GL calls should
-  // be made if the device cannot be made current.
-  virtual bool MakeCurrent() = 0;
-  // Clears the context from the current thread.
-  virtual void ClearCurrent() = 0;
-
   // RAII usage lock for use of a context on the current thread.
   // No other thread will be able to use the context until the Lock is
   // reset. If this is called repeatedly from the same thread the cost will be
@@ -206,6 +152,67 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     ref_ptr<ES3PlatformContext> context_;
     std::unique_lock<std::recursive_mutex> lock_;
   };
+
+  // Creates a new platform context.
+  // If a display and window is provided the context will be created compatible
+  // with that pair and otherwise it will be created for offscreen use.
+  static ref_ptr<ES3PlatformContext> Create(
+      void* native_display, void* native_window,
+      ref_ptr<ES3PlatformContext> share_group);
+  static ref_ptr<ES3PlatformContext> Create(void* native_display,
+                                            void* native_window) {
+    return Create(native_display, native_window, {});
+  }
+  static ref_ptr<ES3PlatformContext> Create(
+      ref_ptr<ES3PlatformContext> share_group) {
+    return Create(nullptr, nullptr, std::move(share_group));
+  }
+  static ref_ptr<ES3PlatformContext> Create() {
+    return Create(nullptr, nullptr, {});
+  }
+
+  // Acquires a thread-locked context that is in a share-group with the given
+  // context. Future calls to AcquireThreadContext from the same thread will
+  // return the same context. It's safe to use this context with a ThreadLock
+  // and keep it current on the calling thread. Avoid using thread-locked
+  // contexts with ExclusiveLock as it can cause undefined behavior.
+  //
+  // The context will be retained for the life of the calling thread or until
+  // ReleaseThreadContext is called.
+  //
+  // Returns the thread-locked context, if one could be created. If the given
+  // context happens to already be the thread-locked context for the current
+  // thread that will be returned.
+  static ref_ptr<ES3PlatformContext> AcquireThreadContext(
+      ref_ptr<ES3PlatformContext> existing_context);
+
+  // Releases a thread-locked context for the current thread, if any exists.
+  // Calling AcquireThreadContext will recreate a new context for the thread.
+  static void ReleaseThreadContext();
+
+  // Acquires a context to use for short operations.
+  // If a context is already made current on the calling thread this will return
+  // that context. Otherwise, this will return a thread-locked context as if
+  // AcquireThreadContext had been used.
+  static ThreadLock LockTransientContext(
+      ref_ptr<ES3PlatformContext> existing_context);
+
+  virtual ~ES3PlatformContext();
+
+  // Native platform context handle (such as EGLContext).
+  virtual void* native_handle() const = 0;
+
+  // Checks whether this render device is attached to the current thread.
+  virtual bool IsCurrent() = 0;
+  // Binds the context to the current thread.
+  // Only one thread may interact with the GL device at any given time.
+  // To ensure sanity, try to only ever interact with the GL device from one
+  // thread.
+  // Returns false when the context fails to bind. No GL calls should
+  // be made if the device cannot be made current.
+  virtual bool MakeCurrent() = 0;
+  // Clears the context from the current thread.
+  virtual void ClearCurrent() = 0;
 
   // Flushes the context without synchronizing with the GPU.
   virtual void Flush() = 0;

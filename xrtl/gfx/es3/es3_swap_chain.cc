@@ -65,8 +65,8 @@ ES3PlatformSwapChain::ES3PlatformSwapChain(
       platform_context_(std::move(platform_context)) {}
 
 ES3PlatformSwapChain::~ES3PlatformSwapChain() {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   glDeleteFramebuffers(static_cast<GLsizei>(framebuffers_.size()),
                        framebuffers_.data());
 }

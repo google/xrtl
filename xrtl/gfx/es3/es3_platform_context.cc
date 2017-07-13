@@ -39,6 +39,16 @@ Thread::LocalStorageSlot<ES3PlatformContext> thread_context_slot_{
       thread_context->ReleaseReference();
     }};
 
+// Currently locked context on the thread. May be null if none is locked.
+Thread::LocalStorageSlot<ES3PlatformContext> locked_context_slot_{
+    [](ES3PlatformContext* thread_context) {
+      // Clear the context so it's not bound.
+      thread_context->ClearCurrent();
+
+      // Drop reference - this may delete the thread context.
+      thread_context->ReleaseReference();
+    }};
+
 extern "C" void OnDebugMessage(GLenum source, GLenum type, GLuint id,
                                GLenum severity, GLsizei length,
                                const GLchar* message, GLvoid* user_param) {
@@ -169,6 +179,18 @@ void ES3PlatformContext::ReleaseThreadContext() {
   //       destroyed.
 }
 
+ES3PlatformContext::ThreadLock ES3PlatformContext::LockTransientContext(
+    ref_ptr<ES3PlatformContext> existing_context) {
+  // See if we already have a context locked. If so, we can just reuse that.
+  ref_ptr<ES3PlatformContext> locked_context{locked_context_slot_.value()};
+  if (locked_context) {
+    return ThreadLock(locked_context);
+  }
+
+  // No currently locked context, use the thread-locked one.
+  return ThreadLock(AcquireThreadContext(existing_context));
+}
+
 bool ES3PlatformContext::Lock(bool clear_on_unlock,
                               std::unique_lock<std::recursive_mutex>* lock) {
   std::unique_lock<std::recursive_mutex> lock_guard(usage_mutex_);
@@ -177,10 +199,17 @@ bool ES3PlatformContext::Lock(bool clear_on_unlock,
   // If you're getting an error here it means that some other context is locked
   // while this lock was attempted. Don't do that.
   DCHECK(lock_depth_ == 1 || IsCurrent());
+  ref_ptr<ES3PlatformContext> locked_context{locked_context_slot_.value()};
+  DCHECK(!locked_context || locked_context.get() == this);
 
   if (lock_depth_ == 1) {
     // The first lock decides whether this is really exclusive or thread-local.
     clear_on_unlock_ = clear_on_unlock;
+
+    // Stash in TLS for reuse.
+    AddReference();
+    locked_context_slot_.set_value(this);
+
     if (!MakeCurrent()) {
       --lock_depth_;
       return false;
@@ -194,9 +223,18 @@ void ES3PlatformContext::Unlock(std::unique_lock<std::recursive_mutex> lock) {
   DCHECK_GE(lock_depth_, 1);
   --lock_depth_;
   if (lock_depth_ == 0) {
+    // NOTE: the flush is required to ensure changes on this context make it
+    // to other contexts.
+    Flush();
     if (clear_on_unlock_) {
       ClearCurrent();
     }
+
+    // Clear the TLS slot.
+    ref_ptr<ES3PlatformContext> locked_context{locked_context_slot_.value()};
+    DCHECK(locked_context && locked_context.get() == this);
+    ReleaseReference();
+    locked_context_slot_.set_value(nullptr);
   }
   lock.unlock();
 }
