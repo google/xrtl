@@ -125,6 +125,10 @@ Win32Control::Win32Control(ref_ptr<MessageLoop> message_loop,
     : Control(message_loop), container_(container) {
   create_event_ = Event::CreateManualResetEvent(false);
   destroy_event_ = Event::CreateManualResetEvent(false);
+
+  // Create shared display link and suspend until the control is created.
+  display_link_ = make_ref<TimerDisplayLink>(message_loop);
+  display_link_->Suspend();
 }
 
 Win32Control::~Win32Control() { DCHECK(!hwnd_); }
@@ -177,6 +181,11 @@ bool Win32Control::is_suspended() {
 
 void Win32Control::set_suspended(bool suspended) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (is_suspended_ && !suspended) {
+    display_link_->Resume();
+  } else if (!is_suspended_ && suspended) {
+    display_link_->Suspend();
+  }
   is_suspended_ = suspended;
   switch (state_) {
     case State::kCreating:
@@ -415,6 +424,10 @@ bool Win32Control::BeginCreate() {
 bool Win32Control::EndCreate() {
   DCHECK(hwnd_);
 
+  if (!is_suspended_) {
+    display_link_->Resume();
+  }
+
   {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     state_ = State::kCreated;
@@ -477,6 +490,10 @@ ref_ptr<WaitHandle> Win32Control::Destroy() {
 
 bool Win32Control::BeginDestroy() {
   PostDestroying();
+
+  // Fully stop the display link.
+  display_link_->Suspend();
+  display_link_->Stop();
 
   // We'll call EndDestroy from the close message handler.
   message_loop_->Defer(&pending_task_list_,
@@ -677,6 +694,9 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
       VLOG(1) << "WM_SHOWWINDOW " << is_visible;
       if (is_visible) {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (is_suspended_) {
+          display_link_->Resume();
+        }
         is_suspended_ = false;
         PostSuspendChanged(is_suspended_);
         bounds_ = QueryBounds();
@@ -692,6 +712,9 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         case SC_MINIMIZE: {
           VLOG(1) << "WM_SYSCOMMAND: SC_MINIMIZE";
           std::lock_guard<std::recursive_mutex> lock(mutex_);
+          if (!is_suspended_) {
+            display_link_->Suspend();
+          }
           is_suspended_ = true;
           PostSuspendChanged(is_suspended_);
           is_focused_ = false;
@@ -702,6 +725,9 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         case SC_RESTORE: {
           VLOG(1) << "WM_SYSCOMMAND: SC_RESTORE";
           std::lock_guard<std::recursive_mutex> lock(mutex_);
+          if (is_suspended_) {
+            display_link_->Resume();
+          }
           is_suspended_ = false;
           PostSuspendChanged(is_suspended_);
           bounds_ = QueryBounds();

@@ -16,6 +16,7 @@
 #define XRTL_PORT_LINUX_UI_X11_CONTROL_H_
 
 #include "xrtl/base/threading/event.h"
+#include "xrtl/port/common/ui/timer_display_link.h"
 #include "xrtl/port/linux/ui/x11_display.h"
 #include "xrtl/port/linux/ui/x11_headers.h"
 #include "xrtl/ui/control.h"
@@ -53,6 +54,8 @@ class X11Control : public Control, private X11Display::Listener {
   void set_background_color(gfx::rgba8_t background_color) override;
   bool is_cursor_visible() override;
   void set_cursor_visible(bool cursor_visible) override;
+
+  ref_ptr<DisplayLink> display_link() override { return display_link_; }
 
   ref_ptr<WaitHandle> Create() override;
   ref_ptr<WaitHandle> Destroy() override;
@@ -102,6 +105,8 @@ class X11Control : public Control, private X11Display::Listener {
   bool is_cursor_visible_ = true;
 
   bool virtual_key_state_[kVirtualKeyCount] = {false};
+
+  ref_ptr<DisplayLink> display_link_;
 };
 
 }  // namespace ui

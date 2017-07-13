@@ -12,6 +12,7 @@ cc_library(
     deps = [
         "//xrtl/base:logging",
         "//xrtl/base/threading:event",
+        "//xrtl/port/common/ui:timer_display_link",
         "//xrtl/port/windows/base:windows_headers",
         "//xrtl/ui:control_hdrs",
     ],

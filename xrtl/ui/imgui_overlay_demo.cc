@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/testing/demo_main.h"
-
 #include "xrtl/base/logging.h"
 #include "xrtl/base/threading/event.h"
 #include "xrtl/base/threading/thread.h"
 #include "xrtl/gfx/context.h"
 #include "xrtl/gfx/context_factory.h"
+#include "xrtl/testing/demo_main.h"
+#include "xrtl/ui/display_link.h"
 #include "xrtl/ui/imgui_overlay.h"
 #include "xrtl/ui/window.h"
 
@@ -130,7 +130,7 @@ class ImGuiOverlayDemo : private Control::Listener {
   }
 
   // Draws a single frame and presents it to the screen.
-  bool DrawFrame() {
+  bool DrawFrame(std::chrono::microseconds timestamp_utc_micros) {
     // Create a command buffer for the render commands.
     auto scene_command_buffer = context_->CreateCommandBuffer();
     if (!scene_command_buffer) {
@@ -211,7 +211,6 @@ class ImGuiOverlayDemo : private Control::Listener {
           return false;
         }
         // TODO(benvanik): clearer way to force redraw.
-        redraw_required_ = true;
         break;
       default:
         LOG(ERROR) << "Failed to present framebuffer";
@@ -237,15 +236,15 @@ class ImGuiOverlayDemo : private Control::Listener {
       done_event_->Set();
     }
 
-    draw_task_ = message_loop_->DeferRepeating(&pending_task_list_,
-                                               [this]() { DrawFrame(); },
-                                               std::chrono::milliseconds(16));
+    // Start the frame loop.
+    target->display_link()->Start(
+        [this](std::chrono::microseconds timestamp_utc_micros) {
+          DrawFrame(timestamp_utc_micros);
+        });
   }
 
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
-
-    draw_task_->Cancel();
 
     imgui_overlay_.reset();
     render_pass_.reset();
@@ -273,26 +272,12 @@ class ImGuiOverlayDemo : private Control::Listener {
   void OnResized(ref_ptr<Control> target, Rect2D bounds) override {
     LOG(INFO) << "OnResized: " << bounds.origin.x << "," << bounds.origin.y
               << " " << bounds.size.width << "x" << bounds.size.height;
-
-    if (context_) {
-      DrawFrame();
-      if (redraw_required_) {
-        // Immediately redraw the frame if we actually resized the surface.
-        // This will prevent (most) flickering.
-        // TODO(benvanik): avoid this by instead requesting a redraw. This can
-        //                 cause window manager lag during resize.
-        redraw_required_ = false;
-        DrawFrame();
-      }
-    }
   }
 
   ref_ptr<MessageLoop> message_loop_;
   MessageLoop::TaskList pending_task_list_;
   ref_ptr<Window> window_;
   ref_ptr<Event> done_event_;
-  bool redraw_required_ = true;
-  ref_ptr<MessageLoop::Task> draw_task_;
 
   ref_ptr<Context> context_;
   ref_ptr<SwapChain> swap_chain_;

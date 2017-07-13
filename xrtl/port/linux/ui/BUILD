@@ -18,6 +18,7 @@ cc_library(
         "//xrtl/base:flags",
         "//xrtl/base:logging",
         "//xrtl/base/threading:event",
+        "//xrtl/port/common/ui:timer_display_link",
         "//xrtl/ui:control_hdrs",
     ],
 )

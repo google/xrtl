@@ -63,6 +63,14 @@ cc_test(
 )
 
 cc_library(
+    name = "display_link",
+    hdrs = ["display_link.h"],
+    deps = [
+        "//xrtl/base:ref_ptr",
+    ],
+)
+
+cc_library(
     name = "imgui_overlay",
     srcs = ["imgui_overlay.cc"],
     hdrs = ["imgui_overlay.h"],
@@ -83,6 +91,7 @@ cc_binary(
     name = "imgui_overlay_demo",
     srcs = ["imgui_overlay_demo.cc"],
     deps = [
+        ":display_link",
         ":imgui_overlay",
         ":window",
         "//xrtl/base:logging",

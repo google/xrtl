@@ -30,6 +30,8 @@
 namespace xrtl {
 namespace ui {
 
+class DisplayLink;
+
 // A user-visible system control that can be used as a swap chain target or
 // presentation surface.
 //
@@ -218,6 +220,11 @@ class Control : public RefObject<Control> {
   // TODO(benvanik): custom cursor API.
 
   // TODO(benvanik): context menu API: ShowContextMenu(...), HideContextMenus().
+
+  // Returns a display link for the control that can be used to synchronize
+  // rendering. Each control in an application may have its own display link
+  // based on the display it is presented on so it is best not to share them.
+  virtual ref_ptr<DisplayLink> display_link() = 0;
 
   // Creates the control.
   // Once created controls must be destroyed with Destroy.
