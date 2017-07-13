@@ -115,7 +115,7 @@ void Control::ResetEventShadows() {
 void Control::PostEvent(
     std::function<void(Listener*, ref_ptr<Control>)> callback) {
   auto callback_baton = MoveToLambda(callback);
-  message_loop_->Defer(&pending_task_list_, [this, callback_baton]() {
+  message_loop_->MarshalSync([this, callback_baton]() {
     std::lock_guard<std::mutex> lock(listener_mutex_);
     if (listener_) {
       ref_ptr<Control> control{this};
@@ -126,8 +126,17 @@ void Control::PostEvent(
 
 void Control::PostInputEvent(
     std::function<void(InputListener*, ref_ptr<Control>)> callback) {
+  switch (state()) {
+    case State::kCreating:
+    case State::kDestroying:
+    case State::kDestroyed:
+      // Ignore input events when the control is not active.
+      return;
+    default:
+      break;
+  }
   auto callback_baton = MoveToLambda(callback);
-  message_loop_->Defer(&pending_task_list_, [this, callback_baton]() {
+  message_loop_->MarshalSync([this, callback_baton]() {
     std::lock_guard<std::mutex> lock(input_listener_mutex_);
     if (input_listener_) {
       ref_ptr<Control> control{this};
