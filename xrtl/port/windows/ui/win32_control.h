@@ -16,6 +16,7 @@
 #define XRTL_PORT_WINDOWS_UI_WIN32_CONTROL_H_
 
 #include "xrtl/base/threading/event.h"
+#include "xrtl/port/common/ui/timer_display_link.h"
 #include "xrtl/port/windows/base/windows.h"
 #include "xrtl/ui/control.h"
 
@@ -51,6 +52,8 @@ class Win32Control : public Control {
   void set_background_color(gfx::rgba8_t background_color) override;
   bool is_cursor_visible() override;
   void set_cursor_visible(bool cursor_visible) override;
+
+  ref_ptr<DisplayLink> display_link() override { return display_link_; }
 
   ref_ptr<WaitHandle> Create() override;
   ref_ptr<WaitHandle> Destroy() override;
@@ -91,6 +94,8 @@ class Win32Control : public Control {
 
   // TODO(benvanik): switch to bitmap.
   uint8_t key_down_map_[256] = {0};
+
+  ref_ptr<DisplayLink> display_link_;
 };
 
 }  // namespace ui

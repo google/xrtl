@@ -20,6 +20,7 @@
 #include "xrtl/gfx/context_factory.h"
 #include "xrtl/gfx/spirv/shader_compiler.h"
 #include "xrtl/testing/demo_main.h"
+#include "xrtl/ui/display_link.h"
 #include "xrtl/ui/window.h"
 
 namespace xrtl {
@@ -385,7 +386,7 @@ void main() {
   }
 
   // Draws a single frame and presents it to the screen.
-  bool DrawFrame() {
+  bool DrawFrame(std::chrono::microseconds timestamp_utc_micros) {
     // Create a command buffer for the render commands.
     auto command_buffer = context_->CreateCommandBuffer();
     if (!command_buffer) {
@@ -470,8 +471,6 @@ void main() {
           LOG(ERROR) << "Failed to resize swap chain";
           return false;
         }
-        // TODO(benvanik): clearer way to force redraw.
-        redraw_required_ = true;
         break;
       default:
         LOG(ERROR) << "Failed to present framebuffer";
@@ -498,6 +497,12 @@ void main() {
       LOG(ERROR) << "Failed to launch example";
       done_event_->Set();
     }
+
+    // Start the frame loop.
+    target->display_link()->Start(
+        [this](std::chrono::microseconds timestamp_utc_micros) {
+          DrawFrame(timestamp_utc_micros);
+        });
   }
 
   void OnDestroying(ref_ptr<Control> target) override {
@@ -535,24 +540,11 @@ void main() {
   void OnResized(ref_ptr<Control> target, Rect2D bounds) override {
     LOG(INFO) << "OnResized: " << bounds.origin.x << "," << bounds.origin.y
               << " " << bounds.size.width << "x" << bounds.size.height;
-
-    if (context_) {
-      DrawFrame();
-      if (redraw_required_) {
-        // Immediately redraw the frame if we actually resized the surface.
-        // This will prevent (most) flickering.
-        // TODO(benvanik): avoid this by instead requesting a redraw. This can
-        //                 cause window manager lag during resize.
-        redraw_required_ = false;
-        DrawFrame();
-      }
-    }
   }
 
   ref_ptr<MessageLoop> message_loop_;
   ref_ptr<Window> window_;
   ref_ptr<Event> done_event_;
-  bool redraw_required_ = true;
 
   ref_ptr<Context> context_;
   ref_ptr<SwapChain> swap_chain_;

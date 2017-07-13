@@ -365,6 +365,10 @@ X11Control::X11Control(ref_ptr<MessageLoop> message_loop,
     : Control(message_loop), container_(container) {
   create_event_ = Event::CreateManualResetEvent(false);
   destroy_event_ = Event::CreateManualResetEvent(false);
+
+  // Create shared display link and suspend until the control is created.
+  display_link_ = make_ref<TimerDisplayLink>(message_loop);
+  display_link_->Suspend();
 }
 
 X11Control::~X11Control() { DCHECK(!window_handle_); }
@@ -422,6 +426,11 @@ bool X11Control::is_suspended() {
 
 void X11Control::set_suspended(bool suspended) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (is_suspended_ && !suspended) {
+    display_link_->Resume();
+  } else if (!is_suspended_ && suspended) {
+    display_link_->Suspend();
+  }
   is_suspended_ = suspended;
   switch (state_) {
     case State::kCreating:
@@ -733,6 +742,10 @@ bool X11Control::BeginCreate() {
 }
 
 bool X11Control::EndCreate() {
+  if (!is_suspended_) {
+    display_link_->Resume();
+  }
+
   {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     state_ = State::kCreated;
@@ -795,6 +808,10 @@ ref_ptr<WaitHandle> X11Control::Destroy() {
 
 bool X11Control::BeginDestroy() {
   PostDestroying();
+
+  // Fully stop the display link.
+  display_link_->Suspend();
+  display_link_->Stop();
 
   // Note that we let the DestroyNotify message handle the OnClose().
   ::XDestroyWindow(display_handle(), window_handle());
@@ -1279,9 +1296,15 @@ bool X11Control::OnXEvent(::XEvent* x_event) {
           case WindowState::kWithdrawn:
             break;
           case WindowState::kNormal:
+            if (is_suspended_) {
+              display_link_->Resume();
+            }
             is_suspended_ = false;
             break;
           case WindowState::kIconic:
+            if (!is_suspended_) {
+              display_link_->Suspend();
+            }
             is_suspended_ = true;
             is_focused_ = false;
             break;
