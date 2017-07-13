@@ -139,6 +139,8 @@ class SwapChain : public RefObject<SwapChain> {
     // The specified timeout elapsed while waiting for an image to become
     // available.
     kTimeout,
+    // A swap chain discard is pending and the image could not be acquired.
+    kDiscardPending,
     // The device was lost before or during the wait to dequeue an image.
     kDeviceLost,
   };
@@ -170,6 +172,8 @@ class SwapChain : public RefObject<SwapChain> {
     // The target swap chain surface has been resized and the swap chain no
     // longer matches. Resize the swap chain before continuing to render.
     kResizeRequired,
+    // A swap chain discard is pending and the image was not presented.
+    kDiscardPending,
     // The device was lost before or during the enqueue operation.
     kDeviceLost,
   };
@@ -200,6 +204,15 @@ class SwapChain : public RefObject<SwapChain> {
     return PresentImage(std::move(wait_queue_fence), std::move(image_view),
                         std::chrono::milliseconds::min());
   }
+
+  // Requests that all pending presents are discarded.
+  // This can be used when the swap chain content is no longer useful, such as
+  // when the application is being backgrounded.
+  //
+  // This will block if a present is in progress and after this method returns
+  // no presents will occur unless more are queued. Note that all pending
+  // acquire fences will be signaled but attempts to present them will fail.
+  virtual void DiscardPendingPresents() = 0;
 
  protected:
   SwapChain(PresentMode present_mode, int image_count)

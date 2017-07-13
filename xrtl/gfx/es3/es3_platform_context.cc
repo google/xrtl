@@ -188,7 +188,7 @@ ES3PlatformContext::ThreadLock ES3PlatformContext::LockTransientContext(
   }
 
   // No currently locked context, use the thread-locked one.
-  return ThreadLock(AcquireThreadContext(existing_context));
+  return ThreadLock(AcquireThreadContext(std::move(existing_context)));
 }
 
 bool ES3PlatformContext::Lock(bool clear_on_unlock,

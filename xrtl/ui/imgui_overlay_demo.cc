@@ -246,6 +246,12 @@ class ImGuiOverlayDemo : private Control::Listener {
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
 
+    if (swap_chain_) {
+      swap_chain_->DiscardPendingPresents();
+    }
+    if (context_) {
+      context_->WaitUntilQueuesIdle();
+    }
     imgui_overlay_.reset();
     render_pass_.reset();
     swap_chain_.reset();

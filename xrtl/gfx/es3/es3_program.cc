@@ -84,7 +84,7 @@ bool ES3Program::Link() {
     for (const auto& assignment : shader->uniform_assignments()) {
       auto& set_bindings = set_binding_maps_.set_bindings[assignment.set];
       if (set_bindings.size() <= assignment.binding) {
-        set_bindings.resize(assignment.binding + 1);
+        set_bindings.resize(static_cast<size_t>(assignment.binding) + 1);
         set_bindings[assignment.binding] = next_binding_index++;
       }
     }
