@@ -38,8 +38,8 @@ ES3Shader::ES3Shader(ref_ptr<ES3PlatformContext> platform_context,
       entry_point_(std::move(entry_point)) {}
 
 ES3Shader::~ES3Shader() {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   if (shader_id_) {
     glDeleteShader(shader_id_);
   }
@@ -68,8 +68,8 @@ bool ES3Shader::CompileSource(GLenum shader_type,
 bool ES3Shader::CompileSource(GLenum shader_type,
                               ArrayView<StringView> sources) {
   WTF_SCOPE0("ES3Shader#CompileSource");
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   shader_type_ = shader_type;
   shader_id_ = glCreateShader(shader_type_);

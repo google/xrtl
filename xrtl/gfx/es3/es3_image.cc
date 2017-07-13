@@ -52,8 +52,8 @@ ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
     : Image(allocation_size, create_params),
       platform_context_(std::move(platform_context)),
       texture_params_(texture_params) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   // TODO(benvanik): pool ID allocation.
   glGenTextures(1, &texture_id_);
@@ -99,8 +99,8 @@ ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
 }
 
 ES3Image::~ES3Image() {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   glDeleteTextures(1, &texture_id_);
 }
 
@@ -120,8 +120,8 @@ ref_ptr<ImageView> ES3Image::CreateView(Image::Type type, PixelFormat format) {
 
 bool ES3Image::ReadData(LayerRange source_range, void* data,
                         size_t data_length) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   // TODO(benvanik): support automatically splitting across layers.
   DCHECK_EQ(1, source_range.layer_count);
@@ -133,8 +133,8 @@ bool ES3Image::ReadData(LayerRange source_range, void* data,
 
 bool ES3Image::WriteData(LayerRange target_range, const void* data,
                          size_t data_length) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   // TODO(benvanik): support automatically splitting across layers.
   //                 We'll need to shift around in data for each layer.

@@ -26,8 +26,8 @@ ES3Program::ES3Program(ref_ptr<ES3PlatformContext> platform_context,
                        ArrayView<ref_ptr<ES3Shader>> shaders)
     : platform_context_(std::move(platform_context)),
       shaders_(std::vector<ref_ptr<ES3Shader>>(shaders)) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   program_id_ = glCreateProgram();
 
@@ -37,8 +37,8 @@ ES3Program::ES3Program(ref_ptr<ES3PlatformContext> platform_context,
 }
 
 ES3Program::~ES3Program() {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   if (program_id_) {
     glDeleteProgram(program_id_);
   }
@@ -46,8 +46,8 @@ ES3Program::~ES3Program() {
 
 bool ES3Program::Link() {
   WTF_SCOPE0("ES3Program#Link");
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   glLinkProgram(program_id_);
 

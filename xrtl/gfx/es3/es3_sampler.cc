@@ -21,8 +21,8 @@ namespace es3 {
 ES3Sampler::ES3Sampler(ref_ptr<ES3PlatformContext> platform_context,
                        Params params)
     : Sampler(params), platform_context_(std::move(platform_context)) {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
 
   // TODO(benvanik): pool ID allocation.
   glGenSamplers(1, &sampler_id_);
@@ -86,8 +86,8 @@ ES3Sampler::ES3Sampler(ref_ptr<ES3PlatformContext> platform_context,
 }
 
 ES3Sampler::~ES3Sampler() {
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
+  auto context_lock =
+      ES3PlatformContext::LockTransientContext(platform_context_);
   glDeleteSamplers(1, &sampler_id_);
 }
 

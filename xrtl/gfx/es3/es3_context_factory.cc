@@ -60,8 +60,7 @@ bool ES3ContextFactory::Initialize() {
 bool ES3ContextFactory::QueryDevices() {
   // Create the default device.
   // There are GL extensions to get multiple devices, but this is fine for now.
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(shared_context_));
+  ES3PlatformContext::ExclusiveLock context_lock(shared_context_);
   auto default_device = make_ref<ES3Device>();
   if (!default_device->AdoptCurrentContext()) {
     LOG(ERROR) << "Unable to query default device properties";
