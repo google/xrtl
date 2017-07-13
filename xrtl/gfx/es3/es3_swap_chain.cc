@@ -28,8 +28,8 @@ namespace es3 {
 // TODO(benvanik): remove the need for this when we have multiple impls.
 ref_ptr<ES3SwapChain> ES3SwapChain::Create(
     ref_ptr<ES3PlatformContext> shared_platform_context,
-    ref_ptr<MemoryPool> memory_pool, ref_ptr<ui::Control> control,
-    PresentMode present_mode, int image_count,
+    ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+    ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
     ArrayView<PixelFormat> pixel_formats) {
   WTF_SCOPE0("ES3SwapChain#Create");
 
@@ -44,9 +44,9 @@ ref_ptr<ES3SwapChain> ES3SwapChain::Create(
     return nullptr;
   }
 
-  auto swap_chain =
-      make_ref<ES3PlatformSwapChain>(memory_pool, control, platform_context,
-                                     present_mode, image_count, pixel_formats);
+  auto swap_chain = make_ref<ES3PlatformSwapChain>(
+      present_queue, memory_pool, control, platform_context, present_mode,
+      image_count, pixel_formats);
   if (!swap_chain->Initialize()) {
     return nullptr;
   }
@@ -54,10 +54,12 @@ ref_ptr<ES3SwapChain> ES3SwapChain::Create(
 }
 
 ES3PlatformSwapChain::ES3PlatformSwapChain(
-    ref_ptr<MemoryPool> memory_pool, ref_ptr<ui::Control> control,
-    ref_ptr<ES3PlatformContext> platform_context, PresentMode present_mode,
-    int image_count, ArrayView<PixelFormat> pixel_formats)
+    ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+    ref_ptr<ui::Control> control, ref_ptr<ES3PlatformContext> platform_context,
+    PresentMode present_mode, int image_count,
+    ArrayView<PixelFormat> pixel_formats)
     : ES3SwapChain(present_mode, image_count, pixel_formats),
+      present_queue_(present_queue),
       memory_pool_(std::move(memory_pool)),
       control_(std::move(control)),
       platform_context_(std::move(platform_context)) {}

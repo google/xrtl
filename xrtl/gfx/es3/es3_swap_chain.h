@@ -19,6 +19,7 @@
 
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
+#include "xrtl/gfx/es3/es3_queue.h"
 #include "xrtl/gfx/memory_pool.h"
 #include "xrtl/gfx/swap_chain.h"
 #include "xrtl/ui/control.h"
@@ -31,8 +32,8 @@ class ES3SwapChain : public SwapChain {
  public:
   static ref_ptr<ES3SwapChain> Create(
       ref_ptr<ES3PlatformContext> shared_platform_context,
-      ref_ptr<MemoryPool> memory_pool, ref_ptr<ui::Control> control,
-      PresentMode present_mode, int image_count,
+      ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+      ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
       ArrayView<PixelFormat> pixel_formats);
 
   ~ES3SwapChain() override = default;
@@ -50,7 +51,7 @@ class ES3SwapChain : public SwapChain {
 
 class ES3PlatformSwapChain : public ES3SwapChain {
  public:
-  ES3PlatformSwapChain(ref_ptr<MemoryPool> memory_pool,
+  ES3PlatformSwapChain(ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
                        ref_ptr<ui::Control> control,
                        ref_ptr<ES3PlatformContext> platform_context,
                        PresentMode present_mode, int image_count,
@@ -70,6 +71,7 @@ class ES3PlatformSwapChain : public ES3SwapChain {
       std::chrono::milliseconds present_time_utc_millis) override;
 
  private:
+  ES3Queue* present_queue_;
   ref_ptr<MemoryPool> memory_pool_;
   ref_ptr<ui::Control> control_;
   ref_ptr<ES3PlatformContext> platform_context_;

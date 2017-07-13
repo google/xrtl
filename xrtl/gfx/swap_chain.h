@@ -57,7 +57,7 @@ namespace gfx {
 //  DoRendering(command_buffer, framebuffer);
 //  // Submit for rendering into the framebuffer.
 //  context_->Submit(image_ready_fence, command_buffer, rendered_fence);
-//  // NOTE: command buffer is submitted here by the swap chain!
+//  // Asynchronously present the image.
 //  swap_chain->PresentImage(std::move(rendered_fence),
 //                           std::move(image_view));
 class SwapChain : public RefObject<SwapChain> {
@@ -189,6 +189,9 @@ class SwapChain : public RefObject<SwapChain> {
   // If an absolute present time is specified (as SystemClock::now_utc_millis())
   // the compositor may wait to display it on the screen until that time. Not
   // all implementations support this so it should only be treated as a hint.
+  //
+  // Calls to this function will never block. If the caller requires that the
+  // image be presented they must use Context::WaitUntilQueuesIdle.
   virtual PresentResult PresentImage(
       ref_ptr<QueueFence> wait_queue_fence, ref_ptr<ImageView> image_view,
       std::chrono::milliseconds present_time_utc_millis) = 0;

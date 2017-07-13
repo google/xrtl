@@ -23,6 +23,7 @@
 #include "xrtl/gfx/es3/es3_pipeline.h"
 #include "xrtl/gfx/es3/es3_pipeline_layout.h"
 #include "xrtl/gfx/es3/es3_program.h"
+#include "xrtl/gfx/es3/es3_queue.h"
 #include "xrtl/gfx/es3/es3_queue_fence.h"
 #include "xrtl/gfx/es3/es3_render_pass.h"
 #include "xrtl/gfx/es3/es3_resource_set.h"
@@ -32,7 +33,6 @@
 #include "xrtl/gfx/es3/es3_shader_module.h"
 #include "xrtl/gfx/es3/es3_swap_chain.h"
 #include "xrtl/gfx/util/memory_command_buffer.h"
-#include "xrtl/gfx/util/memory_command_decoder.h"
 
 namespace xrtl {
 namespace gfx {
@@ -45,24 +45,13 @@ ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
     : Context(std::move(devices), features),
       context_factory_(std::move(context_factory)),
       platform_context_(std::move(platform_context)) {
-  // Spawn the thread that will execute command buffers.
-  queue_work_pending_event_ = Event::CreateAutoResetEvent(false);
-  queue_work_completed_event_ = Event::CreateAutoResetEvent(false);
-  Thread::CreateParams create_params;
-  create_params.name = "ES3ContextQueueThread";
-  queue_thread_ = Thread::Create(create_params, QueueThreadMain, this);
+  // Setup the primary work queue.
+  primary_queue_ = make_unique<ES3Queue>(platform_context_);
 }
 
 ES3Context::~ES3Context() {
   // Join with queue thread.
-  if (queue_thread_) {
-    {
-      std::lock_guard<std::mutex> lock(queue_mutex_);
-      queue_running_ = false;
-    }
-    queue_work_pending_event_->Set();
-    queue_thread_->Join();
-  }
+  primary_queue_.reset();
 }
 
 bool ES3Context::DeserializePipelineCache(const void* existing_data,
@@ -225,9 +214,9 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
   auto memory_pool = CreateMemoryPool(MemoryType::kDeviceLocal, 0);
   DCHECK(memory_pool);
 
-  return ES3SwapChain::Create(platform_context_, std::move(memory_pool),
-                              std::move(control), present_mode, image_count,
-                              pixel_formats);
+  return ES3SwapChain::Create(platform_context_, primary_queue_.get(),
+                              std::move(memory_pool), std::move(control),
+                              present_mode, image_count, pixel_formats);
 }
 
 ref_ptr<MemoryPool> ES3Context::CreateMemoryPool(MemoryType memory_type_mask,
@@ -263,25 +252,14 @@ Context::SubmitResult ES3Context::Submit(
     ArrayView<ref_ptr<CommandBuffer>> command_buffers,
     ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
-  {
-    std::lock_guard<std::mutex> lock(queue_mutex_);
-    DCHECK(queue_running_);
-    queue_.emplace(wait_queue_fences, command_buffers, signal_queue_fences,
-                   signal_handle);
-    queue_work_pending_event_->Set();
-  }
-
+  primary_queue_->EnqueueCommandBuffers(wait_queue_fences, command_buffers,
+                                        signal_queue_fences,
+                                        std::move(signal_handle));
   return SubmitResult::kSuccess;
 }
 
 Context::WaitResult ES3Context::WaitUntilQueuesIdle() {
-  while (true) {
-    std::lock_guard<std::mutex> lock(queue_mutex_);
-    if (!queue_running_ || queue_.empty()) {
-      return WaitResult::kSuccess;
-    }
-    Thread::Wait(queue_work_completed_event_);
-  }
+  primary_queue_->WaitUntilIdle();
   return WaitResult::kSuccess;
 }
 
@@ -289,103 +267,6 @@ Context::WaitResult ES3Context::WaitUntilQueuesIdle(
     OperationQueueMask queue_mask) {
   // We only have one queue so no need to mask.
   return WaitUntilQueuesIdle();
-}
-
-void ES3Context::QueueThreadMain(void* param) {
-  reinterpret_cast<ES3Context*>(param)->RunQueue();
-}
-
-void ES3Context::RunQueue() {
-  // Acquire and lock the GL context we'll use to execute commands. It's only
-  // ever used by this thread so it's safe to keep active forever.
-  ES3PlatformContext::ThreadLock context_lock(
-      ES3PlatformContext::AcquireThreadContext(platform_context_));
-  if (!context_lock.is_held()) {
-    LOG(FATAL) << "Unable to make current the queue platform context";
-  }
-
-  // Create the native command buffer that takes a recorded memory command
-  // buffer and makes GL calls.
-  auto queue_command_buffer = make_ref<ES3CommandBuffer>();
-
-  while (true) {
-    QueueEntry queue_entry;
-    {
-      std::lock_guard<std::mutex> lock(queue_mutex_);
-      if (!queue_running_) {
-        // Queue is shutting down; exit thread.
-        break;
-      }
-
-      // Attempt to dequeue a command buffer set.
-      if (!queue_.empty()) {
-        queue_entry = std::move(queue_.front());
-        queue_.pop();
-      } else {
-        // Signal that there was no work available.
-        queue_work_completed_event_->Set();
-      }
-    }
-
-    // If there was no work pending wait for more work.
-    if (queue_entry.command_buffers.empty()) {
-      Thread::Wait(queue_work_pending_event_);
-      continue;
-    }
-
-    // Wait on queue fences.
-    std::vector<ref_ptr<WaitHandle>> wait_events;
-    wait_events.reserve(queue_entry.wait_queue_fences.size());
-    for (const auto& queue_fence : queue_entry.wait_queue_fences) {
-      wait_events.push_back(queue_fence.As<ES3QueueFence>()->event());
-    }
-    if (Thread::WaitAll(wait_events) != Thread::WaitResult::kSuccess) {
-      break;
-    }
-
-    // Execute command buffers.
-    for (const auto& command_buffer : queue_entry.command_buffers) {
-      // Reset GL state.
-      queue_command_buffer->PrepareState();
-
-      // Get the underlying memory command buffer stream.
-      auto memory_command_buffer =
-          command_buffer.As<util::MemoryCommandBuffer>();
-      auto command_reader = memory_command_buffer->GetReader();
-
-      // Execute the command buffer against our native GL implementation.
-      util::MemoryCommandDecoder::Decode(&command_reader,
-                                         queue_command_buffer.get());
-
-      // Reset our execution command buffer to clear all state.
-      // This ensures that the next time we start using it the state is clean
-      // (as expected by command buffers).
-      queue_command_buffer->Reset();
-
-      // Reset the command buffer now that we have executed it. This should
-      // release any resources kept alive exclusively by the command buffer.
-      memory_command_buffer->Reset();
-    }
-
-    // TODO(benvanik): avoid? need to flush to ensure presents on other threads
-    //                 see the outputs, probably.
-    glFlush();
-
-    // Signal queue fences.
-    for (const auto& queue_fence : queue_entry.signal_queue_fences) {
-      queue_fence.As<ES3QueueFence>()->event()->Set();
-    }
-
-    // Signal CPU event.
-    if (queue_entry.signal_handle) {
-      queue_entry.signal_handle->Set();
-    }
-  }
-
-  queue_work_completed_event_->Set();
-  queue_command_buffer.reset();
-  context_lock.reset();
-  ES3PlatformContext::ReleaseThreadContext();
 }
 
 }  // namespace es3
