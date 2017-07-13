@@ -87,7 +87,7 @@ class ImGuiOverlayDemo : private Control::Listener {
 
     // Create the swap chain used for presentation.
     swap_chain_ = context_->CreateSwapChain(
-        window_->root_control(), SwapChain::PresentMode::kLowLatency, 2,
+        window_->root_control(), SwapChain::PresentMode::kLowLatency, 1,
         {gfx::PixelFormats::kB8G8R8A8UNorm});
     if (!swap_chain_) {
       LOG(ERROR) << "Failed to create swap chain";
