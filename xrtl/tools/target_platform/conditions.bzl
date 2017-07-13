@@ -51,23 +51,19 @@ CONDITION_IOS = {
 }
 
 CONDITION_IOS_ARM_V7A = {
-    "crosstool_top": "TODO",
-    "ios_cpu": "armv7",
+    "cpu": "ios_armv7",
 }
 
 CONDITION_IOS_ARM_V8A = {
-    "crosstool_top": "TODO",
-    "ios_cpu": "arm64",
+    "cpu": "ios_arm64",
 }
 
 CONDITION_IOS_X86_32 = {
-    "crosstool_top": "TODO",
-    "ios_cpu": "i386",
+    "cpu": "ios_i386",
 }
 
 CONDITION_IOS_X86_64 = {
-    "crosstool_top": "TODO",
-    "ios_cpu": "x86_64",
+    "cpu": "ios_x86_64",
 }
 
 CONDITION_LINUX = {
