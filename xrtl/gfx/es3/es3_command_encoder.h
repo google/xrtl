@@ -373,6 +373,8 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
 
   // Prepares the current subpass state.
   void PrepareSubpass();
+  // Finishes a subpass before the next executes (or the render pass ends).
+  void FinishSubpass();
 
   // Refreshes the GL state machine with the given XRTL state.
   void RefreshVertexInputState(

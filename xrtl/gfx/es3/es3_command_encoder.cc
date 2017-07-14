@@ -542,6 +542,8 @@ void ES3RenderPassCommandEncoder::BeginRenderPass(
 
 void ES3RenderPassCommandEncoder::NextSubpass() {
   DCHECK_LT(subpass_index_ + 1, render_pass_->subpasses().size());
+  // Finish the previous subpass before preparing for the next.
+  FinishSubpass();
   ++subpass_index_;
   PrepareSubpass();
 }
@@ -600,7 +602,50 @@ void ES3RenderPassCommandEncoder::PrepareSubpass() {
   }
 }
 
+void ES3RenderPassCommandEncoder::FinishSubpass() {
+  const auto& subpass = render_pass_->subpasses()[subpass_index_];
+
+  // Walk forward and see what attachments will be used in the future. This lets
+  // us quickly check our store behavior below.
+  uint64_t future_attachment_uses = 0;
+  for (int i = subpass_index_ + 1; i < subpass.color_attachments.size(); ++i) {
+    const auto& attachment_ref = subpass.color_attachments[i];
+    if (attachment_ref.index != RenderPass::AttachmentReference::kUnused) {
+      future_attachment_uses |= (1ull << attachment_ref.index);
+    }
+  }
+
+  // Invalidate any of the buffers the subpass defined as StoreOp::kDontCare.
+  GLenum invalidate_attachments[16] = {GL_NONE};
+  GLsizei invalidate_attachment_count = 0;
+  for (int i = 0; i < subpass.color_attachments.size(); ++i) {
+    const auto& attachment_ref = subpass.color_attachments[i];
+    if (attachment_ref.index == RenderPass::AttachmentReference::kUnused) {
+      continue;
+    }
+    const auto& attachment_desc =
+        render_pass_->attachments()[attachment_ref.index];
+    if (attachment_desc.store_op == RenderPass::StoreOp::kDontCare) {
+      if ((future_attachment_uses & (1ull << attachment_ref.index)) == 0) {
+        // This attachment will not be used again so we can invalidate it.
+        invalidate_attachments[invalidate_attachment_count++] =
+            GL_COLOR_ATTACHMENT0 + i;
+      }
+    }
+  }
+  // TODO(benvanik): depth_stencil_attachment store_op/stencil_store_op
+  if (invalidate_attachment_count) {
+    // Invalidating one or more attachments.
+    // NOTE: we could use glInvalidateSubFramebuffer if we had a region.
+    glInvalidateFramebuffer(GL_DRAW_FRAMEBUFFER, invalidate_attachment_count,
+                            invalidate_attachments);
+  }
+}
+
 void ES3RenderPassCommandEncoder::EndRenderPass() {
+  // Finish off the last subpass.
+  FinishSubpass();
+
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
   glDeleteFramebuffers(1, &scratch_framebuffer_id_);
   scratch_framebuffer_id_ = 0;
