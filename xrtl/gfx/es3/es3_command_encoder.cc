@@ -808,7 +808,11 @@ void ES3RenderPassCommandEncoder::RefreshVertexInputState(
 
 void ES3RenderPassCommandEncoder::RefreshInputAssemblyState(
     const RenderState::InputAssemblyState& input_assembly_state) {
-  // TODO(benvanik): input_assembly_state.is_primitive_restart_enabled()
+  if (input_assembly_state.is_primitive_restart_enabled()) {
+    glEnable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
+  } else {
+    glDisable(GL_PRIMITIVE_RESTART_FIXED_INDEX);
+  }
 
   static const GLenum kPrimitiveTopologyLookup[] = {
       GL_POINTS,                    // kPointList
