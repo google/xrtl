@@ -331,6 +331,15 @@ void ES3PlatformSwapChain::PerformPresent(
   glBlitFramebuffer(0, 0, size_.width, size_.height, 0, 0, surface_size.width,
                     surface_size.height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
+  // Invalidate the read framebuffer, as we no longer need its contents.
+  // TODO(benvanik): verify we can eat the contents.
+  GLenum read_invalidate_attachments[] = {
+      GL_COLOR_ATTACHMENT0,
+  };
+  glInvalidateFramebuffer(GL_READ_FRAMEBUFFER,
+                          count_of(read_invalidate_attachments),
+                          read_invalidate_attachments);
+
   // Detach framebuffer texture to ensure it's not in use on the read frame
   // buffer. This may be required by certain impls due to multi-context use.
   glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
@@ -340,6 +349,14 @@ void ES3PlatformSwapChain::PerformPresent(
   if (!platform_context_->SwapBuffers(present_time_utc_millis)) {
     LOG(ERROR) << "Platform SwapBuffers failed";
   }
+
+  // Invalidate the default framebuffer now that we've swapped.
+  GLenum draw_invalidate_attachments[] = {
+      GL_COLOR,
+  };
+  glInvalidateFramebuffer(GL_DRAW_FRAMEBUFFER,
+                          count_of(draw_invalidate_attachments),
+                          draw_invalidate_attachments);
 
   // Mark the image as available.
   std::lock_guard<std::mutex> lock_guard(mutex_);
