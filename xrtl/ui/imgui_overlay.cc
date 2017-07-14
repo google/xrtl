@@ -437,11 +437,17 @@ void ImGuiOverlay::RenderDrawLists(ImDrawData* data) {
   auto vertex_mapping = vertex_buffer_->MapMemory<uint8_t>(
       gfx::MemoryAccess::kWriteDiscard, 0,
       data->TotalVtxCount * sizeof(ImDrawVert));
+  if (!vertex_mapping) {
+    return;
+  }
   uint8_t* vertex_data = vertex_mapping.data();
   size_t vertex_data_offset = 0;
   auto index_mapping = index_buffer_->MapMemory<uint8_t>(
       gfx::MemoryAccess::kWriteDiscard, 0,
       data->TotalIdxCount * sizeof(ImDrawIdx));
+  if (!index_mapping) {
+    return;
+  }
   uint8_t* index_data = index_mapping.data();
   size_t index_data_offset = 0;
 

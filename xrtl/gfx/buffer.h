@@ -31,8 +31,8 @@ enum class MemoryType {
   // Resource::MapMemory.
   kHostVisible = 1 << 1,
 
-  // The host cache management commands Resource::FlushMappedMemory and
-  // Resource::InvalidateMappedMemory are not needed to flush host writes
+  // The host cache management commands MappedMemory::Flush and
+  // MappedMemory::Invalidate are not needed to flush host writes
   // to the device or make device writes visible to the host, respectively.
   kHostCoherent = 1 << 2,
 
@@ -194,10 +194,10 @@ class Buffer : public Resource {
   // MemoryType::kHostVisible.
   //
   // If MemoryType::kHostCoherent was not specified the explicit
-  // InvalidateMappedMemory and FlushMappedMemory must be used to control
-  // visibility of the data on the device. If MemoryType::kHostCached
-  // is not set callers should not attempt to read from the mapped memory, as
-  // doing so may produce undefined results and/or ultra slow reads.
+  // Invalidate and Flush calls must be used to control visibility of the data
+  // on the device. If MemoryType::kHostCached is not set callers should not
+  // attempt to read from the mapped memory, as doing so may produce undefined
+  // results and/or ultra slow reads.
   //
   // This allows mapping the memory as a C++ type. Care must be taken to ensure
   // the data layout in C++ matches the expected data layout in the shaders that
@@ -234,25 +234,6 @@ class Buffer : public Resource {
     return MapMemory<T>(memory_access, 0, allocation_size() / sizeof(T));
   }
 
-  // Invalidates ranges of non-coherent memory from the host caches.
-  // Use this before reading from non-coherent memory.
-  // This guarantees that device writes to the memory ranges provided are
-  // visible on the host.
-  // This is only required for memory types without kHostCoherent set.
-  virtual void InvalidateMappedMemory(size_t byte_offset,
-                                      size_t byte_length) = 0;
-  void InvalidateMappedMemory() {
-    InvalidateMappedMemory(0, allocation_size());
-  }
-
-  // Flushes ranges of non-coherent memory from the host caches.
-  // Use this after writing to non-coherent memory.
-  // This guarantees that host writes to the memory ranges provided are made
-  // available for device access.
-  // This is only required for memory types without kHostCoherent set.
-  virtual void FlushMappedMemory(size_t byte_offset, size_t byte_length) = 0;
-  void FlushMappedMemory() { FlushMappedMemory(0, allocation_size()); }
-
  protected:
   template <typename T>
   friend class MappedMemory;
@@ -270,6 +251,21 @@ class Buffer : public Resource {
   // Unmaps previously mapped memory.
   virtual void UnmapMemory(size_t byte_offset, size_t byte_length,
                            void* data) = 0;
+
+  // Invalidates ranges of non-coherent memory from the host caches.
+  // Use this before reading from non-coherent memory.
+  // This guarantees that device writes to the memory ranges provided are
+  // visible on the host.
+  // This is only required for memory types without kHostCoherent set.
+  virtual void InvalidateMappedMemory(size_t byte_offset,
+                                      size_t byte_length) = 0;
+
+  // Flushes ranges of non-coherent memory from the host caches.
+  // Use this after writing to non-coherent memory.
+  // This guarantees that host writes to the memory ranges provided are made
+  // available for device access.
+  // This is only required for memory types without kHostCoherent set.
+  virtual void FlushMappedMemory(size_t byte_offset, size_t byte_length) = 0;
 
   Usage usage_mask_ = Usage::kNone;
 };
