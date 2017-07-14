@@ -124,6 +124,7 @@ bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
   if (access & GL_MAP_WRITE_BIT) {
     // Non-host-coherent memory requires explicit flushes.
     if (!any(memory_type_mask_ & MemoryType::kHostCoherent)) {
+      access |= GL_MAP_UNSYNCHRONIZED_BIT;
       access |= GL_MAP_FLUSH_EXPLICIT_BIT;
     }
   }
@@ -162,6 +163,11 @@ void ES3Buffer::InvalidateMappedMemory(size_t byte_offset, size_t byte_length) {
 }
 
 void ES3Buffer::FlushMappedMemory(size_t byte_offset, size_t byte_length) {
+  // Flushes are ignored with kHostCoherent memory.
+  if (any(memory_type_mask_ & MemoryType::kHostCoherent)) {
+    return;
+  }
+
   auto context_lock =
       ES3PlatformContext::LockTransientContext(platform_context_);
 
