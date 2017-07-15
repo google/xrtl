@@ -35,6 +35,10 @@ enum class OperationQueueMask : uint32_t {
   kCompute = 1 << 1,
   // A queue supporting transfer operations (such as CopyBuffer).
   kTransfer = 1 << 2,
+  // A queue supportion presentation operations (via SwapChain).
+  kPresent = 1 << 3,
+  // A union of all operation queue modes.
+  kAll = kRender | kCompute | kTransfer | kPresent,
 };
 XRTL_BITMASK(OperationQueueMask);
 

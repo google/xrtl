@@ -45,12 +45,16 @@ ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
     : Context(std::move(devices), features),
       context_factory_(std::move(context_factory)),
       platform_context_(std::move(platform_context)) {
-  // Setup the primary work queue.
-  primary_queue_ = make_unique<ES3Queue>(platform_context_);
+  // Setup the work queues.
+  primary_queue_ = make_unique<ES3Queue>(ES3Queue::Type::kCommandSubmission,
+                                         platform_context_);
+  presentation_queue_ =
+      make_unique<ES3Queue>(ES3Queue::Type::kPresentation, platform_context_);
 }
 
 ES3Context::~ES3Context() {
-  // Join with queue thread.
+  // Join with queue threads.
+  presentation_queue_.reset();
   primary_queue_.reset();
 }
 
@@ -214,7 +218,7 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
   auto memory_pool = CreateMemoryPool(MemoryType::kDeviceLocal, 0);
   DCHECK(memory_pool);
 
-  return ES3SwapChain::Create(platform_context_, primary_queue_.get(),
+  return ES3SwapChain::Create(platform_context_, presentation_queue_.get(),
                               std::move(memory_pool), std::move(control),
                               present_mode, image_count, pixel_formats);
 }
@@ -259,14 +263,21 @@ Context::SubmitResult ES3Context::Submit(
 }
 
 Context::WaitResult ES3Context::WaitUntilQueuesIdle() {
-  primary_queue_->WaitUntilIdle();
-  return WaitResult::kSuccess;
+  return WaitUntilQueuesIdle(OperationQueueMask::kAll);
 }
 
 Context::WaitResult ES3Context::WaitUntilQueuesIdle(
     OperationQueueMask queue_mask) {
-  // We only have one queue so no need to mask.
-  return WaitUntilQueuesIdle();
+  bool any_failed = false;
+  if (any(queue_mask &
+          (OperationQueueMask::kRender | OperationQueueMask::kCompute |
+           OperationQueueMask::kTransfer))) {
+    any_failed = !primary_queue_->WaitUntilIdle() || any_failed;
+  }
+  if (any(queue_mask & OperationQueueMask::kPresent)) {
+    any_failed = !presentation_queue_->WaitUntilIdle() || any_failed;
+  }
+  return any_failed ? WaitResult::kDeviceLost : WaitResult::kSuccess;
 }
 
 }  // namespace es3
