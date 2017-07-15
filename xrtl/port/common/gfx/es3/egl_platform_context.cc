@@ -1062,6 +1062,21 @@ Size2D EGLPlatformContext::QuerySize() {
   return {real_width, real_height};
 }
 
+void EGLPlatformContext::SetSwapBehavior(SwapBehavior swap_behavior) {
+  switch (swap_behavior) {
+    case SwapBehavior::kImmediate:
+      eglSwapInterval(egl_display_, 0);
+      break;
+    case SwapBehavior::kSynchronize:
+      eglSwapInterval(egl_display_, 1);
+      break;
+    case SwapBehavior::kSynchronizeAndTear:
+      // TODO(benvanik): try to use glXSwapIntervalEXT if on linux.
+      eglSwapInterval(egl_display_, 1);
+      break;
+  }
+}
+
 bool EGLPlatformContext::SwapBuffers(
     std::chrono::milliseconds present_time_utc_millis) {
   if (!native_window_) {
