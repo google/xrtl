@@ -23,7 +23,7 @@
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_queue.h"
-#include "xrtl/gfx/memory_pool.h"
+#include "xrtl/gfx/memory_heap.h"
 #include "xrtl/gfx/swap_chain.h"
 #include "xrtl/ui/control.h"
 
@@ -35,7 +35,7 @@ class ES3SwapChain : public SwapChain {
  public:
   static ref_ptr<ES3SwapChain> Create(
       ref_ptr<ES3PlatformContext> shared_platform_context,
-      ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+      ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
       ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
       ArrayView<PixelFormat> pixel_formats);
 
@@ -54,7 +54,7 @@ class ES3SwapChain : public SwapChain {
 
 class ES3PlatformSwapChain : public ES3SwapChain {
  public:
-  ES3PlatformSwapChain(ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+  ES3PlatformSwapChain(ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
                        ref_ptr<ui::Control> control,
                        ref_ptr<ES3PlatformContext> platform_context,
                        PresentMode present_mode, int image_count,
@@ -90,7 +90,7 @@ class ES3PlatformSwapChain : public ES3SwapChain {
   void MarkPresentComplete(int image_index);
 
   ES3Queue* present_queue_;
-  ref_ptr<MemoryPool> memory_pool_;
+  ref_ptr<MemoryHeap> memory_heap_;
   ref_ptr<ui::Control> control_;
   ref_ptr<ES3PlatformContext> platform_context_;
 

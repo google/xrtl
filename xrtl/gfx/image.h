@@ -139,11 +139,13 @@ class Image : public Resource {
     Size3D size;
     int mip_level_count = 1;
     int array_layer_count = 1;
-    Usage usage_mask = Usage::kNone;
     Layout initial_layout = Layout::kUndefined;
   };
 
   ~Image() override = default;
+
+  // Bitmask describing how the image is to be used.
+  Usage usage_mask() const { return usage_mask_; }
 
   // Image type the view is representing.
   Image::Type type() const { return create_params_.type; }
@@ -160,8 +162,6 @@ class Image : public Resource {
   int mip_level_count() const { return create_params_.mip_level_count; }
   // Total number of layers in the array, if the image is an array type.
   int array_layer_count() const { return create_params_.array_layer_count; }
-  // Bitmask describing how the image is to be used.
-  Usage usage_mask() const { return create_params_.usage_mask; }
 
   // Returns a layer range encompassing the entire image.
   LayerRange entire_range() const {
@@ -195,6 +195,7 @@ class Image : public Resource {
   Image(size_t allocation_size, CreateParams create_params)
       : Resource(allocation_size), create_params_(create_params) {}
 
+  Usage usage_mask_ = Usage::kNone;
   CreateParams create_params_;
 };
 

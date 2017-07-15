@@ -13,6 +13,7 @@ cc_library(
         ":es3_common",
         ":es3_platform_context",
         "//xrtl/gfx:buffer",
+        "//xrtl/gfx:memory_heap",
     ],
 )
 
@@ -70,7 +71,7 @@ cc_library(
         ":es3_common",
         ":es3_framebuffer",
         ":es3_image_view",
-        ":es3_memory_pool",
+        ":es3_memory_heap",
         ":es3_pipeline",
         ":es3_pipeline_layout",
         ":es3_platform_context",
@@ -149,6 +150,7 @@ cc_library(
         ":es3_pixel_format",
         ":es3_platform_context",
         "//xrtl/gfx:image",
+        "//xrtl/gfx:memory_heap",
     ],
 )
 
@@ -162,17 +164,18 @@ cc_library(
 )
 
 cc_library(
-    name = "es3_memory_pool",
-    srcs = ["es3_memory_pool.cc"],
-    hdrs = ["es3_memory_pool.h"],
+    name = "es3_memory_heap",
+    srcs = ["es3_memory_heap.cc"],
+    hdrs = ["es3_memory_heap.h"],
     deps = [
         ":es3_buffer",
         ":es3_common",
         ":es3_image",
         ":es3_pixel_format",
         ":es3_platform_context",
+        "//xrtl/base:math",
         "//xrtl/base:tracing",
-        "//xrtl/gfx:memory_pool",
+        "//xrtl/gfx:memory_heap",
     ],
 )
 
@@ -379,7 +382,7 @@ cc_library(
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:semaphore",
         "//xrtl/base/threading:thread",
-        "//xrtl/gfx:memory_pool",
+        "//xrtl/gfx:memory_heap",
         "//xrtl/gfx:swap_chain",
         "//xrtl/ui:control",
     ],

@@ -19,7 +19,7 @@
 #include "xrtl/gfx/es3/es3_command_fence.h"
 #include "xrtl/gfx/es3/es3_framebuffer.h"
 #include "xrtl/gfx/es3/es3_image_view.h"
-#include "xrtl/gfx/es3/es3_memory_pool.h"
+#include "xrtl/gfx/es3/es3_memory_heap.h"
 #include "xrtl/gfx/es3/es3_pipeline.h"
 #include "xrtl/gfx/es3/es3_pipeline_layout.h"
 #include "xrtl/gfx/es3/es3_program.h"
@@ -215,18 +215,19 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
     int image_count, ArrayView<PixelFormat> pixel_formats) {
   // Shared memory pool for all frame buffer images.
   // TODO(benvanik): pool across swap chains.
-  auto memory_pool = CreateMemoryPool(MemoryType::kDeviceLocal, 0);
-  DCHECK(memory_pool);
+  auto memory_heap =
+      CreateMemoryHeap(MemoryType::kDeviceLocal, 64 * 1024 * 1024);
+  DCHECK(memory_heap);
 
   return ES3SwapChain::Create(platform_context_, presentation_queue_.get(),
-                              std::move(memory_pool), std::move(control),
+                              std::move(memory_heap), std::move(control),
                               present_mode, image_count, pixel_formats);
 }
 
-ref_ptr<MemoryPool> ES3Context::CreateMemoryPool(MemoryType memory_type_mask,
-                                                 size_t chunk_size) {
-  return make_ref<ES3MemoryPool>(platform_context_, memory_type_mask,
-                                 chunk_size);
+ref_ptr<MemoryHeap> ES3Context::CreateMemoryHeap(MemoryType memory_type_mask,
+                                                 size_t heap_size) {
+  return make_ref<ES3MemoryHeap>(platform_context_, memory_type_mask,
+                                 heap_size);
 }
 
 ref_ptr<Sampler> ES3Context::CreateSampler(Sampler::Params params) {

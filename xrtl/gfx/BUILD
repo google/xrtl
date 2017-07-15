@@ -82,7 +82,7 @@ cc_library(
         ":device",
         ":framebuffer",
         ":image_view",
-        ":memory_pool",
+        ":memory_heap",
         ":pipeline",
         ":pipeline_layout",
         ":pixel_format",
@@ -199,8 +199,8 @@ cc_library(
 )
 
 cc_library(
-    name = "memory_pool",
-    hdrs = ["memory_pool.h"],
+    name = "memory_heap",
+    hdrs = ["memory_heap.h"],
     deps = [
         ":buffer",
         ":image",

@@ -99,7 +99,7 @@ class ImGuiOverlay : public Control::InputListener {
   void OnMouseWheel(ref_ptr<Control> target, const MouseEvent& ev) override;
 
   ref_ptr<gfx::Context> context_;
-  ref_ptr<gfx::MemoryPool> memory_pool_;
+  ref_ptr<gfx::MemoryHeap> memory_heap_;
 
   ref_ptr<gfx::Sampler> nearest_sampler_;
   ref_ptr<gfx::Sampler> linear_sampler_;

@@ -32,7 +32,7 @@ using gfx::Context;
 using gfx::ContextFactory;
 using gfx::Image;
 using gfx::ImageView;
-using gfx::MemoryPool;
+using gfx::MemoryHeap;
 using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
@@ -121,12 +121,12 @@ class TriangleExample : private Control::Listener {
       return false;
     }
 
-    // Allocate a memory pool to allocate buffers and textures.
-    memory_pool_ = context_->CreateMemoryPool(
+    // Allocate a memory heap to allocate buffers and textures.
+    memory_heap_ = context_->CreateMemoryHeap(
         gfx::MemoryType::kHostVisible | gfx::MemoryType::kHostCoherent,
-        1 * 1024 * 1024);
-    if (!memory_pool_) {
-      LOG(ERROR) << "Unable to create memory pool";
+        16 * 1024 * 1024);
+    if (!memory_heap_) {
+      LOG(ERROR) << "Unable to create memory heap";
       return false;
     }
 
@@ -148,10 +148,10 @@ class TriangleExample : private Control::Listener {
     };
 
     // Allocate a buffer for the geometry.
-    auto allocation_result = memory_pool_->AllocateBuffer(
+    auto allocation_result = memory_heap_->AllocateBuffer(
         sizeof(kVertexData), Buffer::Usage::kVertexBuffer, &triangle_buffer_);
     switch (allocation_result) {
-      case MemoryPool::AllocationResult::kSuccess:
+      case MemoryHeap::AllocationResult::kSuccess:
         break;
       default:
         LOG(ERROR) << "Failed to allocate geometry buffer";
@@ -187,13 +187,12 @@ class TriangleExample : private Control::Listener {
     create_params.format = gfx::PixelFormats::kR8G8B8A8UNorm;
     create_params.tiling_mode = Image::TilingMode::kLinear;
     create_params.size = {kWidth, kHeight};
-    create_params.usage_mask = Image::Usage::kSampled;
     create_params.initial_layout = Image::Layout::kPreinitialized;
 
-    auto allocation_result =
-        memory_pool_->AllocateImage(create_params, &grid_image_);
+    auto allocation_result = memory_heap_->AllocateImage(
+        create_params, Image::Usage::kSampled, &grid_image_);
     switch (allocation_result) {
-      case MemoryPool::AllocationResult::kSuccess:
+      case MemoryHeap::AllocationResult::kSuccess:
         break;
       default:
         LOG(ERROR) << "Failed to allocate texture image";
@@ -359,10 +358,10 @@ void main() {
     }
 
     // Allocate the uniform buffer.
-    auto allocation_result = memory_pool_->AllocateBuffer(
+    auto allocation_result = memory_heap_->AllocateBuffer(
         sizeof(UniformBlock), Buffer::Usage::kUniformBuffer, &uniform_buffer_);
     switch (allocation_result) {
-      case MemoryPool::AllocationResult::kSuccess:
+      case MemoryHeap::AllocationResult::kSuccess:
         break;
       default:
         LOG(ERROR) << "Failed to allocate uniform buffer";
@@ -527,7 +526,7 @@ void main() {
     resource_set_.reset();
     render_pipeline_.reset();
     render_pass_.reset();
-    memory_pool_.reset();
+    memory_heap_.reset();
     swap_chain_.reset();
     context_.reset();
   }
@@ -565,7 +564,7 @@ void main() {
   ref_ptr<RenderPipeline> render_pipeline_;
   ref_ptr<ResourceSet> resource_set_;
 
-  ref_ptr<MemoryPool> memory_pool_;
+  ref_ptr<MemoryHeap> memory_heap_;
   ref_ptr<Buffer> triangle_buffer_;
   ref_ptr<Image> grid_image_;
   ref_ptr<ImageView> grid_image_view_;

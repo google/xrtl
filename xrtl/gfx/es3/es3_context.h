@@ -83,8 +83,8 @@ class ES3Context : public Context {
       ref_ptr<ui::Control> control, SwapChain::PresentMode present_mode,
       int image_count, ArrayView<PixelFormat> pixel_formats) override;
 
-  ref_ptr<MemoryPool> CreateMemoryPool(MemoryType memory_type_mask,
-                                       size_t chunk_size) override;
+  ref_ptr<MemoryHeap> CreateMemoryHeap(MemoryType memory_type_mask,
+                                       size_t heap_size) override;
 
   ref_ptr<Sampler> CreateSampler(Sampler::Params params) override;
 
