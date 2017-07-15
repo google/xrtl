@@ -38,7 +38,16 @@ namespace es3 {
 // buffers and callbacks in FIFO order.
 class ES3Queue {
  public:
-  explicit ES3Queue(ref_ptr<ES3PlatformContext> shared_platform_context);
+  enum class Type {
+    // Queue is used for command buffer submission.
+    kCommandSubmission,
+    // Queue is used for presentation. It may block for long periods of time
+    // waiting on vsync and such.
+    kPresentation,
+  };
+
+  ES3Queue(Type queue_type,
+           ref_ptr<ES3PlatformContext> shared_platform_context);
   ~ES3Queue();
 
   // Enqueues a set of command buffers to be executed from the queue.
@@ -54,7 +63,8 @@ class ES3Queue {
                        ref_ptr<Event> signal_handle);
 
   // Waits until all commands in the queue have completed.
-  void WaitUntilIdle();
+  // Returns false if the device was lost and the wait will never complete.
+  bool WaitUntilIdle();
 
  private:
   static void QueueThreadMain(void* param);
@@ -65,6 +75,8 @@ class ES3Queue {
 
   // Base platform context used by the parent ES3Context.
   ref_ptr<ES3PlatformContext> shared_platform_context_;
+
+  Type queue_type_;
 
   ref_ptr<Thread> queue_thread_;
   ref_ptr<Event> queue_work_pending_event_;

@@ -22,8 +22,10 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-ES3Queue::ES3Queue(ref_ptr<ES3PlatformContext> shared_platform_context)
-    : shared_platform_context_(std::move(shared_platform_context)) {
+ES3Queue::ES3Queue(Type queue_type,
+                   ref_ptr<ES3PlatformContext> shared_platform_context)
+    : shared_platform_context_(std::move(shared_platform_context)),
+      queue_type_(queue_type) {
   queue_work_pending_event_ = Event::CreateAutoResetEvent(false);
   queue_work_completed_event_ = Event::CreateAutoResetEvent(false);
 
@@ -50,6 +52,8 @@ void ES3Queue::EnqueueCommandBuffers(
     ArrayView<ref_ptr<CommandBuffer>> command_buffers,
     ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
+  // Presentation queues cannot handle command buffers.
+  DCHECK(queue_type_ != Type::kPresentation);
   std::lock_guard<std::mutex> lock(queue_mutex_);
   DCHECK(queue_running_);
   queue_.emplace(wait_queue_fences, command_buffers, signal_queue_fences,
@@ -69,17 +73,18 @@ void ES3Queue::EnqueueCallback(
   queue_work_pending_event_->Set();
 }
 
-void ES3Queue::WaitUntilIdle() {
+bool ES3Queue::WaitUntilIdle() {
   WTF_SCOPE0("ES3Queue#WaitUntilIdle");
   while (true) {
     {
       std::lock_guard<std::mutex> lock(queue_mutex_);
       if (!queue_running_ || (queue_.empty() && !queue_executing_)) {
-        return;
+        return true;
       }
     }
     Thread::Wait(queue_work_completed_event_);
   }
+  return true;  // Unreachable
 }
 
 void ES3Queue::QueueThreadMain(void* param) {
@@ -89,16 +94,23 @@ void ES3Queue::QueueThreadMain(void* param) {
 void ES3Queue::RunQueue() {
   // Acquire and lock the GL context we'll use to execute commands. It's only
   // ever used by this thread so it's safe to keep active forever.
-  auto queue_context =
-      ES3PlatformContext::AcquireThreadContext(shared_platform_context_);
-  if (!queue_context) {
-    LOG(FATAL) << "Unable to allocate a queue platform context";
-    return;
+  // Note that we only need this if we'll be executing commands.
+  // We could also defer allocation until first use but having it here makes it
+  // easier to track down GL context errors and keeps performance at runtime
+  // predictable.
+  ref_ptr<ES3PlatformContext> queue_context;
+  if (queue_type_ != Type::kPresentation) {
+    queue_context =
+        ES3PlatformContext::AcquireThreadContext(shared_platform_context_);
+    if (!queue_context) {
+      LOG(FATAL) << "Unable to allocate a queue platform context";
+      return;
+    }
   }
 
-  // Create the native command buffer that takes a recorded memory command
-  // buffer and makes GL calls.
-  auto implementation_command_buffer = make_ref<ES3CommandBuffer>();
+  // The native command buffer that takes a recorded memory command buffer and
+  // makes GL calls. We'll allocate it on demand.
+  ref_ptr<ES3CommandBuffer> implementation_command_buffer;
 
   while (true) {
     QueueEntry queue_entry;
@@ -142,9 +154,13 @@ void ES3Queue::RunQueue() {
 
     // Execute command buffers.
     if (!queue_entry.command_buffers.empty()) {
+      DCHECK(queue_context);
       ES3PlatformContext::ThreadLock context_lock(queue_context);
       if (!context_lock.is_held()) {
         LOG(FATAL) << "Unable to make current the queue platform context";
+      }
+      if (!implementation_command_buffer) {
+        implementation_command_buffer = make_ref<ES3CommandBuffer>();
       }
       ExecuteCommandBuffers(queue_entry.command_buffers,
                             implementation_command_buffer);
