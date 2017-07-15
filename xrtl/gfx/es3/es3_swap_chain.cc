@@ -29,7 +29,7 @@ namespace es3 {
 // TODO(benvanik): remove the need for this when we have multiple impls.
 ref_ptr<ES3SwapChain> ES3SwapChain::Create(
     ref_ptr<ES3PlatformContext> shared_platform_context,
-    ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+    ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
     ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
     ArrayView<PixelFormat> pixel_formats) {
   WTF_SCOPE0("ES3SwapChain#Create");
@@ -46,7 +46,7 @@ ref_ptr<ES3SwapChain> ES3SwapChain::Create(
   }
 
   auto swap_chain = make_ref<ES3PlatformSwapChain>(
-      present_queue, memory_pool, control, platform_context, present_mode,
+      present_queue, memory_heap, control, platform_context, present_mode,
       image_count, pixel_formats);
   if (!swap_chain->Initialize()) {
     return nullptr;
@@ -55,13 +55,13 @@ ref_ptr<ES3SwapChain> ES3SwapChain::Create(
 }
 
 ES3PlatformSwapChain::ES3PlatformSwapChain(
-    ES3Queue* present_queue, ref_ptr<MemoryPool> memory_pool,
+    ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
     ref_ptr<ui::Control> control, ref_ptr<ES3PlatformContext> platform_context,
     PresentMode present_mode, int image_count,
     ArrayView<PixelFormat> pixel_formats)
     : ES3SwapChain(present_mode, image_count, pixel_formats),
       present_queue_(present_queue),
-      memory_pool_(std::move(memory_pool)),
+      memory_heap_(std::move(memory_heap)),
       control_(std::move(control)),
       platform_context_(std::move(platform_context)) {}
 
@@ -81,9 +81,6 @@ bool ES3PlatformSwapChain::Initialize() {
 
   image_create_params_.format = available_pixel_formats_[0];
   image_create_params_.size = Size3D(size_);
-  image_create_params_.usage_mask =
-      Image::Usage::kTransferSource | Image::Usage::kSampled |
-      Image::Usage::kColorAttachment | Image::Usage::kInputAttachment;
 
   // Allocate framebuffers we'll use for copying.
   framebuffers_.resize(image_count());
@@ -161,16 +158,20 @@ SwapChain::ResizeResult ES3PlatformSwapChain::ResizeWithContext(
   size_ = platform_context_->QuerySize();
   image_create_params_.size = Size3D(size_);
 
+  auto usage_mask = Image::Usage::kTransferSource | Image::Usage::kSampled |
+                    Image::Usage::kColorAttachment |
+                    Image::Usage::kInputAttachment;
+
   // Resize all images by recreating them.
   for (int i = 0; i < image_views_.size(); ++i) {
     image_views_[i].reset();
   }
-  memory_pool_->Reclaim();
   for (int i = 0; i < image_views_.size(); ++i) {
     // Allocate image.
     ref_ptr<Image> image;
-    auto result = memory_pool_->AllocateImage(image_create_params_, &image);
-    DCHECK(result == MemoryPool::AllocationResult::kSuccess);
+    auto result =
+        memory_heap_->AllocateImage(image_create_params_, usage_mask, &image);
+    DCHECK(result == MemoryHeap::AllocationResult::kSuccess);
     if (!image) {
       return ResizeResult::kOutOfMemory;
     }

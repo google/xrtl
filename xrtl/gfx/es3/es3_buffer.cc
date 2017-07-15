@@ -16,16 +16,18 @@
 
 #include <utility>
 
+#include "xrtl/gfx/memory_heap.h"
+
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
 ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
-                     MemoryType memory_type_mask, size_t allocation_size,
+                     ref_ptr<MemoryHeap> memory_heap, size_t allocation_size,
                      Usage usage_mask)
     : Buffer(allocation_size, usage_mask),
       platform_context_(std::move(platform_context)),
-      memory_type_mask_(memory_type_mask) {
+      memory_heap_(std::move(memory_heap)) {
   auto context_lock =
       ES3PlatformContext::LockTransientContext(platform_context_);
 
@@ -65,6 +67,10 @@ ES3Buffer::~ES3Buffer() {
   glDeleteBuffers(1, &buffer_id_);
 }
 
+ref_ptr<MemoryHeap> ES3Buffer::memory_heap() const { return memory_heap_; }
+
+void ES3Buffer::Release() { memory_heap_->ReleaseBuffer(this); }
+
 bool ES3Buffer::ReadData(size_t source_offset, void* data, size_t data_length) {
   DCHECK_LE(source_offset + data_length, allocation_size());
   // TODO(benvanik): buffer.
@@ -91,7 +97,8 @@ bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
   *out_data = nullptr;
 
   // Must be mappable.
-  bool is_mappable = any(memory_type_mask_ & MemoryType::kHostVisible);
+  bool is_mappable =
+      any(memory_heap_->memory_type_mask() & MemoryType::kHostVisible);
   DCHECK(is_mappable);
   if (!is_mappable) {
     LOG(ERROR) << "Attempting to map a non-host-visible memory buffer";
@@ -123,7 +130,7 @@ bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
 
   if (access & GL_MAP_WRITE_BIT) {
     // Non-host-coherent memory requires explicit flushes.
-    if (!any(memory_type_mask_ & MemoryType::kHostCoherent)) {
+    if (!any(memory_heap_->memory_type_mask() & MemoryType::kHostCoherent)) {
       access |= GL_MAP_UNSYNCHRONIZED_BIT;
       access |= GL_MAP_FLUSH_EXPLICIT_BIT;
     }
@@ -164,7 +171,7 @@ void ES3Buffer::InvalidateMappedMemory(size_t byte_offset, size_t byte_length) {
 
 void ES3Buffer::FlushMappedMemory(size_t byte_offset, size_t byte_length) {
   // Flushes are ignored with kHostCoherent memory.
-  if (any(memory_type_mask_ & MemoryType::kHostCoherent)) {
+  if (any(memory_heap_->memory_type_mask() & MemoryType::kHostCoherent)) {
     return;
   }
 

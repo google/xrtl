@@ -12,37 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_GFX_ES3_ES3_MEMORY_POOL_H_
-#define XRTL_GFX_ES3_ES3_MEMORY_POOL_H_
+#ifndef XRTL_GFX_ES3_ES3_MEMORY_HEAP_H_
+#define XRTL_GFX_ES3_ES3_MEMORY_HEAP_H_
+
+#include <mutex>
 
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
-#include "xrtl/gfx/memory_pool.h"
+#include "xrtl/gfx/memory_heap.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3MemoryPool : public MemoryPool {
+class ES3MemoryHeap : public MemoryHeap {
  public:
-  ES3MemoryPool(ref_ptr<ES3PlatformContext> platform_context,
-                MemoryType memory_type_mask, size_t chunk_size);
-  ~ES3MemoryPool() override;
+  ES3MemoryHeap(ref_ptr<ES3PlatformContext> platform_context,
+                MemoryType memory_type_mask, size_t heap_size);
+  ~ES3MemoryHeap() override;
 
-  void Reclaim() override;
+  size_t allocation_alignment() const override { return allocation_alignment_; }
+  size_t used_size() override;
 
   AllocationResult AllocateBuffer(size_t size, Buffer::Usage usage_mask,
                                   ref_ptr<Buffer>* out_buffer) override;
 
   AllocationResult AllocateImage(Image::CreateParams create_params,
+                                 Image::Usage usage_mask,
                                  ref_ptr<Image>* out_image) override;
 
  private:
+  void ReleaseBuffer(Buffer* buffer) override;
+  void ReleaseImage(Image* image) override;
+
   ref_ptr<ES3PlatformContext> platform_context_;
+
+  size_t allocation_alignment_ = 0;
+
+  std::mutex mutex_;
+  size_t used_size_ = 0;
 };
 
 }  // namespace es3
 }  // namespace gfx
 }  // namespace xrtl
 
-#endif  // XRTL_GFX_ES3_ES3_MEMORY_POOL_H_
+#endif  // XRTL_GFX_ES3_ES3_MEMORY_HEAP_H_

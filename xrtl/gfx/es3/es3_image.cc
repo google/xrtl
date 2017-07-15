@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "xrtl/gfx/es3/es3_image_view.h"
+#include "xrtl/gfx/memory_heap.h"
 
 namespace xrtl {
 namespace gfx {
@@ -47,10 +48,12 @@ size_t ES3Image::ComputeAllocationSize(
 }
 
 ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
+                   ref_ptr<MemoryHeap> memory_heap,
                    ES3TextureParams texture_params, size_t allocation_size,
                    CreateParams create_params)
     : Image(allocation_size, create_params),
       platform_context_(std::move(platform_context)),
+      memory_heap_(std::move(memory_heap)),
       texture_params_(texture_params) {
   auto context_lock =
       ES3PlatformContext::LockTransientContext(platform_context_);
@@ -103,6 +106,10 @@ ES3Image::~ES3Image() {
       ES3PlatformContext::LockTransientContext(platform_context_);
   glDeleteTextures(1, &texture_id_);
 }
+
+ref_ptr<MemoryHeap> ES3Image::memory_heap() const { return memory_heap_; }
+
+void ES3Image::Release() { memory_heap_->ReleaseImage(this); }
 
 ref_ptr<ImageView> ES3Image::CreateView() {
   return CreateView(create_params_.type, create_params_.format, entire_range());

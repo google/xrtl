@@ -27,7 +27,7 @@
 #include "xrtl/gfx/device.h"
 #include "xrtl/gfx/framebuffer.h"
 #include "xrtl/gfx/image_view.h"
-#include "xrtl/gfx/memory_pool.h"
+#include "xrtl/gfx/memory_heap.h"
 #include "xrtl/gfx/pipeline.h"
 #include "xrtl/gfx/pipeline_layout.h"
 #include "xrtl/gfx/pixel_format.h"
@@ -146,20 +146,20 @@ class Context : public RefObject<Context> {
       ref_ptr<ui::Control> control, SwapChain::PresentMode present_mode,
       int image_count, ArrayView<PixelFormat> pixel_formats) = 0;
 
-  // Creates a new resource memory pool.
-  // The pool can be used to create images and buffers of the given memory
+  // Creates a new resource memory heap.
+  // The heap can be used to create images and buffers of the given memory
   // type.
   //
-  // The memory pool will request hardware resources in the provided chunk size
-  // and then dole out images and buffers from those chunks. Chunk sizes
+  // The memory heap will request hardware resources in the provided heap size
+  // and then dole out images and buffers from that allocation. Heap sizes
   // should be sufficiently large to prevent frequent exhaustion but not so
   // large as to potentially run out of device memory. 64-128MB is often a good
-  // size to start with. The provided chunk size may be rounded up to alignment
+  // size to start with. The provided heap size may be rounded up to alignment
   // restrictions of the device.
   //
   // Returns nullptr if the memory type mask is invalid.
-  virtual ref_ptr<MemoryPool> CreateMemoryPool(MemoryType memory_type_mask,
-                                               size_t chunk_size) = 0;
+  virtual ref_ptr<MemoryHeap> CreateMemoryHeap(MemoryType memory_type_mask,
+                                               size_t heap_size) = 0;
 
   // Creates a new image sampler.
   virtual ref_ptr<Sampler> CreateSampler(Sampler::Params params) = 0;

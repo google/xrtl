@@ -32,7 +32,7 @@ namespace {
 
 using gfx::Buffer;
 using gfx::Image;
-using gfx::MemoryPool;
+using gfx::MemoryHeap;
 using gfx::PipelineLayout;
 using gfx::RenderPass;
 using gfx::RenderPipeline;
@@ -91,20 +91,20 @@ ImGuiOverlay::~ImGuiOverlay() {
   linear_sampler_.reset();
   nearest_sampler_.reset();
 
-  memory_pool_.reset();
+  memory_heap_.reset();
   context_.reset();
 }
 
 bool ImGuiOverlay::Initialize(ref_ptr<gfx::Context> context) {
   context_ = std::move(context);
 
-  // Allocate a memory pool to allocate buffers and textures.
+  // Allocate a memory heap to allocate buffers and textures.
   // TODO(benvanik): accept one to share.
-  memory_pool_ = context_->CreateMemoryPool(
+  memory_heap_ = context_->CreateMemoryHeap(
       gfx::MemoryType::kHostVisible | gfx::MemoryType::kHostCoherent,
-      1 * 1024 * 1024);
-  if (!memory_pool_) {
-    LOG(ERROR) << "Unable to create memory pool";
+      8 * 1024 * 1024);
+  if (!memory_heap_) {
+    LOG(ERROR) << "Unable to create memory heap";
     return false;
   }
 
@@ -201,13 +201,12 @@ bool ImGuiOverlay::InitializeFont(ImGuiIO* io) {
   image_params.format = gfx::PixelFormats::kR8G8B8A8UNorm;
   image_params.tiling_mode = Image::TilingMode::kLinear;
   image_params.size = {width, height};
-  image_params.usage_mask = Image::Usage::kSampled;
   image_params.initial_layout = Image::Layout::kPreinitialized;
   ref_ptr<Image> font_image;
-  auto allocation_result =
-      memory_pool_->AllocateImage(image_params, &font_image);
+  auto allocation_result = memory_heap_->AllocateImage(
+      image_params, Image::Usage::kSampled, &font_image);
   switch (allocation_result) {
-    case MemoryPool::AllocationResult::kSuccess:
+    case MemoryHeap::AllocationResult::kSuccess:
       break;
     default:
       LOG(ERROR) << "Failed to allocate font atlas image";
@@ -253,21 +252,21 @@ bool ImGuiOverlay::InitializePipeline() {
   }
 
   // Allocate the buffers we'll use to stash geometry from imgui.
-  auto allocation_result = memory_pool_->AllocateBuffer(
+  auto allocation_result = memory_heap_->AllocateBuffer(
       kMaxVertexCount * sizeof(ImDrawVert), Buffer::Usage::kVertexBuffer,
       &vertex_buffer_);
   switch (allocation_result) {
-    case MemoryPool::AllocationResult::kSuccess:
+    case MemoryHeap::AllocationResult::kSuccess:
       break;
     default:
       LOG(ERROR) << "Failed to allocate geometry vertex buffer";
       return false;
   }
   allocation_result =
-      memory_pool_->AllocateBuffer(kMaxIndexCount * sizeof(ImDrawIdx),
+      memory_heap_->AllocateBuffer(kMaxIndexCount * sizeof(ImDrawIdx),
                                    Buffer::Usage::kIndexBuffer, &index_buffer_);
   switch (allocation_result) {
-    case MemoryPool::AllocationResult::kSuccess:
+    case MemoryHeap::AllocationResult::kSuccess:
       break;
     default:
       LOG(ERROR) << "Failed to allocate geometry index buffer";
