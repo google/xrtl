@@ -260,8 +260,26 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
   virtual RecreateSurfaceResult RecreateSurface(Size2D size_hint) {
     return RecreateSurfaceResult::kInvalidTarget;
   }
+
   // Queries the size of the backing surface, if any.
   virtual Size2D QuerySize() { return {0, 0}; }
+
+  // Defines the swap behavior of the native window surface.
+  enum class SwapBehavior {
+    // Disable synchronization and swap immediately.
+    // Classic no-vsync mode.
+    kImmediate,
+    // Synchronize to the display rate, possibly blocking for awhile.
+    // Classic vsync mode.
+    kSynchronize,
+    // Synchronize to the display rate but allow tearing.
+    // This greatly benefits variable refresh rate (VRR) displays like gsync.
+    kSynchronizeAndTear,
+  };
+
+  // Sets the swap behavior for the native window surface.
+  virtual void SetSwapBehavior(SwapBehavior swap_behavior) {}
+
   // Swaps presentation buffers, if created.
   virtual bool SwapBuffers(std::chrono::milliseconds present_time_utc_millis) {
     return false;

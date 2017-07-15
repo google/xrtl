@@ -108,6 +108,22 @@ bool ES3PlatformSwapChain::Initialize() {
       return false;
   }
 
+  // Set swap mode.
+  switch (present_mode_) {
+    case PresentMode::kImmediate:
+      platform_context_->SetSwapBehavior(
+          ES3PlatformContext::SwapBehavior::kImmediate);
+      break;
+    case PresentMode::kLowLatency:
+      platform_context_->SetSwapBehavior(
+          ES3PlatformContext::SwapBehavior::kSynchronizeAndTear);
+      break;
+    case PresentMode::kFifo:
+      platform_context_->SetSwapBehavior(
+          ES3PlatformContext::SwapBehavior::kSynchronize);
+      break;
+  }
+
   return true;
 }
 

@@ -69,6 +69,7 @@ class EGLPlatformContext : public ES3PlatformContext {
 
   RecreateSurfaceResult RecreateSurface(Size2D size_hint) override;
   Size2D QuerySize() override;
+  void SetSwapBehavior(SwapBehavior swap_behavior) override;
   bool SwapBuffers(std::chrono::milliseconds present_time_utc_millis) override;
 
   void* GetExtensionProc(const char* extension_name,

@@ -69,12 +69,6 @@ class SwapChain : public RefObject<SwapChain> {
   // See section 20 here for more information:
   // https://software.intel.com/en-us/articles/api-without-secrets-introduction-to-vulkan-part-2#_Toc445674479
   enum class PresentMode {
-    // Queue up to 1 pending image at a time.
-    // This prevents tearing but may introduce frame skips (if the compositor
-    // runs slower than images are enqueued).
-    //
-    // Maps to VK_PRESENT_MODE_MAILBOX_KHR.
-    kLowLatency,
     // Immediately present the swap chain contents.
     // This may cause tearing as the image being used to scan-out the
     // display may be replaced with a newly-enqueued images. This is the
@@ -82,6 +76,12 @@ class SwapChain : public RefObject<SwapChain> {
     //
     // Maps to VK_PRESENT_MODE_IMMEDIATE_KHR.
     kImmediate,
+    // Queue up to 1 pending image at a time.
+    // This prevents tearing but may introduce frame skips (if the compositor
+    // runs slower than images are enqueued).
+    //
+    // Maps to VK_PRESENT_MODE_MAILBOX_KHR.
+    kLowLatency,
     // Queues the frame buffers for FIFO processing.
     // This is like the classic GL present mode in that the compositor ensures
     // all images queued are displayed even if it is running slower than
