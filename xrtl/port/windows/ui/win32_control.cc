@@ -114,6 +114,30 @@ void DisableMediaPresentation() {
   }
 }
 
+// Queries the refresh rate of the monitor the given window is mostly on.
+// Returns 0 if the rate could not be queried.
+int QueryRefreshRate(HWND hwnd) {
+  HMONITOR monitor = ::MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+  if (!monitor) {
+    return 0;
+  }
+  ::MONITORINFOEX monitor_info;
+  monitor_info.cbSize = sizeof(monitor_info);
+  if (!::GetMonitorInfo(monitor, &monitor_info)) {
+    return 0;
+  }
+  DEVMODE dev_mode;
+  dev_mode.dmSize = sizeof(dev_mode);
+  if (!::EnumDisplaySettings(monitor_info.szDevice, ENUM_CURRENT_SETTINGS,
+                             &dev_mode)) {
+    return 0;
+  }
+  if (dev_mode.dmDisplayFrequency <= 1) {
+    return 0;
+  }
+  return static_cast<int>(dev_mode.dmDisplayFrequency);
+}
+
 }  // namespace
 
 ref_ptr<Control> Control::Create(ref_ptr<MessageLoop> message_loop) {
@@ -538,6 +562,13 @@ void Win32Control::Invalidate() {
   ::InvalidateRect(hwnd(), nullptr, FALSE);
 }
 
+void Win32Control::CheckMonitorChanged() {
+  // Query the refresh rate of the monitor the control is on and update the
+  // display link.
+  int refresh_rate = QueryRefreshRate(hwnd_);
+  display_link_->set_max_frames_per_second(refresh_rate);
+}
+
 Rect2D Win32Control::QueryBounds() {
   WINDOWPLACEMENT placement = {0};
   placement.length = sizeof(WINDOWPLACEMENT);
@@ -622,6 +653,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
 
     case WM_CREATE: {
       VLOG(1) << "WM_CREATE";
+      CheckMonitorChanged();
       break;
     }
     case WM_CLOSE: {
@@ -652,6 +684,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         // Ignore when minimized.
         break;
       }
+      CheckMonitorChanged();
       std::lock_guard<std::recursive_mutex> lock(mutex_);
       bounds_ = bounds;
       PostResized(bounds_);
@@ -668,6 +701,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         // Ignore when minimized.
         break;
       }
+      CheckMonitorChanged();
       std::lock_guard<std::recursive_mutex> lock(mutex_);
       bounds_ = QueryBounds();
       PostResized(bounds_);
@@ -686,6 +720,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
 
     case WM_DISPLAYCHANGE: {
       VLOG(1) << "WM_DISPLAYCHANGE";
+      CheckMonitorChanged();
       break;
     }
 
@@ -700,6 +735,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         is_suspended_ = false;
         PostSuspendChanged(is_suspended_);
         bounds_ = QueryBounds();
+        CheckMonitorChanged();
         PostResized(bounds_);
         OnFocusChanged(is_focused_);
         PostFocusChanged(is_focused_);
@@ -731,6 +767,7 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
           is_suspended_ = false;
           PostSuspendChanged(is_suspended_);
           bounds_ = QueryBounds();
+          CheckMonitorChanged();
           PostResized(bounds_);
           OnFocusChanged(is_focused_);
           PostFocusChanged(is_focused_);
