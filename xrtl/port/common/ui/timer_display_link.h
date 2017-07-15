@@ -32,8 +32,8 @@ class TimerDisplayLink : public DisplayLink {
   ~TimerDisplayLink();
 
   int max_frames_per_second() override;
+  void set_max_frames_per_second(int max_frames_per_second);
   int preferred_frames_per_second() override;
-  float actual_frames_per_second() override;
 
   void Start(std::function<void(std::chrono::microseconds)> callback,
              int preferred_frames_per_second) override;
@@ -45,6 +45,8 @@ class TimerDisplayLink : public DisplayLink {
  protected:
   // Assumes the lock is held.
   void SetupTimer();
+  // Runs one tick of the timer.
+  void Tick();
 
   ref_ptr<MessageLoop> message_loop_;
   MessageLoop::TaskList pending_task_list_;
@@ -52,7 +54,7 @@ class TimerDisplayLink : public DisplayLink {
   std::recursive_mutex mutex_;
   int max_frames_per_second_ = 60;
   int preferred_frames_per_second_ = 0;
-  float actual_frames_per_second_ = 0.0f;
+  std::chrono::microseconds frame_time_micros_;
   bool is_active_ = false;
   int suspend_count_ = 0;
   std::function<void(std::chrono::microseconds)> callback_;

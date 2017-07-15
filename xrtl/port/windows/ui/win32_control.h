@@ -66,6 +66,7 @@ class Win32Control : public Control {
   bool BeginDestroy();
   bool EndDestroy();
 
+  void CheckMonitorChanged();
   Rect2D QueryBounds();
 
   static LRESULT CALLBACK WndProcThunk(HWND hwnd, UINT message, WPARAM w_param,
@@ -95,7 +96,7 @@ class Win32Control : public Control {
   // TODO(benvanik): switch to bitmap.
   uint8_t key_down_map_[256] = {0};
 
-  ref_ptr<DisplayLink> display_link_;
+  ref_ptr<TimerDisplayLink> display_link_;
 };
 
 }  // namespace ui

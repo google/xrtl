@@ -44,19 +44,23 @@ namespace ui {
 // The fallback for other platforms is a nasty timer. Beware.
 class DisplayLink : public RefObject<DisplayLink> {
  public:
+  // A value that can be used to specify the preferred frames per second should
+  // be kept as fast as possible.
+  static constexpr int kLowLatency = 0;
+  // A value that can be used to specify the preferred frames per second should
+  // always match the maximum.
+  static constexpr int kMaxDisplayRate = -1;
+
   virtual ~DisplayLink() = default;
 
   // The maximum number of frames/second that the display can support.
-  // For example, 60.
+  // For example, 60. This may change during execution if the parent control
+  // is moved to other displays.
   virtual int max_frames_per_second() = 0;
 
   // The preferred frames per second the display is refreshing at.
   // The display will attempt to call back at this rate.
   virtual int preferred_frames_per_second() = 0;
-
-  // The current average frames per second the display is achieving.
-  // Returns 0 if the display link is inactive.
-  virtual float actual_frames_per_second() = 0;
 
   // Starts the display link refresh callback.
   // After calling this function refresh callbacks will start unless there are
@@ -73,11 +77,16 @@ class DisplayLink : public RefObject<DisplayLink> {
   // preferred = 35 when max = 60 may cause the implementation to round to 30).
   // If the preferred rate is omitted the maximum rate will be used.
   //
+  // To unrestrict the callback rate and drive the link as fast as possible use
+  // the kLowLatency constant for the preferred frame rate. The kMaxDisplayRate
+  // constant can be used to allow the link to adjust its rate based on the
+  // current display of the control.
+  //
   // This is safe to call from any thread.
   virtual void Start(std::function<void(std::chrono::microseconds)> callback,
                      int preferred_frames_per_second) = 0;
   void Start(std::function<void(std::chrono::microseconds)> callback) {
-    Start(std::move(callback), max_frames_per_second());
+    Start(std::move(callback), kMaxDisplayRate);
   }
 
   // Stops the display link refresh callbacks.

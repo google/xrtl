@@ -37,14 +37,26 @@ int TimerDisplayLink::max_frames_per_second() {
   return max_frames_per_second_;
 }
 
+void TimerDisplayLink::set_max_frames_per_second(int max_frames_per_second) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (max_frames_per_second == max_frames_per_second_) {
+    return;  // No-op.
+  }
+  max_frames_per_second_ = max_frames_per_second;
+  preferred_frames_per_second_ =
+      std::min(preferred_frames_per_second_, max_frames_per_second_);
+
+  VLOG(1) << "TimerDisplayLink max fps changed to " << max_frames_per_second_;
+
+  // If we are running we'll need to restart the timer.
+  if (suspend_count_ == 0) {
+    SetupTimer();
+  }
+}
+
 int TimerDisplayLink::preferred_frames_per_second() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   return preferred_frames_per_second_;
-}
-
-float TimerDisplayLink::actual_frames_per_second() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  return actual_frames_per_second_;
 }
 
 void TimerDisplayLink::SetupTimer() {
@@ -58,33 +70,62 @@ void TimerDisplayLink::SetupTimer() {
 
   // Compute the duration between frames in microseconds. This is what we'll
   // tell the timer to do.
-  std::chrono::microseconds frame_time_micros{static_cast<uint64_t>(
-      (1.0 / preferred_frames_per_second_) * 1000.0 * 1000.0)};
+  if (preferred_frames_per_second_ == kLowLatency) {
+    // As fast as possible.
+    frame_time_micros_ = std::chrono::microseconds(0);
+  } else if (preferred_frames_per_second_ == kMaxDisplayRate) {
+    // Fixed at max display rate.
+    frame_time_micros_ = std::chrono::microseconds(static_cast<uint64_t>(
+        (1.0 / max_frames_per_second_) * 1000.0 * 1000.0));
+  } else {
+    // An actual FPS value.
+    frame_time_micros_ = std::chrono::microseconds(static_cast<uint64_t>(
+        (1.0 / preferred_frames_per_second_) * 1000.0 * 1000.0));
+  }
 
-  VLOG(1) << "DisplayLink started with interval " << frame_time_micros.count();
+  VLOG(1) << "DisplayLink started with rate " << preferred_frames_per_second_
+          << ", interval " << frame_time_micros_.count();
 
   // Schedule the timer and fire one callback immediately.
-  timer_task_ = message_loop_->DeferRepeating(
-      &pending_task_list_,
-      [this]() {
-        // We hold this lock for the duration of the callback so as to prevent
-        // the instance from being deleted from under us.
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        if (!callback_) {
-          // Cancelled from another thread. Ignore.
-          return;
-        }
+  timer_task_ = message_loop_->Defer(
+      &pending_task_list_, [this]() { Tick(); },
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          frame_time_micros_));
+}
 
-        // Query frame time. Real APIs get real times, fake APIs like us get
-        // this.
-        std::chrono::microseconds timestamp_utc_micros =
-            SystemClock::default_clock()->now_utc_micros();
+void TimerDisplayLink::Tick() {
+  // Query frame time. Real APIs get real times, fake APIs like us get
+  // this.
+  std::chrono::microseconds timestamp_utc_micros =
+      SystemClock::default_clock()->now_utc_micros();
 
-        // Issue callback; note that it may call display link methods.
-        callback_(timestamp_utc_micros);
-      },
-      std::chrono::milliseconds(0),
-      std::chrono::duration_cast<std::chrono::milliseconds>(frame_time_micros));
+  // We hold this lock for the duration of the callback so as to prevent
+  // the instance from being deleted from under us.
+  {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!callback_) {
+      // Cancelled from another thread. Ignore.
+      return;
+    }
+
+    // Issue callback; note that it may call display link methods.
+    callback_(timestamp_utc_micros);
+  }
+
+  // Schedule another tick. We make sure to compensate for the amount of time
+  // we've spent in the callback.
+  std::chrono::microseconds callback_duration_micros =
+      SystemClock::default_clock()->now_utc_micros() - timestamp_utc_micros;
+  std::chrono::microseconds delay_micros;
+  if (callback_duration_micros < frame_time_micros_) {
+    delay_micros = frame_time_micros_ - callback_duration_micros;
+  } else {
+    // Prevent swamping the message loop by clamping to a minimum time.
+    delay_micros = std::chrono::microseconds(1000);
+  }
+  timer_task_ = message_loop_->Defer(
+      &pending_task_list_, [this]() { Tick(); },
+      std::chrono::duration_cast<std::chrono::milliseconds>(delay_micros));
 }
 
 void TimerDisplayLink::Start(
@@ -93,9 +134,6 @@ void TimerDisplayLink::Start(
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   preferred_frames_per_second_ =
       std::min(preferred_frames_per_second, max_frames_per_second_);
-  if (preferred_frames_per_second_ == 0) {
-    preferred_frames_per_second_ = max_frames_per_second_;
-  }
   is_active_ = true;
   callback_ = std::move(callback);
   if (suspend_count_ == 0) {
@@ -110,10 +148,8 @@ void TimerDisplayLink::Stop() {
     timer_task_->Cancel();
     timer_task_.reset();
   }
-  preferred_frames_per_second_ = 0;
   is_active_ = false;
   callback_ = nullptr;
-  actual_frames_per_second_ = 0.0f;
 }
 
 void TimerDisplayLink::Suspend() {
@@ -124,7 +160,6 @@ void TimerDisplayLink::Suspend() {
     timer_task_->Cancel();
     timer_task_.reset();
   }
-  actual_frames_per_second_ = 0.0f;
 }
 
 void TimerDisplayLink::Resume() {
