@@ -267,6 +267,11 @@ class Context : public RefObject<Context> {
   Device::Features features_;
 };
 
+std::ostream& operator<<(std::ostream& stream,
+                         const Context::SubmitResult& value);
+std::ostream& operator<<(std::ostream& stream,
+                         const Context::WaitResult& value);
+
 }  // namespace gfx
 }  // namespace xrtl
 

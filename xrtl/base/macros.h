@@ -42,6 +42,7 @@
 #define XRTL_ATTRIBUTE_WEAK __attribute__((weak))
 #define XRTL_ATTRIBUTE_NOSANITIZE __attribute__((no_sanitize_address))
 #define XRTL_EMPTY_FILE() static int dummy __attribute__((unused, used)) = 0;
+#define XRTL_UNREACHABLE_DEFAULT()
 
 #elif defined(XRTL_COMPILER_MSVC)
 
@@ -53,6 +54,9 @@
 #define XRTL_ATTRIBUTE_WEAK
 #define XRTL_ATTRIBUTE_NOSANITIZE
 #define XRTL_EMPTY_FILE()
+#define XRTL_UNREACHABLE_DEFAULT() \
+  default:                         \
+    DCHECK(false);
 
 #else
 
@@ -64,6 +68,9 @@
 #define XRTL_ATTRIBUTE_WEAK
 #define XRTL_ATTRIBUTE_NOSANITIZE
 #define XRTL_EMPTY_FILE()
+#define XRTL_UNREACHABLE_DEFAULT() \
+  default:                         \
+    DCHECK(false);
 
 #endif  // XRTL_COMPILER_[GCC_COMPAT/MSVC/etc]
 

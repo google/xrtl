@@ -117,6 +117,9 @@ class MemoryHeap : public RefObject<MemoryHeap> {
   size_t heap_size_ = 0;
 };
 
+std::ostream& operator<<(std::ostream& stream,
+                         const MemoryHeap::AllocationResult& value);
+
 }  // namespace gfx
 }  // namespace xrtl
 

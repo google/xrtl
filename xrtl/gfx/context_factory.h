@@ -114,6 +114,9 @@ class ContextFactory : public RefObject<ContextFactory> {
   ContextFactory() = default;
 };
 
+std::ostream& operator<<(std::ostream& stream,
+                         const ContextFactory::CreateResult& value);
+
 }  // namespace gfx
 }  // namespace xrtl
 
