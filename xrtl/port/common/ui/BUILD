@@ -13,6 +13,7 @@ cc_library(
         "//xrtl/base:logging",
         "//xrtl/base:system_clock",
         "//xrtl/base/threading:message_loop",
+        "//xrtl/base/threading:thread",
         "//xrtl/ui:display_link",
     ],
 )

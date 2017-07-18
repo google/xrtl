@@ -396,7 +396,7 @@ void main() {
     auto framebuffer_ready_fence = context_->CreateQueueFence();
     ref_ptr<ImageView> framebuffer_image_view;
     auto acquire_result = swap_chain_->AcquireNextImage(
-        std::chrono::milliseconds(2), framebuffer_ready_fence,
+        std::chrono::milliseconds(16), framebuffer_ready_fence,
         &framebuffer_image_view);
     switch (acquire_result) {
       case SwapChain::AcquireResult::kSuccess:
@@ -495,16 +495,19 @@ void main() {
 
   void OnCreated(ref_ptr<Control> target) override {
     LOG(INFO) << "OnCreated";
+
     // Setup everything for rendering.
     if (!CreateContext() || !CreateGeometry() || !CreateGridTexture() ||
         !CreateRenderPipeline()) {
-      LOG(ERROR) << "Failed to launch example";
+      LOG(ERROR) << "Failed to initialize graphics resources";
       done_event_->Set();
+      return;
     }
 
     // Start the frame loop.
     target->display_link()->Start(
         [this](std::chrono::microseconds timestamp_utc_micros) {
+          // NOTE: this may be called back from an arbitrary thread!
           DrawFrame(timestamp_utc_micros);
         });
   }
@@ -512,6 +515,7 @@ void main() {
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
 
+    target->display_link()->Stop();
     if (swap_chain_) {
       swap_chain_->DiscardPendingPresents();
     }

@@ -18,6 +18,7 @@
 #include <mutex>
 
 #include "xrtl/base/threading/message_loop.h"
+#include "xrtl/base/threading/thread.h"
 #include "xrtl/ui/display_link.h"
 
 namespace xrtl {
@@ -31,6 +32,7 @@ class TimerDisplayLink : public DisplayLink {
   explicit TimerDisplayLink(ref_ptr<MessageLoop> message_loop);
   ~TimerDisplayLink();
 
+  bool is_accurate() override { return false; }
   int max_frames_per_second() override;
   void set_max_frames_per_second(int max_frames_per_second);
   int preferred_frames_per_second() override;
@@ -43,10 +45,10 @@ class TimerDisplayLink : public DisplayLink {
   void Resume() override;
 
  protected:
-  // Assumes the lock is held.
-  void SetupTimer();
-  // Runs one tick of the timer.
-  void Tick();
+  // Configures the dedicated thread, initializing/deinitializing as required.
+  void ConfigureThread(std::unique_lock<std::recursive_mutex> lock);
+  // Thread entry point for the dedicated timer thread.
+  void TimerThread();
 
   ref_ptr<MessageLoop> message_loop_;
   MessageLoop::TaskList pending_task_list_;
@@ -59,9 +61,9 @@ class TimerDisplayLink : public DisplayLink {
   int suspend_count_ = 0;
   std::function<void(std::chrono::microseconds)> callback_;
 
-  // TODO(benvanik): replace with Timer once that's implemented; the MessageLoop
-  //                 task impl here has only millisecond granularity.
-  ref_ptr<MessageLoop::Task> timer_task_;
+  // Thread performing the core timer loop.
+  // Callbacks will be dispatched from here.
+  ref_ptr<Thread> thread_;
 };
 
 }  // namespace ui

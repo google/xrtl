@@ -735,11 +735,11 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
         is_suspended_ = false;
         PostSuspendChanged(is_suspended_);
         bounds_ = QueryBounds();
-        CheckMonitorChanged();
         PostResized(bounds_);
         OnFocusChanged(is_focused_);
         PostFocusChanged(is_focused_);
       }
+      CheckMonitorChanged();
       break;
     }
 
@@ -767,13 +767,13 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
           is_suspended_ = false;
           PostSuspendChanged(is_suspended_);
           bounds_ = QueryBounds();
-          CheckMonitorChanged();
           PostResized(bounds_);
           OnFocusChanged(is_focused_);
           PostFocusChanged(is_focused_);
           break;
         }
       }
+      CheckMonitorChanged();
       break;
     }
 

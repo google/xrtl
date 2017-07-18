@@ -53,6 +53,12 @@ class DisplayLink : public RefObject<DisplayLink> {
 
   virtual ~DisplayLink() = default;
 
+  // True if the callbacks from this DisplayLink are accurate.
+  // Some implementations are unable to provide high resolution timing or direct
+  // system vsync listening. If that is the case it's recommended to instead
+  // use dedicated render threads and blocking on swap chain presents.
+  virtual bool is_accurate() = 0;
+
   // The maximum number of frames/second that the display can support.
   // For example, 60. This may change during execution if the parent control
   // is moved to other displays.
@@ -81,6 +87,11 @@ class DisplayLink : public RefObject<DisplayLink> {
   // the kLowLatency constant for the preferred frame rate. The kMaxDisplayRate
   // constant can be used to allow the link to adjust its rate based on the
   // current display of the control.
+  //
+  // Callbacks will be executed on an arbitrary thread depending on
+  // implementation. This may mean the calling thread (if it has a MessageLoop)
+  // or others. Always ensure the callback either marshals to an appropriate
+  // thread or ensures resources are guarded.
   //
   // This is safe to call from any thread.
   virtual void Start(std::function<void(std::chrono::microseconds)> callback,
