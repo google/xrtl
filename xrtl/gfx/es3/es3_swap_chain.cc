@@ -20,7 +20,6 @@
 #include "xrtl/base/threading/thread.h"
 #include "xrtl/base/tracing.h"
 #include "xrtl/gfx/es3/es3_image.h"
-#include "xrtl/gfx/es3/es3_queue_fence.h"
 
 namespace xrtl {
 namespace gfx {
@@ -231,7 +230,9 @@ SwapChain::AcquireResult ES3PlatformSwapChain::AcquireNextImage(
         // Allow the caller to use it immediately.
         image_index = i;
         pending_image_presents_[i] = true;
-        signal_queue_fence.As<ES3QueueFence>()->event()->Set();
+        auto context_lock =
+            ES3PlatformContext::LockTransientContext(platform_context_);
+        signal_queue_fence.As<ES3QueueFence>()->Signal();
         break;
       }
     }
@@ -241,8 +242,7 @@ SwapChain::AcquireResult ES3PlatformSwapChain::AcquireNextImage(
         if (!pending_acquire_fences_[i]) {
           // Image is in-flight but doesn't yet have a waiter. Reserve it.
           image_index = i;
-          pending_acquire_fences_[i] =
-              signal_queue_fence.As<ES3QueueFence>()->event();
+          pending_acquire_fences_[i] = signal_queue_fence.As<ES3QueueFence>();
           break;
         }
       }
@@ -278,6 +278,8 @@ SwapChain::PresentResult ES3PlatformSwapChain::PresentImage(
 
     if (is_discard_pending_ && pending_image_presents_[image_index]) {
       // A discard is pending so ignore the present request.
+      auto context_lock =
+          ES3PlatformContext::LockTransientContext(platform_context_);
       MarkPresentComplete(image_index);
       return PresentResult::kDiscardPending;
     }
@@ -290,7 +292,7 @@ SwapChain::PresentResult ES3PlatformSwapChain::PresentImage(
   // Submit present request to the context queue.
   auto self = ref_ptr<ES3PlatformSwapChain>(this);
   auto self_token = MoveToLambda(self);
-  present_queue_->EnqueueCallback({wait_queue_fence},
+  present_queue_->EnqueueCallback(platform_context_, {wait_queue_fence},
                                   [self_token, surface_size, image_index,
                                    image_view, present_time_utc_millis]() {
                                     self_token.value->PerformPresent(
@@ -323,8 +325,6 @@ void ES3PlatformSwapChain::PerformPresent(
   GLuint texture_id = image_view->image().As<ES3Image>()->texture_id();
   DCHECK_NE(framebuffer_id, 0);
   DCHECK_NE(texture_id, 0);
-
-  ES3PlatformContext::ExclusiveLock context_lock(platform_context_);
 
   // TODO(benvanik): multisample resolve, scaling, etc.
 
@@ -383,7 +383,7 @@ void ES3PlatformSwapChain::PerformPresent(
 void ES3PlatformSwapChain::MarkPresentComplete(int image_index) {
   if (pending_acquire_fences_[image_index]) {
     // A present is still pending until the pending acquire presents.
-    pending_acquire_fences_[image_index]->Set();
+    pending_acquire_fences_[image_index]->Signal();
     pending_acquire_fences_[image_index].reset();
   } else {
     pending_image_presents_[image_index] = false;

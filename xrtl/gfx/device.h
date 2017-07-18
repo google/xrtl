@@ -15,6 +15,7 @@
 #ifndef XRTL_GFX_DEVICE_H_
 #define XRTL_GFX_DEVICE_H_
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -70,6 +71,10 @@ class Device : public RefObject<Device> {
     // Shaders with set indices larger than this value will fail to bind.
     // | ES3 4 | VK 4 | MTL ∞ | D3D ∞ |
     int resource_set_count = 4;
+
+    // Maximum duration of a QueueFence timeout in nanoseconds. Any timeout
+    // provided will be clamped to this value.
+    std::chrono::nanoseconds max_queue_fence_timeout_nanos;
   };
 
   // Describes the features available for use on the device.

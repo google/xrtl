@@ -73,11 +73,8 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     }
     explicit ThreadLock(ES3PlatformContext* context)
         : ThreadLock(ref_ptr<ES3PlatformContext>(context)) {}
-    explicit ThreadLock(ref_ptr<ES3PlatformContext> context)
-        : context_(context) {
-      if (context && !context->Lock(false, &lock_)) {
-        context_ = nullptr;
-      }
+    explicit ThreadLock(ref_ptr<ES3PlatformContext> context) {
+      reset(std::move(context));
     }
     ~ThreadLock() { reset(); }
 
@@ -85,10 +82,20 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     bool is_held() const { return context_ != nullptr; }
 
     // Unlocks the context lock.
-    void reset() {
+    void reset() { reset(nullptr); }
+
+    // Locks the given context, unlocking the previous context (if any).
+    void reset(ref_ptr<ES3PlatformContext> context) {
+      if (context == context_) {
+        return;
+      }
       if (context_) {
         context_->Unlock(std::move(lock_));
         context_.reset();
+      }
+      context_ = std::move(context);
+      if (context_ && !context_->Lock(false, &lock_)) {
+        context_ = nullptr;
       }
     }
 
@@ -124,11 +131,8 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     }
     explicit ExclusiveLock(ES3PlatformContext* context)
         : ExclusiveLock(ref_ptr<ES3PlatformContext>(context)) {}
-    explicit ExclusiveLock(ref_ptr<ES3PlatformContext> context)
-        : context_(context) {
-      if (context && !context->Lock(true, &lock_)) {
-        context_ = nullptr;
-      }
+    explicit ExclusiveLock(ref_ptr<ES3PlatformContext> context) {
+      reset(std::move(context));
     }
     ~ExclusiveLock() { reset(); }
     ExclusiveLock& operator=(ExclusiveLock& other) {  // NOLINT
@@ -141,10 +145,20 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     bool is_held() const { return context_ != nullptr; }
 
     // Unlocks the context lock.
-    void reset() {
+    void reset() { reset(nullptr); }
+
+    // Locks the given context, unlocking the previous context (if any).
+    void reset(ref_ptr<ES3PlatformContext> context) {
+      if (context == context_) {
+        return;
+      }
       if (context_) {
         context_->Unlock(std::move(lock_));
         context_.reset();
+      }
+      context_ = std::move(context);
+      if (context_ && !context_->Lock(true, &lock_)) {
+        context_ = nullptr;
       }
     }
 
