@@ -38,7 +38,7 @@ int TimerDisplayLink::max_frames_per_second() {
 }
 
 void TimerDisplayLink::set_max_frames_per_second(int max_frames_per_second) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
   if (max_frames_per_second == max_frames_per_second_) {
     return;  // No-op.
   }
@@ -50,7 +50,7 @@ void TimerDisplayLink::set_max_frames_per_second(int max_frames_per_second) {
 
   // If we are running we'll need to restart the timer.
   if (suspend_count_ == 0) {
-    SetupTimer();
+    ConfigureThread(std::move(lock));
   }
 }
 
@@ -59,13 +59,22 @@ int TimerDisplayLink::preferred_frames_per_second() {
   return preferred_frames_per_second_;
 }
 
-void TimerDisplayLink::SetupTimer() {
-  // If we already have a timer stop it first. This will overwrite it with new
-  // settings.
-  if (timer_task_) {
-    VLOG(1) << "DisplayLink restarted; aborting previously active timer";
-    timer_task_->Cancel();
-    timer_task_.reset();
+void TimerDisplayLink::ConfigureThread(
+    std::unique_lock<std::recursive_mutex> lock) {
+  if (!is_active_ || suspend_count_) {
+    if (thread_) {
+      // Stopping the thread.
+      // Since we've already set state for exiting it'll definitely not make
+      // callbacks after this point, but we'll want to wait for it to exit to
+      // be sure logs and such are clean.
+      // We could probably keep the thread around (as we're likely to use it
+      // again), but this way we save memory in cases where we are backgrounded.
+      auto thread = std::move(thread_);
+      thread_.reset();
+      lock.unlock();
+      Thread::Wait(thread);
+    }
+    return;
   }
 
   // Compute the duration between frames in microseconds. This is what we'll
@@ -86,91 +95,96 @@ void TimerDisplayLink::SetupTimer() {
   VLOG(1) << "DisplayLink started with rate " << preferred_frames_per_second_
           << ", interval " << frame_time_micros_.count();
 
-  // Schedule the timer and fire one callback immediately.
-  timer_task_ = message_loop_->Defer(
-      &pending_task_list_, [this]() { Tick(); },
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          frame_time_micros_));
+  // Spin up the thread.
+  Thread::CreateParams thread_create_params;
+  thread_create_params.name = "TimerDisplayLink";
+  thread_ = Thread::Create(thread_create_params, [this]() { TimerThread(); });
 }
 
-void TimerDisplayLink::Tick() {
-  // Query frame time. Real APIs get real times, fake APIs like us get
-  // this.
-  std::chrono::microseconds timestamp_utc_micros =
-      SystemClock::default_clock()->now_utc_micros();
+void TimerDisplayLink::TimerThread() {
+  SystemClock* clock = SystemClock::default_clock();
 
-  // We hold this lock for the duration of the callback so as to prevent
-  // the instance from being deleted from under us.
-  {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (!callback_) {
-      // Cancelled from another thread. Ignore.
-      return;
+  while (true) {
+    // Query frame start time.
+    std::chrono::microseconds timestamp_utc_micros = clock->now_utc_micros();
+
+    // We hold this lock for the duration of the callback so as to prevent
+    // the instance from being deleted from under us.
+    std::chrono::microseconds frame_time_micros;
+    {
+      std::lock_guard<std::recursive_mutex> lock(mutex_);
+      if (!is_active_ || suspend_count_ || !callback_) {
+        // Cancelled from another thread or suspended. Bail out of the thread.
+        return;
+      }
+
+      // Issue callback; note that it may call display link methods.
+      callback_(timestamp_utc_micros);
+
+      frame_time_micros = frame_time_micros_;
     }
 
-    // Issue callback; note that it may call display link methods.
-    callback_(timestamp_utc_micros);
-  }
+    // Schedule another tick. We make sure to compensate for the amount of time
+    // we've spent in the callback.
+    std::chrono::microseconds callback_duration_micros =
+        clock->now_utc_micros() - timestamp_utc_micros;
+    std::chrono::microseconds delay_micros;
+    if (callback_duration_micros < frame_time_micros) {
+      delay_micros = frame_time_micros - callback_duration_micros;
+    } else {
+      // Prevent swamping the message loop by clamping to a minimum time.
+      delay_micros = std::chrono::microseconds(1000);
+    }
 
-  // Schedule another tick. We make sure to compensate for the amount of time
-  // we've spent in the callback.
-  std::chrono::microseconds callback_duration_micros =
-      SystemClock::default_clock()->now_utc_micros() - timestamp_utc_micros;
-  std::chrono::microseconds delay_micros;
-  if (callback_duration_micros < frame_time_micros_) {
-    delay_micros = frame_time_micros_ - callback_duration_micros;
-  } else {
-    // Prevent swamping the message loop by clamping to a minimum time.
-    delay_micros = std::chrono::microseconds(1000);
+    // Wait for the remaining timeout.
+    // Note that the actual time we spend delayed may be different than what
+    // we ask for, so if we wanted to ensure no skew we'd be a bit smarter...
+    Thread::Sleep(delay_micros);
   }
-  timer_task_ = message_loop_->Defer(
-      &pending_task_list_, [this]() { Tick(); },
-      std::chrono::duration_cast<std::chrono::milliseconds>(delay_micros));
 }
 
 void TimerDisplayLink::Start(
     std::function<void(std::chrono::microseconds)> callback,
     int preferred_frames_per_second) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
   preferred_frames_per_second_ =
       std::min(preferred_frames_per_second, max_frames_per_second_);
   is_active_ = true;
   callback_ = std::move(callback);
   if (suspend_count_ == 0) {
-    SetupTimer();
+    ConfigureThread(std::move(lock));
   }
 }
 
 void TimerDisplayLink::Stop() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  if (timer_task_) {
-    VLOG(1) << "DisplayLink stopped";
-    timer_task_->Cancel();
-    timer_task_.reset();
-  }
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
+  bool was_active = is_active_;
   is_active_ = false;
   callback_ = nullptr;
+  if (was_active) {
+    VLOG(1) << "DisplayLink stopped";
+    ConfigureThread(std::move(lock));
+  }
 }
 
 void TimerDisplayLink::Suspend() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
   ++suspend_count_;
-  if (timer_task_) {
+  if (is_active_ && suspend_count_ == 1) {
     VLOG(1) << "Active DisplayLink suspended";
-    timer_task_->Cancel();
-    timer_task_.reset();
+    ConfigureThread(std::move(lock));
   }
 }
 
 void TimerDisplayLink::Resume() {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  std::unique_lock<std::recursive_mutex> lock(mutex_);
   DCHECK_GE(suspend_count_, 0);
   --suspend_count_;
   if (suspend_count_ == 0) {
     // Unsuspended; see if we need to restart.
     if (is_active_) {
       VLOG(1) << "Active DisplayLink resumed";
-      SetupTimer();
+      ConfigureThread(std::move(lock));
     }
   }
 }

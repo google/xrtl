@@ -142,7 +142,7 @@ class ImGuiOverlayDemo : private Control::Listener {
     auto framebuffer_ready_fence = context_->CreateQueueFence();
     ref_ptr<ImageView> framebuffer_image_view;
     auto acquire_result = swap_chain_->AcquireNextImage(
-        std::chrono::milliseconds(2), framebuffer_ready_fence,
+        std::chrono::milliseconds(16), framebuffer_ready_fence,
         &framebuffer_image_view);
     switch (acquire_result) {
       case SwapChain::AcquireResult::kSuccess:
@@ -238,8 +238,9 @@ class ImGuiOverlayDemo : private Control::Listener {
   void OnCreated(ref_ptr<Control> target) override {
     LOG(INFO) << "OnCreated";
     if (!CreateContext() || !CreateImGuiOverlay()) {
-      LOG(ERROR) << "Failed to launch example";
+      LOG(ERROR) << "Failed to initialize graphics resources";
       done_event_->Set();
+      return;
     }
 
     // Start the frame loop.
@@ -252,6 +253,7 @@ class ImGuiOverlayDemo : private Control::Listener {
   void OnDestroying(ref_ptr<Control> target) override {
     LOG(INFO) << "OnDestroying";
 
+    target->display_link()->Stop();
     if (swap_chain_) {
       swap_chain_->DiscardPendingPresents();
     }
