@@ -62,14 +62,15 @@ void ES3Queue::EnqueueCommandBuffers(
 }
 
 void ES3Queue::EnqueueCallback(
+    ref_ptr<ES3PlatformContext> exclusive_context,
     ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
     std::function<void()> callback,
     ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
   std::lock_guard<std::mutex> lock(queue_mutex_);
   DCHECK(queue_running_);
-  queue_.emplace(wait_queue_fences, std::move(callback), signal_queue_fences,
-                 signal_handle);
+  queue_.emplace(std::move(exclusive_context), wait_queue_fences,
+                 std::move(callback), signal_queue_fences, signal_handle);
   queue_work_pending_event_->Set();
 }
 
@@ -138,27 +139,31 @@ void ES3Queue::RunQueue() {
       continue;
     }
 
+    ES3PlatformContext::ExclusiveLock exclusive_lock;
+    ES3PlatformContext::ThreadLock thread_lock;
+    if (queue_entry.exclusive_context) {
+      // Exclusive lock on the request-provided context.
+      exclusive_lock.reset(queue_entry.exclusive_context);
+      if (!exclusive_lock.is_held()) {
+        LOG(FATAL) << "Unable to make current the provided platform context";
+      }
+    } else {
+      // Use the queue context.
+      DCHECK(queue_context);
+      thread_lock.reset(queue_context);
+      if (!thread_lock.is_held()) {
+        LOG(FATAL) << "Unable to make current the queue platform context";
+      }
+    }
+
     // Wait on queue fences.
-    if (!queue_entry.wait_queue_fences.empty()) {
-      std::vector<ref_ptr<WaitHandle>> wait_events;
-      wait_events.reserve(queue_entry.wait_queue_fences.size());
-      for (const auto& queue_fence : queue_entry.wait_queue_fences) {
-        wait_events.push_back(queue_fence.As<ES3QueueFence>()->event());
-      }
-      if (Thread::WaitAll(wait_events) != Thread::WaitResult::kSuccess) {
-        std::lock_guard<std::mutex> lock(queue_mutex_);
-        queue_executing_ = false;
-        break;
-      }
+    for (const auto& queue_fence : queue_entry.wait_queue_fences) {
+      queue_fence.As<ES3QueueFence>()->WaitOnServer(
+          std::chrono::nanoseconds::max());
     }
 
     // Execute command buffers.
     if (!queue_entry.command_buffers.empty()) {
-      DCHECK(queue_context);
-      ES3PlatformContext::ThreadLock context_lock(queue_context);
-      if (!context_lock.is_held()) {
-        LOG(FATAL) << "Unable to make current the queue platform context";
-      }
       if (!implementation_command_buffer) {
         implementation_command_buffer = make_ref<ES3CommandBuffer>();
       }
@@ -173,7 +178,7 @@ void ES3Queue::RunQueue() {
 
     // Signal queue fences.
     for (const auto& queue_fence : queue_entry.signal_queue_fences) {
-      queue_fence.As<ES3QueueFence>()->event()->Set();
+      queue_fence.As<ES3QueueFence>()->Signal();
     }
 
     // Signal CPU event.

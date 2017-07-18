@@ -70,7 +70,7 @@ std::vector<uint8_t> ES3Context::SerializePipelineCache() {
 }
 
 ref_ptr<QueueFence> ES3Context::CreateQueueFence() {
-  return make_ref<ES3QueueFence>();
+  return make_ref<ES3QueueFence>(platform_context_);
 }
 
 ref_ptr<CommandFence> ES3Context::CreateCommandFence() {

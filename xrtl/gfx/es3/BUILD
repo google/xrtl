@@ -297,7 +297,9 @@ cc_library(
     hdrs = ["es3_queue_fence.h"],
     deps = [
         ":es3_common",
+        ":es3_platform_context",
         "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
         "//xrtl/gfx:queue_fence",
     ],
 )

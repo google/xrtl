@@ -23,6 +23,7 @@
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_queue.h"
+#include "xrtl/gfx/es3/es3_queue_fence.h"
 #include "xrtl/gfx/memory_heap.h"
 #include "xrtl/gfx/swap_chain.h"
 #include "xrtl/ui/control.h"
@@ -99,7 +100,7 @@ class ES3PlatformSwapChain : public ES3SwapChain {
   std::vector<ref_ptr<ImageView>> image_views_;
   std::vector<GLuint> framebuffers_;
   std::vector<bool> pending_image_presents_;
-  std::vector<ref_ptr<Event>> pending_acquire_fences_;
+  std::vector<ref_ptr<ES3QueueFence>> pending_acquire_fences_;
   ref_ptr<Semaphore> available_images_semaphore_;
   bool is_discard_pending_ = false;
 };

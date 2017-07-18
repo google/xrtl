@@ -57,7 +57,9 @@ class ES3Queue {
                              ref_ptr<Event> signal_handle);
 
   // Enqueues a callback to be executed from the queue.
-  void EnqueueCallback(ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
+  // The provided context will be locked exclusively during the execution.
+  void EnqueueCallback(ref_ptr<ES3PlatformContext> exclusive_context,
+                       ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
                        std::function<void()> callback,
                        ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
                        ref_ptr<Event> signal_handle);
@@ -87,6 +89,7 @@ class ES3Queue {
   bool queue_executing_ = false;
 
   struct QueueEntry {
+    ref_ptr<ES3PlatformContext> exclusive_context;
     std::vector<ref_ptr<QueueFence>> wait_queue_fences;
     std::vector<ref_ptr<CommandBuffer>> command_buffers;
     std::function<void()> callback;
@@ -101,11 +104,13 @@ class ES3Queue {
           command_buffers(command_buffers),
           signal_queue_fences(signal_queue_fences),
           signal_handle(std::move(signal_handle)) {}
-    QueueEntry(ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
+    QueueEntry(ref_ptr<ES3PlatformContext> exclusive_context,
+               ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
                std::function<void()> callback,
                ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
                ref_ptr<Event> signal_handle)
-        : wait_queue_fences(wait_queue_fences),
+        : exclusive_context(std::move(exclusive_context)),
+          wait_queue_fences(wait_queue_fences),
           callback(std::move(callback)),
           signal_queue_fences(signal_queue_fences),
           signal_handle(std::move(signal_handle)) {}
