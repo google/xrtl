@@ -22,3 +22,19 @@ cc_binary(
         "//xrtl/ui:window",
     ],
 )
+
+cc_binary(
+    name = "triangle_full_example",
+    srcs = ["triangle_full_example.cc"],
+    deps = [
+        "//xrtl/base:logging",
+        "//xrtl/base:system_clock",
+        "//xrtl/base/threading:event",
+        "//xrtl/base/threading:thread",
+        "//xrtl/gfx:context",
+        "//xrtl/gfx:context_factory",
+        "//xrtl/gfx/spirv:shader_compiler",
+        "//xrtl/testing:demo_main",
+        "//xrtl/ui:window",
+    ],
+)
