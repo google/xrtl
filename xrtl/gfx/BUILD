@@ -75,6 +75,7 @@ cc_library(
 
 cc_library(
     name = "context",
+    srcs = ["context.cc"],
     hdrs = ["context.h"],
     deps = [
         ":command_buffer",
@@ -200,6 +201,7 @@ cc_library(
 
 cc_library(
     name = "memory_heap",
+    srcs = ["memory_heap.cc"],
     hdrs = ["memory_heap.h"],
     deps = [
         ":buffer",
@@ -332,6 +334,7 @@ cc_library(
 
 cc_library(
     name = "swap_chain",
+    srcs = ["swap_chain.cc"],
     hdrs = ["swap_chain.h"],
     deps = [
         ":command_buffer",

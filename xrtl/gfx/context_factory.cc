@@ -89,5 +89,26 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
   return nullptr;
 }
 
+std::ostream& operator<<(std::ostream& stream,
+                         const ContextFactory::CreateResult& value) {
+  switch (value) {
+    XRTL_UNREACHABLE_DEFAULT();
+    case ContextFactory::CreateResult::kSuccess:
+      return stream << "CreateResult::kSuccess";
+    case ContextFactory::CreateResult::kUnknownError:
+      return stream << "CreateResult::kUnknownError";
+    case ContextFactory::CreateResult::kUnsupportedFeatures:
+      return stream << "CreateResult::kUnsupportedFeatures";
+    case ContextFactory::CreateResult::kIncompatibleDevices:
+      return stream << "CreateResult::kIncompatibleDevices";
+    case ContextFactory::CreateResult::kTooManyContexts:
+      return stream << "CreateResult::kTooManyContexts";
+    case ContextFactory::CreateResult::kOutOfMemory:
+      return stream << "CreateResult::kOutOfMemory";
+    case ContextFactory::CreateResult::kDeviceLost:
+      return stream << "CreateResult::kDeviceLost";
+  }
+}
+
 }  // namespace gfx
 }  // namespace xrtl

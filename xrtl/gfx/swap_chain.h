@@ -224,6 +224,13 @@ class SwapChain : public RefObject<SwapChain> {
   Size2D size_{0, 0};
 };
 
+std::ostream& operator<<(std::ostream& stream,
+                         const SwapChain::ResizeResult& value);
+std::ostream& operator<<(std::ostream& stream,
+                         const SwapChain::AcquireResult& value);
+std::ostream& operator<<(std::ostream& stream,
+                         const SwapChain::PresentResult& value);
+
 }  // namespace gfx
 }  // namespace xrtl
 
