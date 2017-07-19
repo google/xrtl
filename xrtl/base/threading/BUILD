@@ -35,6 +35,7 @@ cc_library(
     ],
     visibility = ["//xrtl/port:ports_only"],
     deps = [
+        "//xrtl/base:array_view",
         "//xrtl/base:intrusive_list",
         "//xrtl/base:intrusive_pool",
         "//xrtl/base:logging",
@@ -142,6 +143,7 @@ cc_library(
     deps = [
         ":thread_base",
         ":wait_handle",
+        "//xrtl/base:array_view",
         "//xrtl/base:macros",
     ] + select({
         "//xrtl/tools/target_platform:windows": [
@@ -160,6 +162,7 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":wait_handle",
+        "//xrtl/base:array_view",
         "//xrtl/base:macros",
     ],
 )

@@ -18,7 +18,6 @@
 #include <memory>
 #include <mutex>
 #include <utility>
-#include <vector>
 
 #include "xrtl/base/geometry.h"
 #include "xrtl/base/macros.h"

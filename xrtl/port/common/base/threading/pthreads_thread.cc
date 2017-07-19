@@ -89,8 +89,7 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
   // Runs the thread entry point specified by the Thread::Create call.
   static void* ThreadStartRoutine(void* param);
 
-  static WaitAnyResult WaitMultiple(ref_ptr<WaitHandle> wait_handles[],
-                                    size_t wait_handle_count,
+  static WaitAnyResult WaitMultiple(ArrayView<ref_ptr<WaitHandle>> wait_handles,
                                     std::chrono::milliseconds timeout,
                                     bool require_all);
 
@@ -473,23 +472,19 @@ Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
   return Wait(std::move(wait_handle), timeout);
 }
 
-Thread::WaitAnyResult Thread::WaitAny(ref_ptr<WaitHandle> wait_handles[],
-                                      size_t wait_handle_count,
-                                      std::chrono::milliseconds timeout) {
-  return PthreadsThread::WaitMultiple(wait_handles, wait_handle_count, timeout,
-                                      false);
+Thread::WaitAnyResult Thread::WaitAny(
+    ArrayView<ref_ptr<WaitHandle>> wait_handles,
+    std::chrono::milliseconds timeout) {
+  return PthreadsThread::WaitMultiple(wait_handles, timeout, false);
 }
 
-Thread::WaitResult Thread::WaitAll(ref_ptr<WaitHandle> wait_handles[],
-                                   size_t wait_handle_count,
+Thread::WaitResult Thread::WaitAll(ArrayView<ref_ptr<WaitHandle>> wait_handles,
                                    std::chrono::milliseconds timeout) {
-  return PthreadsThread::WaitMultiple(wait_handles, wait_handle_count, timeout,
-                                      true)
-      .wait_result;
+  return PthreadsThread::WaitMultiple(wait_handles, timeout, true).wait_result;
 }
 
 Thread::WaitAnyResult PthreadsThread::WaitMultiple(
-    ref_ptr<WaitHandle> wait_handles[], size_t wait_handle_count,
+    ArrayView<ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout, bool require_all) {
   // pthreads has no way of doing multi-waits, so our performance won't be as
   // good as on systems that do support it. That's generally ok, as multi-waits
@@ -510,10 +505,10 @@ Thread::WaitAnyResult PthreadsThread::WaitMultiple(
   // Copy wait handles locally. We'll use this as a check and null out entries
   // that have passed and have been signaled.
   // NOTE: the wait handle count is limited so we can stack allocate.
-  DCHECK_LE(wait_handle_count, 64);
+  DCHECK_LE(wait_handles.size(), 64);
   PthreadsWaitHandleImpl** handles = reinterpret_cast<PthreadsWaitHandleImpl**>(
-      alloca(sizeof(PthreadsWaitHandleImpl*) * wait_handle_count));
-  for (size_t i = 0; i < wait_handle_count; ++i) {
+      alloca(sizeof(PthreadsWaitHandleImpl*) * wait_handles.size()));
+  for (size_t i = 0; i < wait_handles.size(); ++i) {
     handles[i] = reinterpret_cast<PthreadsWaitHandleImpl*>(
         wait_handles[i]->native_handle());
   }
@@ -525,7 +520,7 @@ Thread::WaitAnyResult PthreadsThread::WaitMultiple(
     int signal_index = -1;
     bool any_signaled = false;
     bool any_unsignaled = false;
-    for (size_t i = 0; i < wait_handle_count; ++i) {
+    for (size_t i = 0; i < wait_handles.size(); ++i) {
       PthreadsWaitHandleImpl* handle = handles[i];
       if (!handle) {
         signal_index = i;

@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "xrtl/base/array_view.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/base/threading/wait_handle.h"
 
@@ -247,13 +248,8 @@ class Thread : public WaitHandle {
   // Returns a result containing the reason the wait ended and when successful
   // the index into wait_handles that was signaled.
   static WaitAnyResult WaitAny(
-      ref_ptr<WaitHandle> wait_handles[], size_t wait_handle_count,
+      ArrayView<ref_ptr<WaitHandle>> wait_handles,
       std::chrono::milliseconds timeout = kInfiniteTimeout);
-  static WaitAnyResult WaitAny(
-      std::vector<ref_ptr<WaitHandle>> wait_handles,
-      std::chrono::milliseconds timeout = kInfiniteTimeout) {
-    return WaitAny(wait_handles.data(), wait_handles.size(), timeout);
-  }
 
   // Waits until all of the specified wait handles are in the signaled state or
   // the timeout interval elapses.
@@ -264,13 +260,8 @@ class Thread : public WaitHandle {
   // Returns a result that indicates the reason the wait ended, with kSuccess
   // meaning that all objects were signaled.
   static WaitResult WaitAll(
-      ref_ptr<WaitHandle> wait_handles[], size_t wait_handle_count,
+      ArrayView<ref_ptr<WaitHandle>> wait_handles,
       std::chrono::milliseconds timeout = kInfiniteTimeout);
-  static WaitResult WaitAll(
-      std::vector<ref_ptr<WaitHandle>> wait_handles,
-      std::chrono::milliseconds timeout = kInfiniteTimeout) {
-    return WaitAll(wait_handles.data(), wait_handles.size(), timeout);
-  }
 
   virtual ~Thread();
 
@@ -341,6 +332,8 @@ class Thread : public WaitHandle {
   // They will be called in reverse order of registration.
   std::vector<std::function<void()>> exit_callbacks_;
 };
+
+std::ostream& operator<<(std::ostream& stream, const Thread::WaitResult& value);
 
 }  // namespace xrtl
 

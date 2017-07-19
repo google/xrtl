@@ -33,11 +33,9 @@ namespace {
 using gfx::Buffer;
 using gfx::Image;
 using gfx::MemoryHeap;
-using gfx::PipelineLayout;
 using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
-using gfx::ResourceSet;
 using gfx::ResourceSetLayout;
 using gfx::Sampler;
 using gfx::ShaderModule;
@@ -491,11 +489,11 @@ void ImGuiOverlay::RenderDrawLists(ImDrawData* data) {
           // TODO(benvanik): combined image sampler resource to simplify?
           ref_ptr<gfx::ImageView> image_view{
               reinterpret_cast<gfx::ImageView*>(draw_cmd.TextureId)};
-          std::vector<ResourceSet::BindingValue> binding_values;
-          binding_values.push_back(
-              {image_view, Image::Layout::kGeneral, nearest_sampler_});
-          auto resource_set =
-              context_->CreateResourceSet(resource_set_layout_, binding_values);
+          auto resource_set = context_->CreateResourceSet(
+              resource_set_layout_,
+              {
+                  {image_view, Image::Layout::kGeneral, nearest_sampler_},
+              });
           if (!resource_set) {
             LOG(ERROR) << "Unable to create resource set";
             return;
