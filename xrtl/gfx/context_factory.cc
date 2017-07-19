@@ -67,7 +67,7 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
     // Pick the first available type.
     desired_type = available_types.front();
   } else {
-    for (auto available_type : available_types) {
+    for (const auto& available_type : available_types) {
       if (available_type == name) {
         desired_type = name;
         break;

@@ -44,4 +44,17 @@ void Thread::OnExit() {
   // TODO(benvanik): shutdown WTF for this thread.
 }
 
+std::ostream& operator<<(std::ostream& stream,
+                         const Thread::WaitResult& value) {
+  switch (value) {
+    XRTL_UNREACHABLE_DEFAULT();
+    case Thread::WaitResult::kSuccess:
+      return stream << "WaitResult::kSuccess";
+    case Thread::WaitResult::kTimeout:
+      return stream << "WaitResult::kTimeout";
+    case Thread::WaitResult::kError:
+      return stream << "WaitResult::kError";
+  }
+}
+
 }  // namespace xrtl

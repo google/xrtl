@@ -170,7 +170,7 @@ SwapChain::ResizeResult ES3PlatformSwapChain::ResizeWithContext(
     ref_ptr<Image> image;
     auto result =
         memory_heap_->AllocateImage(image_create_params_, usage_mask, &image);
-    DCHECK(result == MemoryHeap::AllocationResult::kSuccess);
+    DCHECK_EQ(result, MemoryHeap::AllocationResult::kSuccess);
     if (!image) {
       return ResizeResult::kOutOfMemory;
     }

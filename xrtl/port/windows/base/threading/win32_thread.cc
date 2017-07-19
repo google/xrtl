@@ -79,8 +79,7 @@ class Win32Thread : public Win32WaitHandle<Thread> {
   // Runs the thread entry point specified by the Thread::Create call.
   static DWORD WINAPI ThreadStartRoutine(LPVOID param);
 
-  static WaitAnyResult WaitMultiple(ref_ptr<WaitHandle> wait_handles[],
-                                    size_t wait_handle_count,
+  static WaitAnyResult WaitMultiple(ArrayView<ref_ptr<WaitHandle>> wait_handles,
                                     std::chrono::milliseconds timeout,
                                     bool require_all);
 
@@ -377,39 +376,35 @@ Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
   }
 }
 
-Thread::WaitAnyResult Thread::WaitAny(ref_ptr<WaitHandle> wait_handles[],
-                                      size_t wait_handle_count,
-                                      std::chrono::milliseconds timeout) {
-  return Win32Thread::WaitMultiple(wait_handles, wait_handle_count, timeout,
-                                   false);
+Thread::WaitAnyResult Thread::WaitAny(
+    ArrayView<ref_ptr<WaitHandle>> wait_handles,
+    std::chrono::milliseconds timeout) {
+  return Win32Thread::WaitMultiple(wait_handles, timeout, false);
 }
 
-Thread::WaitResult Thread::WaitAll(ref_ptr<WaitHandle> wait_handles[],
-                                   size_t wait_handle_count,
+Thread::WaitResult Thread::WaitAll(ArrayView<ref_ptr<WaitHandle>> wait_handles,
                                    std::chrono::milliseconds timeout) {
-  return Win32Thread::WaitMultiple(wait_handles, wait_handle_count, timeout,
-                                   true)
-      .wait_result;
+  return Win32Thread::WaitMultiple(wait_handles, timeout, true).wait_result;
 }
 
 Thread::WaitAnyResult Win32Thread::WaitMultiple(
-    ref_ptr<WaitHandle> wait_handles[], size_t wait_handle_count,
+    ArrayView<ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout, bool require_all) {
   // NOTE: the wait handle count is limited so we can stack allocate.
-  DCHECK_LE(wait_handle_count, 64);
+  DCHECK_LE(wait_handles.size(), 64);
   HANDLE* handles =
-      reinterpret_cast<HANDLE*>(_malloca(sizeof(HANDLE) * wait_handle_count));
-  for (size_t i = 0; i < wait_handle_count; ++i) {
+      reinterpret_cast<HANDLE*>(_malloca(sizeof(HANDLE) * wait_handles.size()));
+  for (size_t i = 0; i < wait_handles.size(); ++i) {
     handles[i] = reinterpret_cast<HANDLE>(wait_handles[i]->native_handle());
   }
   DWORD result = ::WaitForMultipleObjectsEx(
-      static_cast<DWORD>(wait_handle_count), handles,
+      static_cast<DWORD>(wait_handles.size()), handles,
       require_all ? TRUE : FALSE, static_cast<DWORD>(timeout.count()), FALSE);
   _freea(handles);
-  if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + wait_handle_count) {
+  if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + wait_handles.size()) {
     return {WaitResult::kSuccess, result - WAIT_OBJECT_0};
   } else if (result >= WAIT_ABANDONED_0 &&
-             result < WAIT_ABANDONED_0 + wait_handle_count) {
+             result < WAIT_ABANDONED_0 + wait_handles.size()) {
     // NOTE: we shouldn't get abandoned handles.
     return {WaitResult::kError, result - WAIT_ABANDONED_0};
   }
