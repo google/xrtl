@@ -50,10 +50,10 @@
 // XRTL_ARCH_*
 //==============================================================================
 
-#if defined(__arm__) || defined(__arm64) || defined(__thumb__) || \
-    defined(__TARGET_ARCH_ARM) || defined(__TARGET_ARCH_THUMB) || \
-    defined(_M_ARM)
-#if defined(__arm64)
+#if defined(__arm__) || defined(__arm64) || defined(__aarch64__) || \
+    defined(__thumb__) || defined(__TARGET_ARCH_ARM) ||             \
+    defined(__TARGET_ARCH_THUMB) || defined(_M_ARM)
+#if defined(__arm64) || defined(__aarch64__)
 #define XRTL_ARCH_ARM_V8A 1
 #else
 #define XRTL_ARCH_ARM_V7A 1

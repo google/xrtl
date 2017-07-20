@@ -75,7 +75,9 @@ cc_library(
     testonly = 1,
     visibility = ["//visibility:private"],
     deps = select({
-        "//xrtl/tools/target_platform:android": [],
+        "//xrtl/tools/target_platform:android": [
+            "//xrtl/port/common/testing:posix_test_main",
+        ],
         "//xrtl/tools/target_platform:emscripten": [],
         "//xrtl/tools/target_platform:ios": [],
         "//xrtl/tools/target_platform:windows": [

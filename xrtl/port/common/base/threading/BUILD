@@ -5,6 +5,11 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+pthread_linkopts = select({
+    "//xrtl/tools/target_platform:android": [],
+    "//conditions:default": ["-lpthread"],
+})
+
 cc_library(
     name = "epoll_message_loop",
     srcs = ["epoll_message_loop.cc"],
@@ -20,9 +25,7 @@ cc_library(
 cc_library(
     name = "pthreads_event",
     srcs = ["pthreads_event.cc"],
-    linkopts = [
-        "-lpthread",
-    ],
+    linkopts = pthread_linkopts,
     deps = [
         ":pthreads_wait_handle",
         "//xrtl/base/threading:threading_hdrs",
@@ -32,9 +35,7 @@ cc_library(
 cc_library(
     name = "pthreads_semaphore",
     srcs = ["pthreads_semaphore.cc"],
-    linkopts = [
-        "-lpthread",
-    ],
+    linkopts = pthread_linkopts,
     deps = [
         ":pthreads_wait_handle",
         "//xrtl/base/threading:threading_hdrs",
@@ -44,9 +45,7 @@ cc_library(
 cc_library(
     name = "pthreads_thread",
     srcs = ["pthreads_thread.cc"],
-    linkopts = [
-        "-lpthread",
-    ],
+    linkopts = pthread_linkopts,
     deps = [
         ":pthreads_event",
         ":pthreads_wait_handle",
@@ -61,9 +60,7 @@ cc_library(
     name = "pthreads_wait_handle",
     srcs = ["pthreads_wait_handle.cc"],
     hdrs = ["pthreads_wait_handle.h"],
-    linkopts = [
-        "-lpthread",
-    ],
+    linkopts = pthread_linkopts,
     deps = [
         "//xrtl/base/threading:wait_handle",
     ],

@@ -4,26 +4,26 @@
 #  and swap out this file for other versions.
 
 CONDITION_ANDROID = {
-    "crosstool_top": "TODO",
+    "crosstool_top": "//external:android/crosstool",
 }
 
 CONDITION_ANDROID_ARM_V7A = {
-    "crosstool_top": "TODO",
+    "crosstool_top": "//external:android/crosstool",
     "cpu": "armeabi-v7a",
 }
 
 CONDITION_ANDROID_ARM_V8A = {
-    "crosstool_top": "TODO",
+    "crosstool_top": "//external:android/crosstool",
     "cpu": "arm64-v8a",
 }
 
 CONDITION_ANDROID_X86_32 = {
-    "crosstool_top": "TODO",
+    "crosstool_top": "//external:android/crosstool",
     "cpu": "x86",
 }
 
 CONDITION_ANDROID_X86_64 = {
-    "crosstool_top": "TODO",
+    "crosstool_top": "//external:android/crosstool",
     "cpu": "x86_64",
 }
 

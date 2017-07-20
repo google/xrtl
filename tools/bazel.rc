@@ -82,8 +82,11 @@ common:ubsan --linkopt=-fno-sanitize-recover=undefined
 # Android
 #===============================================================================
 
+common:android --crosstool_top=//external:android/crosstool
+common:android --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
 common:android --config=clang
 common:android --dynamic_mode=off
+common:android --copt=-std=c++11
 
 common:android_emulator --config=android
 common:android_emulator --config=android_x86_64

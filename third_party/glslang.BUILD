@@ -53,17 +53,10 @@ cc_library(
     deps = ["glslang_headers"],
 )
 
-config_setting(
-    name = "windows",
-    values = {
-        "cpu": "x64_windows_msvc",
-    },
-)
-
 cc_library(
     name = "OSDependent",
     srcs = select({
-        ":windows": [
+        "@//xrtl/tools/target_platform:windows": [
             "glslang/OSDependent/Windows/ossource.cpp",
         ],
         "//conditions:default": [
@@ -73,7 +66,8 @@ cc_library(
     hdrs = ["glslang/OSDependent/osinclude.h"],
     copts = COMMON_COPTS,
     linkopts = select({
-        ":windows": [],
+        "@//xrtl/tools/target_platform:android": [],
+        "@//xrtl/tools/target_platform:windows": [],
         "//conditions:default": [
             "-lpthread",
         ],
@@ -174,7 +168,7 @@ cc_library(
         "SPIRV/spvIR.h",
     ],
     copts = COMMON_COPTS + select({
-        ":windows": [],
+        "@//xrtl/tools/target_platform:windows": [],
         "//conditions:default": ["-Wno-gnu-redeclared-enum"],
     }),
     deps = [":glslang"],

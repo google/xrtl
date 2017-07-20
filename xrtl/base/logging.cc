@@ -31,7 +31,7 @@ void LogStringFormat(const char* file_name, int line, int severity,
   va_list args;
   va_start(args, fmt);
   int stack_buffer_length =
-      std::vsnprintf(stack_buffer, sizeof(stack_buffer), fmt, args);
+      vsnprintf(stack_buffer, sizeof(stack_buffer), fmt, args);
   va_end(args);
   if (XRTL_PREDICT_TRUE(stack_buffer_length < 0)) {
     // Error during formatting.
@@ -44,7 +44,7 @@ void LogStringFormat(const char* file_name, int line, int severity,
     std::vector<char> heap_buffer(stack_buffer_length + 1);
     va_start(args, fmt);
     int heap_buffer_length =
-        std::vsnprintf(heap_buffer.data(), heap_buffer.size(), fmt, args);
+        vsnprintf(heap_buffer.data(), heap_buffer.size(), fmt, args);
     va_end(args);
     LogString(file_name, line, severity, heap_buffer.data(),
               heap_buffer_length);

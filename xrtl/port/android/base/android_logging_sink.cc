@@ -54,12 +54,12 @@ void LogMessage::EmitLogMessage() {
 
   const char* const partial_name = strrchr(file_name(), '/');
   __android_log_print(android_log_level, "xrtl", "%s:%d %s",
-                      partial_name ? partial_name + 1 : file_name().c_str(),
-                      line(), str().c_str());
+                      partial_name ? partial_name + 1 : file_name(), line(),
+                      str().c_str());
 
   // Also log to stderr (for standalone Android apps).
   std::fprintf(stderr, "xrtl %s:%d %s\n",
-               partial_name ? partial_name + 1 : file_name().c_str(), line(),
+               partial_name ? partial_name + 1 : file_name(), line(),
                str().c_str());
 
   // Android logging at level FATAL does not terminate execution, so abort()

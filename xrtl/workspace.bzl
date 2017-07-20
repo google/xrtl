@@ -8,6 +8,7 @@
 
 # Parses the bazel version string from `native.bazel_version`.
 def _parse_bazel_version(bazel_version):
+  """Parses the bazel version string from `native.bazel_version`."""
   # Remove commit from version.
   version = bazel_version.split(" ", 1)[0]
 
@@ -21,8 +22,8 @@ def _parse_bazel_version(bazel_version):
     version_tuple += (str(number),)
   return version_tuple
 
-# Checks that a specific bazel version is being used.
 def check_version(bazel_version):
+  """Checks that a specific bazel version is being used."""
   if "bazel_version" not in dir(native):
     fail("\nCurrent Bazel version is lower than 0.2.1, expected at least %s\n" % bazel_version)
   elif not native.bazel_version:
@@ -34,11 +35,10 @@ def check_version(bazel_version):
     if minimum_bazel_version > current_bazel_version:
       fail("\nCurrent Bazel version is {}, expected at least {}\n".format(
           native.bazel_version, bazel_version))
-  pass
 
 def xrtl_workspace():
   # Verify supported bazel version.
-  check_version("0.4.5")
+  check_version("0.5.2")
 
   # //third_party/gflags/
   native.new_local_repository(
@@ -104,4 +104,16 @@ def xrtl_workspace():
   native.bind(
       name = "swiftshader",
       actual = "@com_github_google_swiftshader//:swiftshader",
+  )
+
+  # Android SDK and NDK.
+  # We use the ANDROID_HOME and ANDROID_NDK_HOME environment variables to
+  # allow non-local installs (though xtool always sets them).
+  native.android_sdk_repository(
+      name = "androidsdk",
+      api_level = 26,
+  )
+  native.android_ndk_repository(
+      name = "androidndk",
+      api_level = 14,
   )
