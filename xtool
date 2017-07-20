@@ -32,6 +32,8 @@ import shutil
 import string
 import subprocess
 import sys
+import urllib
+import zipfile
 
 
 self_path = os.path.dirname(os.path.abspath(__file__))
@@ -295,12 +297,15 @@ def get_bin(bin):
   """
   for path in os.environ['PATH'].split(os.pathsep):
     path = path.strip('"')
-    exe_file = os.path.join(path, bin)
+    bin_file = os.path.join(path, bin)
+    if os.path.isfile(bin_file) and os.access(bin_file, os.X_OK):
+      return bin_file
+    exe_file = bin_file + '.exe'
     if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
       return exe_file
-    exe_file = exe_file + '.exe'
-    if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
-      return exe_file
+    bat_file = bin_file + '.bat'
+    if os.path.isfile(bat_file) and os.access(bat_file, os.X_OK):
+      return bat_file
   return None
 
 
@@ -343,6 +348,17 @@ def _prepare_bazel_environ():
     os.environ['BAZEL_PYTHON'] = get_python_binary()
   if 'BAZEL_VC' not in os.environ and 'VCINSTALLDIR' in os.environ:
     os.environ['BAZEL_VC'] = os.environ['VCINSTALLDIR']
+  if os.path.exists(os.path.join('tools', 'android-sdk')):
+    if 'ANDROID_HOME' not in os.environ:
+      os.environ['ANDROID_HOME'] = os.path.abspath(os.path.join(
+          'tools', 'android-sdk'))
+    if 'ANDROID_NDK_HOME' not in os.environ:
+      os.environ['ANDROID_NDK_HOME'] = os.path.abspath(os.path.join(
+          'tools', 'android-sdk', 'ndk-bundle'))
+  if 'ANDROID_HOME' in os.environ and not 'ANDORID_NDK_HOME' in os.environ:
+    if os.path.exists(os.path.join(os.environ['ANDROID_HOME'], 'ndk-bundle')):
+      os.environ['ANDROID_NDK_HOME'] = os.path.join(os.environ['ANDROID_HOME'],
+                                                    'ndk-bundle')
 
 
 def invoke_bazel(command, args, output_base = None):
@@ -620,6 +636,9 @@ class SetupCommand(Command):
         name='setup',
         help_short='Setup the build environment.',
         *args, **kwargs)
+    self.parser.add_argument('--android-sdk', action='store_true',
+                             dest='android_sdk',
+                             help='Installs the tools/android-sdk/.')
 
   def execute(self, args, pass_args, cwd):
     print('Setting up the build environment...')
@@ -677,6 +696,58 @@ class SetupCommand(Command):
         for go_package in go_packages:
           print('  %s' % (go_package))
         return 1
+      print('')
+
+    # Fetch Android SDK/NDK, if required.
+    if args['android_sdk']:
+      local_android_sdk = os.path.join('tools', 'android-sdk')
+      if sys.platform == 'cygwin' or sys.platform == 'win32':
+        android_sdk_platform = 'windows'
+      elif sys.platform == 'darwin':
+        android_sdk_platform = 'macosx'
+      else:
+        android_sdk_platform = 'linux'
+      if not os.path.exists(local_android_sdk):
+        # https://androidsdkoffline.blogspot.com/p/android-sdk-tools.html
+        remote_android_sdk_zip = 'https://dl.google.com/android/repository/tools_r25.2.5-%s.zip' % (android_sdk_platform)
+        print('- fetching Android SDK from %s...' % (remote_android_sdk_zip))
+        local_android_sdk_zip = '.android-tools.zip'
+        urllib.urlretrieve(remote_android_sdk_zip, local_android_sdk_zip)
+        print('- extracting Android SDK...')
+        os.makedirs(local_android_sdk)
+        android_sdk_zip_file = zipfile.ZipFile(local_android_sdk_zip, 'r')
+        android_sdk_zip_file.extractall(local_android_sdk)
+        android_sdk_zip_file.close()
+        os.remove(local_android_sdk_zip)
+        # Fake licenses to avoid stupid prompt from stupid Android tools. Sigh.
+        if not os.path.exists(os.path.join(local_android_sdk, 'licenses')):
+          os.makedirs(os.path.join(local_android_sdk, 'licenses'))
+        with open(os.path.join(local_android_sdk, 'licenses', 'android-sdk-license'), 'w') as f:
+          f.write('\n8933bad161af4178b1185d1a37fbf41ea5269c55')
+        with open(os.path.join(local_android_sdk, 'licenses', 'intel-android-extra-license'), 'w') as f:
+          f.write('\nd975f751698a77b662f1254ddbeed3901e976f5a')
+        print('- installing Android SDK to tools/android-sdk/...')
+        packages = [
+            'build-tools;26.0.0',
+            'extras;intel;Hardware_Accelerated_Execution_Manager',
+            'ndk-bundle',
+            'platform-tools',
+            'platforms;android-26',
+            ]
+        ext = '.bat' if android_sdk_platform == 'windows' else ''
+        shell_call([
+            os.path.join(local_android_sdk, 'tools', 'bin', 'sdkmanager') + ext,
+            ] + packages)
+      else:
+        print('- updating Android SDK in tools/android-sdk/...')
+        ext = '.bat' if android_sdk_platform == 'windows' else ''
+        shell_call([
+            os.path.join(local_android_sdk, 'tools', 'bin', 'sdkmanager') + ext,
+            '--update',
+            ])
+    else:
+      print('- skipping Android SDK (pass --android-sdk to install it)')
+    print('')
 
     return 0
 

@@ -51,3 +51,6 @@ obj/
 /bazel-out
 /bazel-testlogs
 /bazel-xrtl
+
+# Android
+/tools/android-sdk*/

@@ -32,7 +32,7 @@ $ sudo easy_install protobuf
 ```
 * Run initial setup with xtool:
 ```
-$ ./xtool setup
+$ ./xtool setup --android-sdk
 ```
 
 ### Ubuntu
@@ -44,7 +44,7 @@ $ sudo apt-get install bazel golang-go
 ```
 * Run initial setup with xtool:
 ```
-$ ./xtool setup
+$ ./xtool setup --android-sdk
 ```
 
 ### Windows
@@ -58,7 +58,7 @@ $ ./xtool setup
 * Follow the [bazel on Windows](https://bazel.build/versions/master/docs/windows.html) instructions (set `BAZEL_SH`, etc)
 * Run initial setup with xtool:
 ```
-> xtool setup
+> xtool setup --android-sdk
 ```
 
 ## IDE Setup
