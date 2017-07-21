@@ -21,6 +21,8 @@ env:
     - BAZEL_VERSION=0.5.2
     - PATH=/usr/local/opt/llvm/bin:$HOME/bin/:$PATH
     - DISPLAY=:0.0
+    - ANDROID_HOME=/usr/local/android-sdk/
+    - ANDROID_NDK_HOME=/usr/local/android-sdk/ndk-bundle/
 
 language: cpp
 compiler:
@@ -65,6 +67,29 @@ jobs:
     - <<: *test-linux
       env: CONFIG=ubsan
 
+    # Test Android for default config.
+    - &test-android
+      stage: test
+      os: linux
+      script: ./tools/ci/travis/test.sh
+      env: CONFIG=android_x86_64
+      language: android
+      sudo: required
+      dist: trusty
+      group: edge
+      android:
+        components:
+          - tools
+          - platform-tools
+          - tools
+          - build-tools-25.0.2
+          - android-25
+          - ndk-bundle
+          - sys-img-x86-google_apis-25
+      before_script:
+        - echo android_sdk_repository(name = "androidsdk") >> WORKSPACE
+        - echo android_ndk_repository(name = "androidndk") >> WORKSPACE
+
     # Test MacOS for default config.
     # We also build here to avoid double cost of MacOS VM startup.
     - &test-macos
@@ -84,5 +109,7 @@ jobs:
       env: CONFIG=analyze
 
   allow_failures:
+    # Android is still being brought up.
+    - <<: *test-android
     # MacOS is flaky right now so we allow it to fail.
     - <<: *test-macos

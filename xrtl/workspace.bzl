@@ -105,15 +105,3 @@ def xrtl_workspace():
       name = "swiftshader",
       actual = "@com_github_google_swiftshader//:swiftshader",
   )
-
-  # Android SDK and NDK.
-  # We use the ANDROID_HOME and ANDROID_NDK_HOME environment variables to
-  # allow non-local installs (though xtool always sets them).
-  native.android_sdk_repository(
-      name = "androidsdk",
-      api_level = 26,
-  )
-  native.android_ndk_repository(
-      name = "androidndk",
-      api_level = 14,
-  )

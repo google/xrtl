@@ -44,24 +44,24 @@ echo "Fetching git-clang-format..."
 curl -L -o ${HOME}/bin/git-clang-format https://llvm.org/svn/llvm-project/cfe/trunk/tools/clang-format/git-clang-format
 chmod +x ${HOME}/bin/git-clang-format
 
+# TODO(benvanik): figure out how to make this useful.
 # Prepare X server.
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-  echo "Launching X..."
-  Xvfb ${DISPLAY} -screen 0 1280x1024x24 > /dev/null 2>&1 &
-
-  # Wait for xvfb to be ready for connections.
-  X_WAIT_MAX=120 # About 60 seconds
-  X_WAIT_DURATION=0
-  while ! xdpyinfo -display ${DISPLAY} >/dev/null 2>&1; do
-    sleep 0.50s
-    X_WAIT_DURATION=$((X_WAIT_DURATION + 1))
-    if [ "$X_WAIT_DURATION" -ge "$X_WAIT_MAX" ]; then
-      echo "FATAL: $0: gave up waiting for X server $DISPLAY"
-      exit 1
-    fi
-  done
-  echo "X ready on ${DISPLAY} (probably)"
-fi
+# if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+#   echo "Launching X..."
+#   Xvfb ${DISPLAY} -screen 0 1280x1024x24 > /dev/null 2>&1 &
+#   # Wait for xvfb to be ready for connections.
+#   X_WAIT_MAX=120 # About 60 seconds
+#   X_WAIT_DURATION=0
+#   while ! xdpyinfo -display ${DISPLAY} >/dev/null 2>&1; do
+#     sleep 0.50s
+#     X_WAIT_DURATION=$((X_WAIT_DURATION + 1))
+#     if [ "$X_WAIT_DURATION" -ge "$X_WAIT_MAX" ]; then
+#       echo "FATAL: $0: gave up waiting for X server $DISPLAY"
+#       exit 1
+#     fi
+#   done
+#   echo "X ready on ${DISPLAY} (probably)"
+# fi
 
 echo "Running 'xtool setup'..."
 ./xtool setup
