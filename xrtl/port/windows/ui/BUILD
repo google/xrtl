@@ -9,6 +9,9 @@ cc_library(
     name = "win32_control",
     srcs = ["win32_control.cc"],
     hdrs = ["win32_control.h"],
+    linkopts = [
+        "-Wl,wtsapi32.lib",
+    ],
     deps = [
         "//xrtl/base:logging",
         "//xrtl/base/threading:event",

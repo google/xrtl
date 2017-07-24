@@ -66,6 +66,7 @@ class Win32Control : public Control {
   bool BeginDestroy();
   bool EndDestroy();
 
+  void CheckScreensaverChanged();
   void CheckMonitorChanged();
   Rect2D QueryBounds();
 
@@ -92,6 +93,11 @@ class Win32Control : public Control {
   Rect2D bounds_{{0, 0}, {128, 128}};
   gfx::rgba8_t background_color_;
   bool is_cursor_visible_ = true;
+
+  // State tracking for screensaver and system power state.
+  bool is_session_locked_ = false;
+  bool is_monitor_power_on_ = false;
+  HPOWERNOTIFY power_notify_handle_ = nullptr;
 
   // TODO(benvanik): switch to bitmap.
   uint8_t key_down_map_[256] = {0};

@@ -26,6 +26,7 @@ typedef struct _MARGINS {
 #include <dwmapi.h>   // DWM MMCSS/etc.
 #include <tpcshrd.h>  // Tablet defines.
 #include <windowsx.h>
+#include <wtsapi32.h>  // Session APIs.
 
 #include <utility>
 
@@ -448,6 +449,20 @@ bool Win32Control::BeginCreate() {
 bool Win32Control::EndCreate() {
   DCHECK(hwnd_);
 
+  // Register for session change notifications (lock state).
+  // This will route WM_WTSSESSION_CHANGE to the window.
+  ::WTSRegisterSessionNotification(hwnd_, NOTIFY_FOR_THIS_SESSION);
+
+  // Register for power notifications that we'll use to track display state.
+  // This will route WM_POWERBROADCAST to the window.
+  power_notify_handle_ = ::RegisterPowerSettingNotification(
+      hwnd_, &GUID_MONITOR_POWER_ON, DEVICE_NOTIFY_WINDOW_HANDLE);
+
+  // We will get a notification immediately with the current state. That will
+  // either be on (in which case nothing changes) or off (in which case we
+  // will suspend).
+  is_monitor_power_on_ = true;
+
   if (!is_suspended_) {
     display_link_->Resume();
   }
@@ -514,6 +529,15 @@ ref_ptr<WaitHandle> Win32Control::Destroy() {
 
 bool Win32Control::BeginDestroy() {
   PostDestroying();
+
+  // Unregister session notifications.
+  ::WTSUnRegisterSessionNotification(hwnd_);
+
+  // Unregister power notifications.
+  if (power_notify_handle_) {
+    ::UnregisterPowerSettingNotification(power_notify_handle_);
+    power_notify_handle_ = nullptr;
+  }
 
   // Fully stop the display link.
   display_link_->Suspend();
@@ -772,8 +796,83 @@ LRESULT Win32Control::WndProc(HWND hwnd, UINT message, WPARAM w_param,
           PostFocusChanged(is_focused_);
           break;
         }
+        case SC_SCREENSAVE: {
+          // TODO(benvanik): find a way to make this check reliably - seems
+          //                 broken.
+          VLOG(1) << "WM_SYSCOMMAND: SC_SCREENSAVE";
+          break;
+        }
       }
       CheckMonitorChanged();
+      break;
+    }
+
+    case WM_WTSSESSION_CHANGE: {
+      VLOG(1) << "WM_WTSSESSION_CHANGE: " << w_param;
+      switch (w_param) {
+        case WTS_SESSION_LOCK:
+          // Session has been locked.
+          if (!is_session_locked_) {
+            is_session_locked_ = true;
+            VLOG(1) << "Session locked; suspending display link";
+            display_link_->Suspend();
+          }
+          break;
+        case WTS_SESSION_UNLOCK:
+          // Session has been unlocked.
+          if (is_session_locked_) {
+            is_session_locked_ = false;
+            VLOG(1) << "Session unlocked; resuming display link";
+            display_link_->Resume();
+          }
+          break;
+        default:
+        case WTS_CONSOLE_CONNECT:
+        case WTS_CONSOLE_DISCONNECT:
+        case WTS_REMOTE_CONNECT:
+        case WTS_REMOTE_DISCONNECT:
+        case WTS_SESSION_LOGON:
+        case WTS_SESSION_LOGOFF:
+          // TODO(benvanik): adjust on these states? RDP could be useful.
+          break;
+      }
+      break;
+    }
+
+    case WM_POWERBROADCAST: {
+      if (w_param == PBT_POWERSETTINGCHANGE) {
+        auto powerbroadcast_setting =
+            reinterpret_cast<POWERBROADCAST_SETTING*>(l_param);
+        if (powerbroadcast_setting->PowerSetting == GUID_MONITOR_POWER_ON) {
+          DWORD value = *reinterpret_cast<DWORD*>(powerbroadcast_setting->Data);
+          VLOG(1) << "WM_POWERBROADCAST: GUID_MONITOR_POWER_ON = " << value;
+          bool should_suspend = false;
+          bool should_resume = false;
+          {
+            std::lock_guard<std::recursive_mutex> lock(mutex_);
+            switch (value) {
+              case 0:  // Monitor is off.
+                if (is_monitor_power_on_) {
+                  is_monitor_power_on_ = false;
+                  should_suspend = true;
+                }
+                break;
+              default:
+              case 1:  // Monitor is on.
+                if (!is_monitor_power_on_) {
+                  is_monitor_power_on_ = true;
+                  should_resume = true;
+                }
+                break;
+            }
+          }
+          if (should_suspend) {
+            display_link_->Suspend();
+          } else if (should_resume) {
+            display_link_->Resume();
+          }
+        }
+      }
       break;
     }
 
