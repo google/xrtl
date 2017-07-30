@@ -9,9 +9,9 @@ cc_library(
     name = "win32_demo_main",
     srcs = ["win32_demo_main.cc"],
     linkopts = [
-        "-Wl,/SUBSYSTEM:WINDOWS",
-        "-Wl,ole32.lib",
-        "-Wl,shell32.lib",
+        "-SUBSYSTEM:WINDOWS",
+        "-DEFAULTLIB:ole32.lib",
+        "-DEFAULTLIB:shell32.lib",
     ],
     deps = [
         "//xrtl/base:debugging",

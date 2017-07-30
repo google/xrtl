@@ -10,7 +10,7 @@ cc_library(
     srcs = ["win32_control.cc"],
     hdrs = ["win32_control.h"],
     linkopts = [
-        "-Wl,wtsapi32.lib",
+        "-DEFAULTLIB:wtsapi32.lib",
     ],
     deps = [
         "//xrtl/base:logging",

@@ -33,8 +33,8 @@ cc_library(
         ],
         "//xrtl/tools/target_platform:macos": [],
         "//xrtl/tools/target_platform:windows": [
-            "-Wl,libEGL.lib",
-            "-Wl,libGLESv2.lib",
+            "-DEFAULTLIB:libEGL.lib",
+            "-DEFAULTLIB:libGLESv2.lib",
         ],
     }),
     deps = [

@@ -9,9 +9,13 @@ licenses(["notice"])  # Apache 2.0
 exports_files(["LICENSE"])
 
 COMMON_COPTS = [
-    "-fexceptions",
     "-DDISABLE_GOOGLE_STRING",
-]
+] + select({
+    "@//xrtl/tools/target_platform:windows": [],
+    "//conditions:default": [
+        "-fexceptions",
+    ],
+})
 
 cc_library(
     name = "spirv_cross_lib",

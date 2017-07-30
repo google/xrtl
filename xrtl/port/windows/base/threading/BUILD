@@ -19,7 +19,7 @@ cc_library(
     name = "win32_message_loop",
     srcs = ["win32_message_loop.cc"],
     linkopts = [
-        "-Wl,user32.lib",
+        "-DEFAULTLIB:user32.lib",
     ],
     deps = [
         "//xrtl/base/threading:event",
@@ -43,7 +43,7 @@ cc_library(
     name = "win32_thread",
     srcs = ["win32_thread.cc"],
     linkopts = [
-        "-Wl,winmm.lib",
+        "-DEFAULTLIB:winmm.lib",
     ],
     deps = [
         ":win32_wait_handle",

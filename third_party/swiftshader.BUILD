@@ -166,7 +166,7 @@ cc_library(
         "@//xrtl/tools/target_platform:macos": [
         ],
         "@//xrtl/tools/target_platform:windows": [
-            "-Wl,ws2_32.lib",
+            "-DEFAULTLIB:ws2_32.lib",
         ],
     }),
 )
@@ -247,9 +247,9 @@ cc_library(
             # Quartz.framework, Cocoa.framework
         ],
         "@//xrtl/tools/target_platform:windows": [
-            "-Wl,dxguid.lib",  # For FrameBufferDD
-            "-Wl,gdi32.lib",
-            "-Wl,user32.lib",
+            "-DEFAULTLIB:dxguid.lib",  # For FrameBufferDD
+            "-DEFAULTLIB:gdi32.lib",
+            "-DEFAULTLIB:user32.lib",
         ],
     }),
     deps = [

@@ -9,16 +9,6 @@ licenses(["notice"])
 
 exports_files(["COPYING.txt"])
 
-config_setting(
-    name = "windows_msvc",
-    values = {"cpu": "x64_windows_msvc"},
-)
-
-config_setting(
-    name = "windows_msys",
-    values = {"cpu": "x64_windows"},
-)
-
 genrule(
     name = "config_h",
     srcs = ["src/config.h.in"],
@@ -69,11 +59,7 @@ native.cc_library(
         "src/mutex.h",
         "src/util.h",
     ] + select({
-        ":windows_msvc": [
-            "src/windows_port.cc",
-            "src/windows_port.h",
-        ],
-        ":windows_msys": [
+        "@//xrtl/tools/target_platform:windows": [
             "src/windows_port.cc",
             "src/windows_port.h",
         ],
@@ -92,7 +78,7 @@ native.cc_library(
         "-DGFLAGS_INTTYPES_FORMAT_C99",
         "-DNO_THREADS",
     ] + select({
-        "//:windows_msvc": [
+        "@//xrtl/tools/target_platform:windows": [
             "-DOS_WINDOWS",
             "-DHAVE_SHLWAPI_H",
         ],
@@ -106,8 +92,8 @@ native.cc_library(
         "GFLAGS_DLL_DEFINE_FLAG=",
     ],
     linkopts = select({
-        "//:windows_msvc": [
-            "-Wl,shlwapi.lib",
+        "@//xrtl/tools/target_platform:windows": [
+            "-DEFAULTLIB:shlwapi.lib",
         ],
         "//conditions:default": [
             "-lpthread",

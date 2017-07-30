@@ -1527,19 +1527,6 @@ class GenerateSlnCommand(Command):
         *args, **kwargs)
     if not self.parser: return
 
-  def _import_msvc_tools(self):
-    output_base = bazel_info('output_base')
-    pydir = os.path.join(output_base,
-                         'external/local_config_cc/wrapper/bin/pydir')
-    if not pydir in sys.path:
-      sys.path.append(pydir)
-    global msvc_cl
-    import msvc_cl
-    global msvc_link
-    import msvc_link
-    global msvc_tools
-    import msvc_tools
-
   def _extract_command_options(self, command):
     # Prepare command line.
     # - convert to ascii
@@ -1548,14 +1535,6 @@ class GenerateSlnCommand(Command):
     command = command[command.find(' ') + 1:]
     command = command.split(' ')
     command += ['/w']  # Turn off msvc_tools warnings
-
-    # Extract arguments.
-    # Unfortunately this is *really* slow, like dozens/calls sec. Doesn't
-    # scale to our giant compile dbs.
-    # driver = msvc_tools.WindowsRunner()
-    # cl_parser = msvc_tools.ArgParser(driver, command, msvc_cl.GCCPATTERNS)
-    # defines = cl_parser.GetOptionValue('D')
-    # include_paths = cl_parser.GetOptionValue('I')
 
     defines = []
     include_paths = []
@@ -1575,11 +1554,6 @@ class GenerateSlnCommand(Command):
     if return_code:
       print('Error generating compile commands')
       return return_code
-
-    # Enable the MSVC wrappers that bazel generates.
-    # These only exist after our build command from the compile database
-    # generation step.
-    self._import_msvc_tools()
 
     # This is what we have Visual Studio invoke for build/etc.
     xtool_path = '%s\\xtool.bat' % (convert_path_cygwin_to_win32(self_path))

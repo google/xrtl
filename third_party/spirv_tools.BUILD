@@ -29,7 +29,7 @@ genrule(
         "core.insts-1.0.inc",
         "operand.kinds-1.0.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --core-insts-output=$(location core.insts-1.0.inc) --operand-kinds-output=$(location operand.kinds-1.0.inc)",
+    cmd = "$(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --core-insts-output=$(location core.insts-1.0.inc) --operand-kinds-output=$(location operand.kinds-1.0.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -41,7 +41,7 @@ genrule(
         "core.insts-1.1.inc",
         "operand.kinds-1.1.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.1) --core-insts-output=$(location core.insts-1.1.inc) --operand-kinds-output=$(location operand.kinds-1.1.inc)",
+    cmd = "$(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.1) --core-insts-output=$(location core.insts-1.1.inc) --operand-kinds-output=$(location operand.kinds-1.1.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -53,7 +53,7 @@ genrule(
         "core.insts-1.2.inc",
         "operand.kinds-1.2.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2) --core-insts-output=$(location core.insts-1.2.inc) --operand-kinds-output=$(location operand.kinds-1.2.inc)",
+    cmd = "$(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2) --core-insts-output=$(location core.insts-1.2.inc) --operand-kinds-output=$(location operand.kinds-1.2.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -65,7 +65,7 @@ genrule(
         "extension_enum.inc",
         "enum_string_mapping.inc",
     ],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2) --extension-enum-output=$(location extension_enum.inc) --enum-string-mapping-output=$(location enum_string_mapping.inc)",
+    cmd = "$(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.2) --extension-enum-output=$(location extension_enum.inc) --enum-string-mapping-output=$(location enum_string_mapping.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -77,7 +77,7 @@ genrule(
         "@com_github_khronosgroup_spirv_headers//:spirv_opencl_grammar_1.0",
     ],
     outs = ["opencl.std.insts-1.0.inc"],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --extinst-opencl-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_opencl_grammar_1.0) --opencl-insts-output=$(location opencl.std.insts-1.0.inc)",
+    cmd = "$(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --extinst-opencl-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_opencl_grammar_1.0) --opencl-insts-output=$(location opencl.std.insts-1.0.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -89,7 +89,7 @@ genrule(
         "@com_github_khronosgroup_spirv_headers//:spirv_glsl_grammar_1.0",
     ],
     outs = ["glsl.std.450.insts-1.0.inc"],
-    cmd = "python $(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --extinst-glsl-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_glsl_grammar_1.0) --glsl-insts-output=$(location glsl.std.450.insts-1.0.inc)",
+    cmd = "$(location :generate_grammar_tables) --spirv-core-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_core_grammar_1.0) --extinst-glsl-grammar=$(location @com_github_khronosgroup_spirv_headers//:spirv_glsl_grammar_1.0) --glsl-insts-output=$(location glsl.std.450.insts-1.0.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -98,7 +98,7 @@ genrule(
     name = "run_generate_grammar_tables_spv_amd_gcn_shader",
     srcs = ["source/extinst.spv-amd-gcn-shader.grammar.json"],
     outs = ["spv-amd-gcn-shader.insts.inc"],
-    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-gcn-shader.grammar.json) --vendor-insts-output=$(location spv-amd-gcn-shader.insts.inc)",
+    cmd = "$(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-gcn-shader.grammar.json) --vendor-insts-output=$(location spv-amd-gcn-shader.insts.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -107,7 +107,7 @@ genrule(
     name = "run_generate_grammar_tables_spv_amd_shader_ballot",
     srcs = ["source/extinst.spv-amd-shader-ballot.grammar.json"],
     outs = ["spv-amd-shader-ballot.insts.inc"],
-    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-ballot.grammar.json) --vendor-insts-output=$(location spv-amd-shader-ballot.insts.inc)",
+    cmd = "$(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-ballot.grammar.json) --vendor-insts-output=$(location spv-amd-shader-ballot.insts.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -116,7 +116,7 @@ genrule(
     name = "run_generate_grammar_tables_spv_amd_shader_explicit_vertex_parameter",
     srcs = ["source/extinst.spv-amd-shader-explicit-vertex-parameter.grammar.json"],
     outs = ["spv-amd-shader-explicit-vertex-parameter.insts.inc"],
-    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-explicit-vertex-parameter.grammar.json) --vendor-insts-output=$(location spv-amd-shader-explicit-vertex-parameter.insts.inc)",
+    cmd = "$(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-explicit-vertex-parameter.grammar.json) --vendor-insts-output=$(location spv-amd-shader-explicit-vertex-parameter.insts.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -125,7 +125,7 @@ genrule(
     name = "run_generate_grammar_tables_spv_amd_trinary_minmax",
     srcs = ["source/extinst.spv-amd-shader-trinary-minmax.grammar.json"],
     outs = ["spv-amd-shader-trinary-minmax.insts.inc"],
-    cmd = "python $(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-trinary-minmax.grammar.json) --vendor-insts-output=$(location spv-amd-shader-trinary-minmax.insts.inc)",
+    cmd = "$(location :generate_grammar_tables) --extinst-vendor-grammar=$(location source/extinst.spv-amd-shader-trinary-minmax.grammar.json) --vendor-insts-output=$(location spv-amd-shader-trinary-minmax.insts.inc)",
     tools = [":generate_grammar_tables"],
     visibility = ["//visibility:private"],
 )
@@ -142,7 +142,7 @@ genrule(
         "@com_github_khronosgroup_spirv_headers//:spirv_xml_registry",
     ],
     outs = ["generators.inc"],
-    cmd = "python $(location :generate_registry_tables) --xml=$(location @com_github_khronosgroup_spirv_headers//:spirv_xml_registry) --generator-output=$(location generators.inc)",
+    cmd = "$(location :generate_registry_tables) --xml=$(location @com_github_khronosgroup_spirv_headers//:spirv_xml_registry) --generator-output=$(location generators.inc)",
     tools = [":generate_registry_tables"],
     visibility = ["//visibility:private"],
 )
@@ -159,7 +159,7 @@ genrule(
         "CHANGES",
     ],
     outs = ["build-version.inc"],
-    cmd = "SOURCE_DATE_EPOCH=0 python $(location :update_build_version) $$(dirname $(location CHANGES)) $(location build-version.inc)",
+    cmd = "SOURCE_DATE_EPOCH=0 $(location :update_build_version) $$(dirname $(location CHANGES)) $(location build-version.inc)",
     tools = [":update_build_version"],
     visibility = ["//visibility:private"],
 )

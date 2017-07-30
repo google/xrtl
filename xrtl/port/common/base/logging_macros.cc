@@ -91,9 +91,15 @@ LogMessageFatal::LogMessageFatal(const char* file, int line)
     : LogMessage(file, line, FATAL) {}
 
 LogMessageFatal::~LogMessageFatal() {
+  EmitLogMessage();
+
+#if defined(XRTL_COMPILER_MSVC)
+// MSVC warns about the abort not returning.
+#pragma warning(suppress : 4722)
+#endif  // XRTL_COMPILER_MSVC
+
   // abort() ensures we don't return (we promised we would not via
   // ATTRIBUTE_NORETURN).
-  EmitLogMessage();
   abort();
 }
 

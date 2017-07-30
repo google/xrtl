@@ -107,9 +107,9 @@ Win32MessageLoop::Win32MessageLoop() {
 
   // Reserve message IDs unique to our app.
   marshal_sync_message_ =
-      ::RegisterWindowMessage(L"XRTL_MESSAGE_LOOP_MARSHAL_SYNC");
-  invoke_message_ = ::RegisterWindowMessage(L"XRTL_MESSAGE_LOOP_INVOKE");
-  quit_message_ = ::RegisterWindowMessage(L"XRTL_MESSAGE_LOOP_QUIT");
+      ::RegisterWindowMessageA("XRTL_MESSAGE_LOOP_MARSHAL_SYNC");
+  invoke_message_ = ::RegisterWindowMessageA("XRTL_MESSAGE_LOOP_INVOKE");
+  quit_message_ = ::RegisterWindowMessageA("XRTL_MESSAGE_LOOP_QUIT");
 
   // We run a thread dedicated to the loop.
   Thread::CreateParams create_params;

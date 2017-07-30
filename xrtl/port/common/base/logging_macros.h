@@ -32,6 +32,9 @@
 // This file may go away in the future when a logging library is available
 // to use in third_party.
 
+// GDI can conflict on Windows by defining some common constants.
+#undef ERROR
+
 namespace xrtl {
 
 // Severity levels for LOG().

@@ -10,7 +10,7 @@ cc_library(
     srcs = ["wgl_platform_context.cc"],
     hdrs = ["wgl_platform_context.h"],
     linkopts = [
-        "-Wl,gdi32.lib",
+        "-DEFAULTLIB:gdi32.lib",
     ],
     deps = [
         "//third_party/glad:glad_wgl",
