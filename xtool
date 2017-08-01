@@ -358,6 +358,7 @@ def invoke_bazel(command, args, output_base = None):
   """
   _prepare_bazel_environ()
   run_args = ['bazel']
+  run_args.append('--bazelrc=' + os.path.join(self_path, 'tools/bazel.rc'))
   if output_base:
     run_args.append('--output_base=%s' % (output_base))
   run_args.append(command)
