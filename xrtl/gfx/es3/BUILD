@@ -86,6 +86,7 @@ cc_library(
         ":es3_shader_module",
         ":es3_swap_chain",
         "//xrtl/base:tracing",
+        "//xrtl/base/threading:thread",
         "//xrtl/gfx:context",
         "//xrtl/gfx:context_factory_hdrs",
         "//xrtl/gfx/util:memory_command_buffer",

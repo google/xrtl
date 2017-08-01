@@ -20,7 +20,6 @@
 #include "xrtl/gfx/context_factory.h"
 #include "xrtl/gfx/spirv/shader_compiler.h"
 #include "xrtl/testing/demo_main.h"
-#include "xrtl/ui/display_link.h"
 #include "xrtl/ui/window.h"
 
 namespace xrtl {

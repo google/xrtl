@@ -24,12 +24,11 @@
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/base/threading/message_loop.h"
 #include "xrtl/gfx/color.h"
+#include "xrtl/ui/display_link.h"
 #include "xrtl/ui/input_events.h"
 
 namespace xrtl {
 namespace ui {
-
-class DisplayLink;
 
 // A user-visible system control that can be used as a swap chain target or
 // presentation surface.

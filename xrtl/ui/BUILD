@@ -13,6 +13,7 @@ cc_library(
     srcs = ["control.cc"],
     hdrs = ["control.h"],
     deps = [
+        ":display_link",
         ":input_events",
         "//xrtl/base:geometry",
         "//xrtl/base:macros",
@@ -35,6 +36,7 @@ cc_library(
     hdrs = ["control.h"],
     visibility = ["//xrtl/port:ports_only"],
     deps = [
+        ":display_link",
         ":input_events",
         "//xrtl/base:geometry",
         "//xrtl/base:macros",
@@ -91,7 +93,6 @@ cc_binary(
     name = "imgui_overlay_demo",
     srcs = ["imgui_overlay_demo.cc"],
     deps = [
-        ":display_link",
         ":imgui_overlay",
         ":window",
         "//xrtl/base:logging",

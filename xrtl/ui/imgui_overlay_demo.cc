@@ -18,7 +18,6 @@
 #include "xrtl/gfx/context.h"
 #include "xrtl/gfx/context_factory.h"
 #include "xrtl/testing/demo_main.h"
-#include "xrtl/ui/display_link.h"
 #include "xrtl/ui/imgui_overlay.h"
 #include "xrtl/ui/window.h"
 

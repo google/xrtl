@@ -149,6 +149,8 @@ enum class IndexElementType {
 // See one of the specific encoders for more information.
 class CommandEncoder {
  public:
+  virtual ~CommandEncoder() = default;
+
   // The command buffer the encoder is encoding into.
   CommandBuffer* command_buffer() const { return command_buffer_; }
 
@@ -260,6 +262,8 @@ class CommandEncoder {
 // a device-specific format (so clearing depth buffers isn't possible).
 class TransferCommandEncoder : public CommandEncoder {
  public:
+  virtual ~TransferCommandEncoder() = default;
+
   // Fills a buffer with a repeating data value.
   // This can be used to quickly clear a buffer.
   // The size passed must be 4-byte aligned. If it is not aligned then the size
@@ -383,6 +387,8 @@ using TransferCommandEncoderPtr =
 // detected before attempting to encode command buffers with them.
 class ComputeCommandEncoder : public TransferCommandEncoder {
  public:
+  virtual ~ComputeCommandEncoder() = default;
+
   // Sets a command fence to signaled state.
   // The fence will be signaled after all commands previously encoded that
   // affect the given stages complete.
@@ -468,6 +474,8 @@ using ComputeCommandEncoderPtr =
 // encodes drawing-specific commands.
 class RenderCommandEncoder : public TransferCommandEncoder {
  public:
+  virtual ~RenderCommandEncoder() = default;
+
   // Sets a command fence to signaled state.
   // The fence will be signaled after all commands previously encoded that
   // affect the given stages complete.
@@ -567,6 +575,8 @@ using RenderCommandEncoderPtr =
 // during encoding.
 class RenderPassCommandEncoder : public CommandEncoder {
  public:
+  virtual ~RenderPassCommandEncoder() = default;
+
   // Waits for the given fence to be signaled.
   // If it is already signaled the wait will continue immediately.
   // This is usually followed by one or more barriers to ensure memory safety.

@@ -123,7 +123,10 @@ cc_library(
     srcs = ["context_factory.cc"],
     hdrs = ["context_factory.h"],
     deps = [
-        ":context_factory_hdrs",
+        ":context",
+        ":device",
+        "//xrtl/base:array_view",
+        "//xrtl/base:ref_ptr",
         "//xrtl/base:flags",
         "//xrtl/base:logging",
     ] + select({

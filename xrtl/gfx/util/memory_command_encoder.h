@@ -29,7 +29,7 @@ class MemoryTransferCommandEncoder : public TransferCommandEncoder {
  public:
   MemoryTransferCommandEncoder(CommandBuffer* command_buffer,
                                MemoryCommandBufferWriter* writer);
-  ~MemoryTransferCommandEncoder();
+  virtual ~MemoryTransferCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
@@ -88,7 +88,7 @@ class MemoryComputeCommandEncoder : public ComputeCommandEncoder {
  public:
   MemoryComputeCommandEncoder(CommandBuffer* command_buffer,
                               MemoryCommandBufferWriter* writer);
-  ~MemoryComputeCommandEncoder();
+  virtual ~MemoryComputeCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
@@ -173,7 +173,7 @@ class MemoryRenderCommandEncoder : public RenderCommandEncoder {
  public:
   MemoryRenderCommandEncoder(CommandBuffer* command_buffer,
                              MemoryCommandBufferWriter* writer);
-  ~MemoryRenderCommandEncoder();
+  virtual ~MemoryRenderCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
@@ -261,7 +261,7 @@ class MemoryRenderPassCommandEncoder : public RenderPassCommandEncoder {
  public:
   MemoryRenderPassCommandEncoder(CommandBuffer* command_buffer,
                                  MemoryCommandBufferWriter* writer);
-  ~MemoryRenderPassCommandEncoder();
+  virtual ~MemoryRenderPassCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
