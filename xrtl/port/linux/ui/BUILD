@@ -54,10 +54,6 @@ cc_library(
     linkopts = [
         "-lX11",
     ],
-    deps = [
-        # TODO(benvanik): pull headers in so we can cross-compile?
-        # "//third_party/Xorg:libX11",
-    ],
 )
 
 cc_library(
