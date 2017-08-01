@@ -26,6 +26,7 @@ cc_library(
     deps = [
         "@com_github_google_swiftshader//:swiftshader",
     ],
+    alwayslink = 1,
 )
 
 cc_library(
