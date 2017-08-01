@@ -6,6 +6,38 @@ package(default_visibility = ["//xrtl:internal"])
 licenses(["notice"])  # Apache 2.0
 
 cc_library(
+    name = "gflags_flags",
+    srcs = ["gflags_flags.cc"],
+    hdrs = ["gflags_flags.h"],
+    deps = [
+        "//xrtl/base:flags_hdrs",
+        "//xrtl/base:macros",
+    ] + select({
+        "//xrtl/tools/target_platform:emscripten": [
+            "@com_github_gflags_gflags//:gflags_nothreads",
+        ],
+        "//conditions:default": [
+            "@com_github_gflags_gflags//:gflags",
+        ],
+    }),
+)
+
+cc_library(
+    name = "gflags_flags_hdrs",
+    hdrs = ["gflags_flags.h"],
+    deps = [
+        "//xrtl/base:macros",
+    ] + select({
+        "//xrtl/tools/target_platform:emscripten": [
+            "@com_github_gflags_gflags//:gflags_nothreads",
+        ],
+        "//conditions:default": [
+            "@com_github_gflags_gflags//:gflags",
+        ],
+    }),
+)
+
+cc_library(
     name = "logging_macros",
     srcs = ["logging_macros.cc"],
     hdrs = ["logging_macros.h"],

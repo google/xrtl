@@ -15,12 +15,16 @@
 #ifndef XRTL_BASE_FLAGS_H_
 #define XRTL_BASE_FLAGS_H_
 
-#include <gflags/gflags.h>
-
 #include <string>
 #include <vector>
 
 #include "xrtl/base/macros.h"
+
+#ifdef XRTL_CONFIG_GOOGLE_INTERNAL
+#include "xrtl/port/google/base/flags_forward.h"
+#else
+#include "xrtl/port/common/base/gflags_flags.h"
+#endif  // XRTL_CONFIG_GOOGLE_INTERNAL
 
 namespace xrtl {
 namespace flags {

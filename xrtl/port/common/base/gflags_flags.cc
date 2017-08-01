@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/base/flags.h"
+#include "xrtl/port/common/base/gflags_flags.h"
 
 namespace xrtl {
 namespace flags {
