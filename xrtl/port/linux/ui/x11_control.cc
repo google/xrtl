@@ -14,8 +14,6 @@
 
 #include "xrtl/port/linux/ui/x11_control.h"
 
-#include <X11/Xlib.h>
-
 #include <utility>
 
 #include "xrtl/base/debugging.h"

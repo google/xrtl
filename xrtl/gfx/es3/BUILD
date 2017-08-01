@@ -77,6 +77,7 @@ cc_library(
         ":es3_pipeline_layout",
         ":es3_platform_context",
         ":es3_program",
+        ":es3_queue",
         ":es3_queue_fence",
         ":es3_render_pass",
         ":es3_resource_set",
@@ -91,17 +92,6 @@ cc_library(
         "//xrtl/gfx:context_factory_hdrs",
         "//xrtl/gfx/util:memory_command_buffer",
         "//xrtl/gfx/util:memory_command_decoder",
-    ],
-)
-
-cc_library(
-    name = "es3_context_hdrs",
-    hdrs = ["es3_context.h"],
-    deps = [
-        ":es3_common",
-        ":es3_platform_context",
-        "//xrtl/gfx:context",
-        "//xrtl/gfx:context_factory_hdrs",
     ],
 )
 
