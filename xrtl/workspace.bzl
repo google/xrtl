@@ -101,7 +101,3 @@ def xrtl_workspace():
       path = "third_party/swiftshader/",
       build_file = "third_party/swiftshader.BUILD",
   )
-  native.bind(
-      name = "swiftshader",
-      actual = "@com_github_google_swiftshader//:swiftshader",
-  )
