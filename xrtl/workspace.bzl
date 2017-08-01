@@ -62,8 +62,10 @@ def xrtl_workspace(path_prefix=""):
   )
 
   # //third_party/spirv_cross/
+  # NOTE: this would be com_github_KhronosGroup_SPIRV_Cross, but that causes
+  #       path limit issues on Windows.
   native.new_local_repository(
-      name = "com_github_khronosgroup_spirv_cross",
+      name = "spirv_cross",
       path = path_prefix + "third_party/spirv_cross/",
       build_file = path_prefix + "third_party/spirv_cross.BUILD",
   )
