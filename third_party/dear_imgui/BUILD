@@ -6,7 +6,7 @@ package(default_visibility = ["//visibility:private"])
 licenses(["notice"])  # MIT
 
 cc_library(
-    name = "imgui",
+    name = "dear_imgui",
     srcs = [
         "imconfig.cpp",
         "imconfig.h",

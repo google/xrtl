@@ -18,7 +18,7 @@
 #include <chrono>
 #include <memory>
 
-#include "third_party/imgui/imgui.h"
+#include "third_party/dear_imgui/imgui.h"
 #include "xrtl/gfx/context.h"
 #include "xrtl/ui/control.h"
 

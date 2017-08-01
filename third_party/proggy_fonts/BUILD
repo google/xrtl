@@ -15,9 +15,9 @@ genrule(
     outs = ["proggy_tiny.cc"],
     cmd = "\n".join([
         "echo \"#include \\\"proggy_tiny.h\\\"\n\" > $@",
-        "$(location @//third_party/imgui:binary_to_compressed_c) -base85 $(location ProggyTiny.ttf) proggy_tiny >> $@",
+        "$(location @//third_party/dear_imgui:binary_to_compressed_c) -base85 $(location ProggyTiny.ttf) proggy_tiny >> $@",
     ]),
-    tools = ["@//third_party/imgui:binary_to_compressed_c"],
+    tools = ["@//third_party/dear_imgui:binary_to_compressed_c"],
 )
 
 cc_library(

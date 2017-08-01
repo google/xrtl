@@ -76,7 +76,7 @@ cc_library(
     hdrs = ["imgui_overlay.h"],
     deps = [
         ":control",
-        "//third_party/imgui",
+        "//third_party/dear_imgui",
         "//third_party/proggy_fonts:proggy_tiny_embedded",
         "//xrtl/base:macros",
         "//xrtl/base:system_clock",
