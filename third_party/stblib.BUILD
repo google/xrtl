@@ -15,10 +15,6 @@ cc_library(
             "-Wno-unused-function",
         ],
     }),
-    defines = [
-        "STBI_NO_LINEAR",  # no loadf
-        "STBI_ONLY_PNG",  # only .png support
-    ],
     includes = ["."],
     visibility = ["//visibility:public"],
 )
@@ -29,7 +25,6 @@ genrule(
     cmd = "\n".join([
         "cat <<'EOF' > $@",
         "#define STB_IMAGE_IMPLEMENTATION",
-        "#define STB_IMAGE_WRITE_IMPLEMENTATION",
         "#include \"stb_image.h\"",
         "EOF",
     ]),
