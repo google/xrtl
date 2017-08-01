@@ -150,17 +150,30 @@ cc_test(
 )
 
 cc_library(
+    name = "gflags_flags",
+    visibility = ["//visibility:private"],
+    deps = select({
+        "//xrtl/tools/target_platform:emscripten": [
+            "@com_github_gflags_gflags//:gflags_nothreads",
+        ],
+        "//conditions:default": [
+            "@com_github_gflags_gflags//:gflags",
+        ],
+    }),
+)
+
+cc_library(
     name = "flags",
     srcs = ["flags.cc"],
     hdrs = ["flags.h"],
     deps = [
         ":macros",
     ] + select({
-        "//xrtl/tools/target_platform:emscripten": [
-            "@com_github_gflags_gflags//:gflags_nothreads",
+        "//xrtl/tools/target_config:google_internal": [
+            "//xrtl/port/google/base:flags_forward",
         ],
         "//conditions:default": [
-            "@com_github_gflags_gflags//:gflags",
+            ":gflags_flags",
         ],
     }),
 )

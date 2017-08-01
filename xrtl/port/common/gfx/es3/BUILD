@@ -21,6 +21,14 @@ cc_library(
 )
 
 cc_library(
+    name = "platform_swiftshader",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@com_github_google_swiftshader//:swiftshader",
+    ],
+)
+
+cc_library(
     name = "egl_platform_context",
     srcs = ["egl_platform_context.cc"],
     hdrs = ["egl_platform_context.h"],
@@ -48,7 +56,7 @@ cc_library(
         "//xrtl/tools/target_config",
     ] + select({
         "//xrtl/tools/target_config:swiftshader": [
-            "@com_github_google_swiftshader//:swiftshader",
+            ":platform_swiftshader",
         ],
         "//conditions:default": [
             ":platform_egl",
