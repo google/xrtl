@@ -34,7 +34,7 @@ namespace es3 {
 class ES3TransferCommandEncoder : public TransferCommandEncoder {
  public:
   explicit ES3TransferCommandEncoder(CommandBuffer* command_buffer);
-  ~ES3TransferCommandEncoder();
+  virtual ~ES3TransferCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
@@ -105,7 +105,7 @@ class ES3TransferCommandEncoder : public TransferCommandEncoder {
 class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
  public:
   explicit ES3ComputeCommandEncoder(CommandBuffer* command_buffer);
-  ~ES3ComputeCommandEncoder();
+  virtual ~ES3ComputeCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
@@ -189,7 +189,7 @@ class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
 class ES3RenderCommandEncoder : public RenderCommandEncoder {
  public:
   explicit ES3RenderCommandEncoder(CommandBuffer* command_buffer);
-  ~ES3RenderCommandEncoder();
+  virtual ~ES3RenderCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,
@@ -276,7 +276,7 @@ class ES3RenderCommandEncoder : public RenderCommandEncoder {
 class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
  public:
   explicit ES3RenderPassCommandEncoder(CommandBuffer* command_buffer);
-  ~ES3RenderPassCommandEncoder();
+  virtual ~ES3RenderPassCommandEncoder();
 
   void PipelineBarrier(PipelineStageFlag source_stage_mask,
                        PipelineStageFlag target_stage_mask,

@@ -75,6 +75,8 @@ class Control : public RefObject<Control> {
   // All listener callbacks occur on the message loop associated with the
   // control.
   struct Listener {
+    virtual ~Listener() = default;
+
     // Handles errors in the window system.
     // If this is received the control is likely broken and must be destroyed.
     virtual void OnError(ref_ptr<Control> target) {}
@@ -110,6 +112,8 @@ class Control : public RefObject<Control> {
   // All listener callbacks occur on the message loop associated with the
   // control.
   struct InputListener {
+    virtual ~InputListener() = default;
+
     // Handles the start of a key press.
     virtual void OnKeyDown(ref_ptr<Control> target, const KeyboardEvent& ev) {}
     // Handles the end of a key press.

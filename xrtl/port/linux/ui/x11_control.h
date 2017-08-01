@@ -30,6 +30,8 @@ class X11Control : public Control, private X11Display::Listener {
   // Interface used by control containers.
   class ControlContainer {
    public:
+    virtual ~ControlContainer() = default;
+
     virtual void OnChildCreated(ref_ptr<X11Control> child_control) {}
     virtual void OnChildDestroyed(ref_ptr<X11Control> child_control) {}
   };

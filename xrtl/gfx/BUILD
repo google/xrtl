@@ -90,6 +90,7 @@ cc_library(
         ":queue_fence",
         ":render_pass",
         ":resource_set",
+        ":resource_set_layout",
         ":sampler",
         ":shader_module",
         ":swap_chain",
@@ -339,6 +340,8 @@ cc_library(
     deps = [
         ":command_buffer",
         ":framebuffer",
+        ":image",
+        ":image_view",
         ":pixel_format",
         ":queue_fence",
         "//xrtl/base:geometry",

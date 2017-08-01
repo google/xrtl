@@ -34,6 +34,8 @@ class X11Display : public RefObject<X11Display> {
  public:
   class Listener {
    public:
+    virtual ~Listener() = default;
+
     // Handles a single X11 event.
     // The event will be filtered based on the listener registration options.
     virtual bool OnXEvent(::XEvent* x_event) = 0;

@@ -38,6 +38,7 @@ cc_library(
         ":es3_image",
         ":es3_pipeline",
         ":es3_sampler",
+        "//xrtl/base:debugging",
         "//xrtl/gfx:command_encoder",
         "//xrtl/gfx:framebuffer",
     ],
@@ -298,6 +299,7 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_platform_context",
+        "//xrtl/base:system_clock",
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
         "//xrtl/gfx:queue_fence",
