@@ -39,6 +39,7 @@ cc_library(
         "//xrtl/base:intrusive_list",
         "//xrtl/base:intrusive_pool",
         "//xrtl/base:logging",
+        "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
     ],
 )

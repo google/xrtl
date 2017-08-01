@@ -28,6 +28,8 @@ namespace xrtl {
 // WaitHandle pointer.
 class PthreadsWaitHandleImpl {
  public:
+  virtual ~PthreadsWaitHandleImpl() = default;
+
   // Mutex+cond that makes up our wait var.
   pthread_mutex_t* wait_mutex() { return &wait_mutex_; }
   pthread_cond_t* wait_cond() { return &wait_cond_; }

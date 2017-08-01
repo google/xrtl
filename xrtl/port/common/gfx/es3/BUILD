@@ -39,6 +39,7 @@ cc_library(
     }),
     deps = [
         ":egl_strings",
+        "//third_party/glad:glad",
         "//third_party/glad:glad_egl",
         "//xrtl/base:debugging",
         "//xrtl/base:macros",
