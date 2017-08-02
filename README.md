@@ -67,7 +67,7 @@ $ ./xtool setup
 
 * Generate a Visual Studio solution; do this each time you change BUILD files:
 ```
-> xtool sln -c dbg
+> xtool sln
 ```
 * Open `.vs\xrtl.sln`, select a project, and press `F5`!
 
