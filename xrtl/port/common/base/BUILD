@@ -12,14 +12,8 @@ cc_library(
     deps = [
         "//xrtl/base:flags_hdrs",
         "//xrtl/base:macros",
-    ] + select({
-        "//xrtl/tools/target_platform:emscripten": [
-            "@com_github_gflags_gflags//:gflags_nothreads",
-        ],
-        "//conditions:default": [
-            "@com_github_gflags_gflags//:gflags",
-        ],
-    }),
+        "@com_github_gflags_gflags//:gflags",
+    ],
 )
 
 cc_library(
@@ -27,14 +21,8 @@ cc_library(
     hdrs = ["gflags_flags.h"],
     deps = [
         "//xrtl/base:macros",
-    ] + select({
-        "//xrtl/tools/target_platform:emscripten": [
-            "@com_github_gflags_gflags//:gflags_nothreads",
-        ],
-        "//conditions:default": [
-            "@com_github_gflags_gflags//:gflags",
-        ],
-    }),
+        "@com_github_gflags_gflags//:gflags",
+    ],
 )
 
 cc_library(
