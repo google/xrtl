@@ -107,6 +107,7 @@ cc_library(
     deps = [
         ":file_manifest",
         "//external:stb_image",
+        "//xrtl/base:logging",
         "//xrtl/base:string_view",
     ],
 )

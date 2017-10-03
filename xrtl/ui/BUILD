@@ -222,6 +222,7 @@ cc_binary(
         ":window",
         "//xrtl/base:logging",
         "//xrtl/base:math",
+        "//xrtl/base:system_clock",
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
         "//xrtl/testing:demo_main",

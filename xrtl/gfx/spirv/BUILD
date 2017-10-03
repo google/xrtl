@@ -58,6 +58,7 @@ cc_test(
     srcs = ["spirv_optimizer_test.cc"],
     deps = [
         ":spirv_optimizer",
+        "//xrtl/base:macros",
         "//xrtl/testing:gtest_main",
     ],
 )

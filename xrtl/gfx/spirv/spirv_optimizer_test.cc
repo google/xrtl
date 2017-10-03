@@ -14,6 +14,7 @@
 
 #include "xrtl/gfx/spirv/spirv_optimizer.h"
 
+#include "xrtl/base/macros.h"
 #include "xrtl/testing/gtest.h"
 
 namespace xrtl {

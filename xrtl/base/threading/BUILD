@@ -20,6 +20,9 @@ cc_library(
         ":thread",
         ":timer",
         ":wait_handle",
+        "//xrtl/base:array_view",
+        "//xrtl/base:macros",
+        "//xrtl/base:ref_ptr",
     ],
 )
 
