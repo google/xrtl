@@ -644,6 +644,8 @@ class SetupCommand(Command):
         return_code = shell_call([
             'pip',
             'install',
+            '--upgrade',
+            '--ignore-installed',
             ] + python_modules)
       elif has_bin('easy_install'):
         print('- easy_install %s' % (' '.join(python_modules)))
