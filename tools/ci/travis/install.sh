@@ -30,7 +30,7 @@ echo "Fetching bazel..."
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   BAZEL_INSTALLER_URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-darwin-x86_64.sh
 else
-  BAZEL_INSTALLER_URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-jdk7-installer-linux-x86_64.sh
+  BAZEL_INSTALLER_URL=https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh
 fi
 BAZEL_INSTALLER_SH=${HOME}/bazel-install.sh
 curl -L -o ${BAZEL_INSTALLER_SH} ${BAZEL_INSTALLER_URL}
