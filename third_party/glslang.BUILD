@@ -13,6 +13,7 @@ COMMON_COPTS = [
     "-DAMD_EXTENSIONS",
     "-DENABLE_HLSL",
     "-DNV_EXTENSIONS",
+    "-Wno-unused-lambda-capture",
 ]
 
 cc_library(
