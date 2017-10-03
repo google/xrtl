@@ -30,7 +30,7 @@ common:asan --strip=never
 common:asan --copt=-g
 common:asan --copt=-O1
 common:asan --copt=-fsanitize=address
-common:asan --copt=-fsanitize-coverage=edge
+common:asan --copt=-fsanitize-coverage=trace-pc-guard
 common:asan --copt=-fno-optimize-sibling-calls
 common:asan --copt=-fno-omit-frame-pointer
 common:asan --linkopt=-fsanitize=address
@@ -71,7 +71,7 @@ common:ubsan --strip=never
 common:ubsan --copt=-g
 common:ubsan --copt=-O0
 common:ubsan --copt=-fsanitize=bool,function,signed-integer-overflow,shift,vla-bound
-common:ubsan --copt=-fsanitize-coverage=edge
+common:ubsan --copt=-fsanitize-coverage=trace-pc-guard
 common:ubsan --copt=-fno-sanitize-recover=undefined
 common:ubsan --copt=-fno-optimize-sibling-calls
 common:ubsan --copt=-fno-omit-frame-pointer
