@@ -2,8 +2,8 @@
 set -e
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-  export CC=clang-4.0
-  export CXX=clang++-4.0
+  export CC=clang-5.0
+  export CXX=clang++-5.0
 else
   export CC=clang
   export CXX=clang
