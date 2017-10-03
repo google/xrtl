@@ -10,15 +10,15 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-trusty-4.0
+      - llvm-toolchain-trusty-5.0
     packages:
-      - clang-4.0
-      - clang-format-4.0
-      - clang-tidy-4.0
+      - clang-5.0
+      - clang-format-5.0
+      - clang-tidy-5.0
 
 env:
   global:
-    - BAZEL_VERSION=0.5.2
+    - BAZEL_VERSION=0.6.0
     - PATH=/usr/local/opt/llvm/bin:$HOME/bin/:$PATH
     - DISPLAY=:0.0
 

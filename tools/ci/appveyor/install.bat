@@ -28,12 +28,12 @@ c:\Python27\Scripts\easy_install.exe protobuf
 
 REM Download bazel into install cache, which is on the path.
 IF NOT EXIST %INSTALL_CACHE%\bazel.exe (
-  appveyor DownloadFile https://github.com/bazelbuild/bazel/releases/download/0.5.2/bazel-msvc-0.5.2-without-jdk-windows-msvc-x86_64.exe -FileName %INSTALL_CACHE%\bazel.exe
+  appveyor DownloadFile https://github.com/bazelbuild/bazel/releases/download/0.6.0/bazel-msvc-0.6.0-without-jdk-windows-msvc-x86_64.exe -FileName %INSTALL_CACHE%\bazel.exe
 )
 
 REM Download and install LLVM.
 IF NOT EXIST %INSTALL_CACHE%\llvm-installer.exe (
-  appveyor DownloadFile http://releases.llvm.org/4.0.1/LLVM-4.0.1-win64.exe -FileName %INSTALL_CACHE%\llvm-installer.exe
+  appveyor DownloadFile http://releases.llvm.org/5.0.0/LLVM-5.0.0-win64.exe -FileName %INSTALL_CACHE%\llvm-installer.exe
 )
 START /WAIT %INSTALL_CACHE%\llvm-installer.exe /S /D="C:\Program Files\LLVM"
 
