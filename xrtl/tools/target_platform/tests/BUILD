@@ -35,5 +35,6 @@ cc_test(
     ),
     deps = [
         "//xrtl/testing:gtest_main",
+        "//xrtl/tools/target_platform",
     ],
 )
