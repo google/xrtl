@@ -6,18 +6,35 @@ package(default_visibility = ["//xrtl:internal"])
 licenses(["notice"])  # Apache 2.0
 
 cc_library(
-    name = "platform_egl",
-    linkopts = select({
-        "//xrtl/tools/target_platform:android": [],
-        "//xrtl/tools/target_platform:emscripten": [],
-        "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:linux": [
-            "-lEGL",
-        ],
-        "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [],
-    }),
+    name = "platform_egl_unused",
+)
+
+cc_library(
+    name = "platform_egl_android",
+    linkopts = [
+        "-pie -ldl -lEGL -lGLESv3 -landroid -Wl,--strip-all",
+    ],
     alwayslink = 1,
+)
+
+cc_library(
+    name = "platform_egl_linux",
+    linkopts = [
+        "-lEGL",
+    ],
+    alwayslink = 1,
+)
+
+alias(
+    name = "platform_egl",
+    actual = select({
+        "//xrtl/tools/target_platform:android": ":platform_egl_android",
+        "//xrtl/tools/target_platform:emscripten": ":platform_egl_unused",
+        "//xrtl/tools/target_platform:ios": ":platform_egl_unused",
+        "//xrtl/tools/target_platform:linux": ":platform_egl_linux",
+        "//xrtl/tools/target_platform:macos": ":platform_egl_unused",
+        "//xrtl/tools/target_platform:windows": ":platform_egl_unused",
+    }),
 )
 
 cc_library(

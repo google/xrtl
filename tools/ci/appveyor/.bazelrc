@@ -5,7 +5,7 @@ startup --host_jvm_args=-Xmx500m
 startup --host_jvm_args=-Xmx500m
 startup --batch
 
-build --define=SWIFTSHADER=1
+build --define=XRTL_USE_SWIFTSHADER=1
 build --ignore_unsupported_sandboxing
 build --verbose_failures
 build --local_resources=400,2,1.0
@@ -13,7 +13,7 @@ build --spawn_strategy=standalone
 build --genrule_strategy=standalone
 build --keep_going
 
-test --define=SWIFTSHADER=1
+test --define=XRTL_USE_SWIFTSHADER=1
 test --ignore_unsupported_sandboxing
 test --verbose_failures
 test --local_resources=400,2,1.0

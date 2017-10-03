@@ -101,21 +101,20 @@ cc_library(
     ],
 )
 
-cc_library(
+alias(
     name = "port_context_factory",
     visibility = ["//visibility:private"],
-    deps = select({
-        "//xrtl/tools/target_platform:android": [],
-        "//xrtl/tools/target_platform:emscripten": [],
-        "//xrtl/tools/target_platform:ios": [],
-        "//xrtl/tools/target_platform:linux": [
-            "//xrtl/gfx/es3:es3_context_factory",
-        ],
-        "//xrtl/tools/target_platform:macos": [],
-        "//xrtl/tools/target_platform:windows": [
-            "//xrtl/gfx/es3:es3_context_factory",
-        ],
-    }),
+    actual = select(
+        {
+            # "//xrtl/tools/target_platform:android": "",
+            # "//xrtl/tools/target_platform:emscripten": "",
+            # "//xrtl/tools/target_platform:ios": "",
+            "//xrtl/tools/target_platform:linux": "//xrtl/gfx/es3:es3_context_factory",
+            # "//xrtl/tools/target_platform:macos": "",
+            "//xrtl/tools/target_platform:windows": "//xrtl/gfx/es3:es3_context_factory",
+        },
+        no_match_error = "No graphics context support on this platform",
+    ),
 )
 
 cc_library(
