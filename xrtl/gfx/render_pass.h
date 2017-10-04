@@ -370,9 +370,10 @@ class RenderPass : public RefObject<RenderPass> {
   RenderPass(ArrayView<AttachmentDescription> attachments,
              ArrayView<SubpassDescription> subpasses,
              ArrayView<SubpassDependency> subpass_dependencies)
-      : attachments_(attachments),
-        subpasses_(subpasses),
-        subpass_dependencies_(subpass_dependencies) {}
+      : attachments_(attachments.begin(), attachments.end()),
+        subpasses_(subpasses.begin(), subpasses.end()),
+        subpass_dependencies_(subpass_dependencies.begin(),
+                              subpass_dependencies.end()) {}
 
   std::vector<AttachmentDescription> attachments_;
   std::vector<SubpassDescription> subpasses_;

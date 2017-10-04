@@ -54,7 +54,7 @@ class ES3CommandBuffer : public CommandBuffer {
 
   RenderPassCommandEncoderPtr BeginRenderPass(
       ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-      ArrayView<ClearColor> clear_colors) override;
+      ArrayView<const ClearColor> clear_colors) override;
   void EndRenderPass(RenderPassCommandEncoderPtr encoder) override;
 
  private:

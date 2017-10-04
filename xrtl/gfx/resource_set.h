@@ -72,7 +72,7 @@ class ResourceSet : public RefObject<ResourceSet> {
 
     // Binding slot used for arrays of bindings.
     BindingValue(ArrayView<BindingValue> elements)  // NOLINT
-        : elements(elements) {}
+        : elements(elements.begin(), elements.end()) {}
 
     // Binding slot used for kUniformBuffer and kStorageBuffer.
     BindingValue(ref_ptr<Buffer> buffer)  // NOLINT
@@ -112,7 +112,7 @@ class ResourceSet : public RefObject<ResourceSet> {
   explicit ResourceSet(ref_ptr<ResourceSetLayout> resource_set_layout,
                        ArrayView<BindingValue> binding_values)
       : layout_(std::move(resource_set_layout)),
-        binding_values_(binding_values) {}
+        binding_values_(binding_values.begin(), binding_values.end()) {}
 
   ref_ptr<ResourceSetLayout> layout_;
   std::vector<BindingValue> binding_values_;

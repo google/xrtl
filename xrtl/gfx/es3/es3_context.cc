@@ -39,10 +39,10 @@ namespace gfx {
 namespace es3 {
 
 ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
-                       std::vector<ref_ptr<Device>> devices,
+                       ArrayView<ref_ptr<Device>> devices,
                        Device::Features features,
                        ref_ptr<ES3PlatformContext> platform_context)
-    : Context(std::move(devices), features),
+    : Context(devices, features),
       context_factory_(std::move(context_factory)),
       platform_context_(std::move(platform_context)) {
   // Setup the work queues.
@@ -109,8 +109,7 @@ ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
                << "' not found in module";
     return nullptr;
   }
-  std::vector<ref_ptr<ES3Shader>> shaders;
-  shaders.push_back(shader);
+  ref_ptr<ES3Shader> shaders[1] = {shader};
 
   auto program = make_ref<ES3Program>(platform_context_, shaders);
   if (!program->Link()) {
@@ -188,7 +187,8 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
     }
   }
 
-  auto program = make_ref<ES3Program>(platform_context_, shaders);
+  auto program = make_ref<ES3Program>(platform_context_,
+                                      ArrayView<ref_ptr<ES3Shader>>(shaders));
   if (!program->Link()) {
     LOG(ERROR) << "Unable to link render program";
     return nullptr;

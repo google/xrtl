@@ -70,21 +70,21 @@ class ES3TransferCommandEncoder : public TransferCommandEncoder {
                     size_t source_data_length) override;
 
   void CopyBuffer(ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-                  ArrayView<CopyBufferRegion> regions) override;
+                  ArrayView<const CopyBufferRegion> regions) override;
 
   void CopyImage(ref_ptr<Image> source_image, Image::Layout source_image_layout,
                  ref_ptr<Image> target_image, Image::Layout target_image_layout,
-                 ArrayView<CopyImageRegion> regions) override;
+                 ArrayView<const CopyImageRegion> regions) override;
 
-  void CopyBufferToImage(ref_ptr<Buffer> source_buffer,
-                         ref_ptr<Image> target_image,
-                         Image::Layout target_image_layout,
-                         ArrayView<CopyBufferImageRegion> regions) override;
+  void CopyBufferToImage(
+      ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
+      Image::Layout target_image_layout,
+      ArrayView<const CopyBufferImageRegion> regions) override;
 
-  void CopyImageToBuffer(ref_ptr<Image> source_image,
-                         Image::Layout source_image_layout,
-                         ref_ptr<Buffer> target_buffer,
-                         ArrayView<CopyBufferImageRegion> regions) override;
+  void CopyImageToBuffer(
+      ref_ptr<Image> source_image, Image::Layout source_image_layout,
+      ref_ptr<Buffer> target_buffer,
+      ArrayView<const CopyBufferImageRegion> regions) override;
 
  protected:
   friend class ES3ComputeCommandEncoder;
@@ -100,7 +100,7 @@ class ES3TransferCommandEncoder : public TransferCommandEncoder {
   void WaitFences(ArrayView<ref_ptr<CommandFence>> fences);
   void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
                        ClearColor clear_color,
-                       ArrayView<Image::LayerRange> ranges);
+                       ArrayView<const Image::LayerRange> ranges);
 };
 
 class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
@@ -141,21 +141,21 @@ class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
                     size_t source_data_length) override;
 
   void CopyBuffer(ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-                  ArrayView<CopyBufferRegion> regions) override;
+                  ArrayView<const CopyBufferRegion> regions) override;
 
   void CopyImage(ref_ptr<Image> source_image, Image::Layout source_image_layout,
                  ref_ptr<Image> target_image, Image::Layout target_image_layout,
-                 ArrayView<CopyImageRegion> regions) override;
+                 ArrayView<const CopyImageRegion> regions) override;
 
-  void CopyBufferToImage(ref_ptr<Buffer> source_buffer,
-                         ref_ptr<Image> target_image,
-                         Image::Layout target_image_layout,
-                         ArrayView<CopyBufferImageRegion> regions) override;
+  void CopyBufferToImage(
+      ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
+      Image::Layout target_image_layout,
+      ArrayView<const CopyBufferImageRegion> regions) override;
 
-  void CopyImageToBuffer(ref_ptr<Image> source_image,
-                         Image::Layout source_image_layout,
-                         ref_ptr<Buffer> target_buffer,
-                         ArrayView<CopyBufferImageRegion> regions) override;
+  void CopyImageToBuffer(
+      ref_ptr<Image> source_image, Image::Layout source_image_layout,
+      ref_ptr<Buffer> target_buffer,
+      ArrayView<const CopyBufferImageRegion> regions) override;
 
   void SetFence(ref_ptr<CommandFence> fence,
                 PipelineStageFlag pipeline_stage_mask) override;
@@ -167,12 +167,12 @@ class ES3ComputeCommandEncoder : public ComputeCommandEncoder {
 
   void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
                        ClearColor clear_color,
-                       ArrayView<Image::LayerRange> ranges) override;
+                       ArrayView<const Image::LayerRange> ranges) override;
 
   void BindPipeline(ref_ptr<ComputePipeline> pipeline) override;
 
   void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
-                       ArrayView<size_t> dynamic_offsets) override;
+                       ArrayView<const size_t> dynamic_offsets) override;
 
   void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,
                      ShaderStageFlag stage_mask, size_t offset,
@@ -225,21 +225,21 @@ class ES3RenderCommandEncoder : public RenderCommandEncoder {
                     size_t source_data_length) override;
 
   void CopyBuffer(ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-                  ArrayView<CopyBufferRegion> regions) override;
+                  ArrayView<const CopyBufferRegion> regions) override;
 
   void CopyImage(ref_ptr<Image> source_image, Image::Layout source_image_layout,
                  ref_ptr<Image> target_image, Image::Layout target_image_layout,
-                 ArrayView<CopyImageRegion> regions) override;
+                 ArrayView<const CopyImageRegion> regions) override;
 
-  void CopyBufferToImage(ref_ptr<Buffer> source_buffer,
-                         ref_ptr<Image> target_image,
-                         Image::Layout target_image_layout,
-                         ArrayView<CopyBufferImageRegion> regions) override;
+  void CopyBufferToImage(
+      ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
+      Image::Layout target_image_layout,
+      ArrayView<const CopyBufferImageRegion> regions) override;
 
-  void CopyImageToBuffer(ref_ptr<Image> source_image,
-                         Image::Layout source_image_layout,
-                         ref_ptr<Buffer> target_buffer,
-                         ArrayView<CopyBufferImageRegion> regions) override;
+  void CopyImageToBuffer(
+      ref_ptr<Image> source_image, Image::Layout source_image_layout,
+      ref_ptr<Buffer> target_buffer,
+      ArrayView<const CopyBufferImageRegion> regions) override;
 
   void SetFence(ref_ptr<CommandFence> fence,
                 PipelineStageFlag pipeline_stage_mask) override;
@@ -251,22 +251,23 @@ class ES3RenderCommandEncoder : public RenderCommandEncoder {
 
   void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
                        ClearColor clear_color,
-                       ArrayView<Image::LayerRange> ranges) override;
+                       ArrayView<const Image::LayerRange> ranges) override;
 
-  void ClearDepthStencilImage(ref_ptr<Image> image, Image::Layout image_layout,
-                              float depth_value, uint32_t stencil_value,
-                              ArrayView<Image::LayerRange> ranges) override;
+  void ClearDepthStencilImage(
+      ref_ptr<Image> image, Image::Layout image_layout, float depth_value,
+      uint32_t stencil_value,
+      ArrayView<const Image::LayerRange> ranges) override;
 
   void BlitImage(ref_ptr<Image> source_image, Image::Layout source_image_layout,
                  ref_ptr<Image> target_image, Image::Layout target_image_layout,
                  Sampler::Filter scaling_filter,
-                 ArrayView<BlitImageRegion> regions) override;
+                 ArrayView<const BlitImageRegion> regions) override;
 
   void ResolveImage(ref_ptr<Image> source_image,
                     Image::Layout source_image_layout,
                     ref_ptr<Image> target_image,
                     Image::Layout target_image_layout,
-                    ArrayView<CopyImageRegion> regions) override;
+                    ArrayView<const CopyImageRegion> regions) override;
 
   void GenerateMipmaps(ref_ptr<Image> image) override;
 
@@ -307,20 +308,23 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) override;
 
   void ClearColorAttachment(int color_attachment_index, ClearColor clear_color,
-                            ArrayView<ClearRect> clear_rects) override;
+                            ArrayView<const ClearRect> clear_rects) override;
 
-  void ClearDepthStencilAttachment(float depth_value, uint32_t stencil_value,
-                                   ArrayView<ClearRect> clear_rects) override;
+  void ClearDepthStencilAttachment(
+      float depth_value, uint32_t stencil_value,
+      ArrayView<const ClearRect> clear_rects) override;
 
   void BeginRenderPass(ref_ptr<RenderPass> render_pass,
                        ref_ptr<Framebuffer> framebuffer,
-                       ArrayView<ClearColor> clear_colors);
+                       ArrayView<const ClearColor> clear_colors);
   void NextSubpass() override;
   void EndRenderPass();
 
-  void SetScissors(int first_scissor, ArrayView<Rect2D> scissors) override;
+  void SetScissors(int first_scissor,
+                   ArrayView<const Rect2D> scissors) override;
 
-  void SetViewports(int first_viewport, ArrayView<Viewport> viewports) override;
+  void SetViewports(int first_viewport,
+                    ArrayView<const Viewport> viewports) override;
 
   void SetLineWidth(float line_width) override;
 
@@ -343,7 +347,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   void BindPipeline(ref_ptr<RenderPipeline> pipeline) override;
 
   void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
-                       ArrayView<size_t> dynamic_offsets) override;
+                       ArrayView<const size_t> dynamic_offsets) override;
 
   void PushConstants(ref_ptr<PipelineLayout> pipeline_layout,
                      ShaderStageFlag stage_mask, size_t offset,
@@ -352,7 +356,7 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
   void BindVertexBuffers(int first_binding,
                          ArrayView<ref_ptr<Buffer>> buffers) override;
   void BindVertexBuffers(int first_binding, ArrayView<ref_ptr<Buffer>> buffers,
-                         ArrayView<size_t> buffer_offsets) override;
+                         ArrayView<const size_t> buffer_offsets) override;
 
   void BindIndexBuffer(ref_ptr<Buffer> buffer, size_t buffer_offset,
                        IndexElementType index_type) override;

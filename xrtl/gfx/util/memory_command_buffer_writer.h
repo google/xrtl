@@ -50,7 +50,7 @@ class MemoryCommandBufferWriter {
 
   // Writes an array of primitives/structs to the command buffer.
   template <typename T>
-  void WriteArray(ArrayView<T> values) {
+  void WriteArray(const ArrayView<const T>& values) {
     if (values.empty()) {
       return;
     }
@@ -60,7 +60,7 @@ class MemoryCommandBufferWriter {
   // Writes an array of reference counted objects to the command buffer.
   // The reference counts will not be adjusted.
   template <typename T>
-  void WriteArray(ArrayView<ref_ptr<T>> values) {
+  void WriteArray(const ArrayView<ref_ptr<T>>& values) {
     if (values.empty()) {
       return;
     }

@@ -48,7 +48,7 @@ class ES3SwapChain : public SwapChain {
   ES3SwapChain(PresentMode present_mode, int image_count,
                ArrayView<PixelFormat> pixel_formats)
       : SwapChain(present_mode, image_count),
-        available_pixel_formats_(pixel_formats) {}
+        available_pixel_formats_(pixel_formats.begin(), pixel_formats.end()) {}
 
   std::vector<PixelFormat> available_pixel_formats_;
 };

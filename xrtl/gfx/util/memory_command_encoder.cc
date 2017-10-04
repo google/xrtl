@@ -95,7 +95,7 @@ void MemoryTransferCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
 
 void MemoryTransferCommandEncoder::CopyBuffer(
     ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-    ArrayView<CopyBufferRegion> regions) {
+    ArrayView<const CopyBufferRegion> regions) {
   command_buffer_->AttachDependency(source_buffer);
   command_buffer_->AttachDependency(target_buffer);
   writer_->WriteCommand(CommandType::kCopyBuffer,
@@ -107,7 +107,7 @@ void MemoryTransferCommandEncoder::CopyBuffer(
 void MemoryTransferCommandEncoder::CopyImage(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
     ref_ptr<Image> target_image, Image::Layout target_image_layout,
-    ArrayView<CopyImageRegion> regions) {
+    ArrayView<const CopyImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -121,7 +121,7 @@ void MemoryTransferCommandEncoder::CopyImage(
 void MemoryTransferCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
-    ArrayView<CopyBufferImageRegion> regions) {
+    ArrayView<const CopyBufferImageRegion> regions) {
   command_buffer_->AttachDependency(source_buffer);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -133,7 +133,8 @@ void MemoryTransferCommandEncoder::CopyBufferToImage(
 
 void MemoryTransferCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
-    ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
+    ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_buffer);
   writer_->WriteCommand(
@@ -218,7 +219,7 @@ void MemoryComputeCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
 
 void MemoryComputeCommandEncoder::CopyBuffer(
     ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-    ArrayView<CopyBufferRegion> regions) {
+    ArrayView<const CopyBufferRegion> regions) {
   command_buffer_->AttachDependency(source_buffer);
   command_buffer_->AttachDependency(target_buffer);
   writer_->WriteCommand(CommandType::kCopyBuffer,
@@ -230,7 +231,7 @@ void MemoryComputeCommandEncoder::CopyBuffer(
 void MemoryComputeCommandEncoder::CopyImage(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
     ref_ptr<Image> target_image, Image::Layout target_image_layout,
-    ArrayView<CopyImageRegion> regions) {
+    ArrayView<const CopyImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -244,7 +245,7 @@ void MemoryComputeCommandEncoder::CopyImage(
 void MemoryComputeCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
-    ArrayView<CopyBufferImageRegion> regions) {
+    ArrayView<const CopyBufferImageRegion> regions) {
   command_buffer_->AttachDependency(source_buffer);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -256,7 +257,8 @@ void MemoryComputeCommandEncoder::CopyBufferToImage(
 
 void MemoryComputeCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
-    ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
+    ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_buffer);
   writer_->WriteCommand(
@@ -290,7 +292,7 @@ void MemoryComputeCommandEncoder::WaitFences(
 
 void MemoryComputeCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
-    ArrayView<Image::LayerRange> ranges) {
+    ArrayView<const Image::LayerRange> ranges) {
   command_buffer_->AttachDependency(image);
   writer_->WriteCommand(CommandType::kClearColorImage,
                         ClearColorImageCommand{image.get(), image_layout,
@@ -307,7 +309,7 @@ void MemoryComputeCommandEncoder::BindPipeline(
 
 void MemoryComputeCommandEncoder::BindResourceSet(
     int set_index, ref_ptr<ResourceSet> resource_set,
-    ArrayView<size_t> dynamic_offsets) {
+    ArrayView<const size_t> dynamic_offsets) {
   command_buffer_->AttachDependency(resource_set);
   writer_->WriteCommand(CommandType::kBindResourceSet,
                         BindResourceSetCommand{set_index, resource_set.get(),
@@ -414,7 +416,7 @@ void MemoryRenderCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
 
 void MemoryRenderCommandEncoder::CopyBuffer(
     ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-    ArrayView<CopyBufferRegion> regions) {
+    ArrayView<const CopyBufferRegion> regions) {
   command_buffer_->AttachDependency(source_buffer);
   command_buffer_->AttachDependency(target_buffer);
   writer_->WriteCommand(CommandType::kCopyBuffer,
@@ -423,11 +425,10 @@ void MemoryRenderCommandEncoder::CopyBuffer(
   writer_->WriteArray(regions);
 }
 
-void MemoryRenderCommandEncoder::CopyImage(ref_ptr<Image> source_image,
-                                           Image::Layout source_image_layout,
-                                           ref_ptr<Image> target_image,
-                                           Image::Layout target_image_layout,
-                                           ArrayView<CopyImageRegion> regions) {
+void MemoryRenderCommandEncoder::CopyImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    ArrayView<const CopyImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -441,7 +442,7 @@ void MemoryRenderCommandEncoder::CopyImage(ref_ptr<Image> source_image,
 void MemoryRenderCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
-    ArrayView<CopyBufferImageRegion> regions) {
+    ArrayView<const CopyBufferImageRegion> regions) {
   command_buffer_->AttachDependency(source_buffer);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -453,7 +454,8 @@ void MemoryRenderCommandEncoder::CopyBufferToImage(
 
 void MemoryRenderCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
-    ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
+    ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_buffer);
   writer_->WriteCommand(
@@ -487,7 +489,7 @@ void MemoryRenderCommandEncoder::WaitFences(
 
 void MemoryRenderCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
-    ArrayView<Image::LayerRange> ranges) {
+    ArrayView<const Image::LayerRange> ranges) {
   command_buffer_->AttachDependency(image);
   writer_->WriteCommand(CommandType::kClearColorImage,
                         ClearColorImageCommand{image.get(), image_layout,
@@ -497,7 +499,7 @@ void MemoryRenderCommandEncoder::ClearColorImage(
 
 void MemoryRenderCommandEncoder::ClearDepthStencilImage(
     ref_ptr<Image> image, Image::Layout image_layout, float depth_value,
-    uint32_t stencil_value, ArrayView<Image::LayerRange> ranges) {
+    uint32_t stencil_value, ArrayView<const Image::LayerRange> ranges) {
   command_buffer_->AttachDependency(image);
   writer_->WriteCommand(
       CommandType::kClearDepthStencilImage,
@@ -506,12 +508,10 @@ void MemoryRenderCommandEncoder::ClearDepthStencilImage(
   writer_->WriteArray(ranges);
 }
 
-void MemoryRenderCommandEncoder::BlitImage(ref_ptr<Image> source_image,
-                                           Image::Layout source_image_layout,
-                                           ref_ptr<Image> target_image,
-                                           Image::Layout target_image_layout,
-                                           Sampler::Filter scaling_filter,
-                                           ArrayView<BlitImageRegion> regions) {
+void MemoryRenderCommandEncoder::BlitImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    Sampler::Filter scaling_filter, ArrayView<const BlitImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -525,7 +525,7 @@ void MemoryRenderCommandEncoder::BlitImage(ref_ptr<Image> source_image,
 void MemoryRenderCommandEncoder::ResolveImage(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
     ref_ptr<Image> target_image, Image::Layout target_image_layout,
-    ArrayView<CopyImageRegion> regions) {
+    ArrayView<const CopyImageRegion> regions) {
   command_buffer_->AttachDependency(source_image);
   command_buffer_->AttachDependency(target_image);
   writer_->WriteCommand(
@@ -606,7 +606,7 @@ void MemoryRenderPassCommandEncoder::WaitFences(
 
 void MemoryRenderPassCommandEncoder::ClearColorAttachment(
     int color_attachment_index, ClearColor clear_color,
-    ArrayView<ClearRect> clear_rects) {
+    ArrayView<const ClearRect> clear_rects) {
   writer_->WriteCommand(
       CommandType::kClearColorAttachment,
       ClearColorAttachmentCommand{color_attachment_index, clear_color,
@@ -616,7 +616,7 @@ void MemoryRenderPassCommandEncoder::ClearColorAttachment(
 
 void MemoryRenderPassCommandEncoder::ClearDepthStencilAttachment(
     float depth_value, uint32_t stencil_value,
-    ArrayView<ClearRect> clear_rects) {
+    ArrayView<const ClearRect> clear_rects) {
   writer_->WriteCommand(CommandType::kClearDepthStencilAttachment,
                         ClearDepthStencilAttachmentCommand{
                             depth_value, stencil_value, clear_rects.size()});
@@ -627,15 +627,15 @@ void MemoryRenderPassCommandEncoder::NextSubpass() {
   writer_->WriteCommand(CommandType::kNextSubpass, NextSubpassCommand{});
 }
 
-void MemoryRenderPassCommandEncoder::SetScissors(int first_scissor,
-                                                 ArrayView<Rect2D> scissors) {
+void MemoryRenderPassCommandEncoder::SetScissors(
+    int first_scissor, ArrayView<const Rect2D> scissors) {
   writer_->WriteCommand(CommandType::kSetScissors,
                         SetScissorsCommand{first_scissor, scissors.size()});
   writer_->WriteArray(scissors);
 }
 
 void MemoryRenderPassCommandEncoder::SetViewports(
-    int first_viewport, ArrayView<Viewport> viewports) {
+    int first_viewport, ArrayView<const Viewport> viewports) {
   writer_->WriteCommand(CommandType::kSetViewports,
                         SetViewportsCommand{first_viewport, viewports.size()});
   writer_->WriteArray(viewports);
@@ -697,7 +697,7 @@ void MemoryRenderPassCommandEncoder::BindPipeline(
 
 void MemoryRenderPassCommandEncoder::BindResourceSet(
     int set_index, ref_ptr<ResourceSet> resource_set,
-    ArrayView<size_t> dynamic_offsets) {
+    ArrayView<const size_t> dynamic_offsets) {
   command_buffer_->AttachDependency(resource_set);
   writer_->WriteCommand(CommandType::kBindResourceSet,
                         BindResourceSetCommand{set_index, resource_set.get(),
@@ -726,7 +726,7 @@ void MemoryRenderPassCommandEncoder::BindVertexBuffers(
 
 void MemoryRenderPassCommandEncoder::BindVertexBuffers(
     int first_binding, ArrayView<ref_ptr<Buffer>> buffers,
-    ArrayView<size_t> buffer_offsets) {
+    ArrayView<const size_t> buffer_offsets) {
   command_buffer_->AttachDependencies(buffers);
   writer_->WriteCommand(
       CommandType::kBindVertexBuffers,

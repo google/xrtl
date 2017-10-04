@@ -260,8 +260,9 @@ class Context : public RefObject<Context> {
   virtual WaitResult WaitUntilQueuesIdle(OperationQueueMask queue_mask) = 0;
 
  protected:
-  Context(std::vector<ref_ptr<Device>> devices, Device::Features features)
-      : devices_(std::move(devices)), features_(std::move(features)) {}
+  Context(ArrayView<ref_ptr<Device>> devices, Device::Features features)
+      : devices_(devices.begin(), devices.end()),
+        features_(std::move(features)) {}
 
   std::vector<ref_ptr<Device>> devices_;
   Device::Features features_;

@@ -35,7 +35,7 @@ class ES3Queue;
 class ES3Context : public Context {
  public:
   ES3Context(ref_ptr<ContextFactory> context_factory,
-             std::vector<ref_ptr<Device>> devices, Device::Features features,
+             ArrayView<ref_ptr<Device>> devices, Device::Features features,
              ref_ptr<ES3PlatformContext> platform_context);
   ~ES3Context() override;
 
