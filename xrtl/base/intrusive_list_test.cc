@@ -368,6 +368,8 @@ TEST(IntrusiveListTest, Sort) {
   EXPECT_EQ(&item1a, items_vector[1]);
   EXPECT_EQ(&item2, items_vector[2]);
   EXPECT_EQ(&item2a, items_vector[3]);
+
+  items.clear();
 }
 
 struct AllocatedType : public IntrusiveLinkBase<void> {
