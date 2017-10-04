@@ -46,10 +46,10 @@ ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
       context_factory_(std::move(context_factory)),
       platform_context_(std::move(platform_context)) {
   // Setup the work queues.
-  primary_queue_ = make_unique<ES3Queue>(ES3Queue::Type::kCommandSubmission,
-                                         platform_context_);
-  presentation_queue_ =
-      make_unique<ES3Queue>(ES3Queue::Type::kPresentation, platform_context_);
+  primary_queue_ = absl::make_unique<ES3Queue>(
+      ES3Queue::Type::kCommandSubmission, platform_context_);
+  presentation_queue_ = absl::make_unique<ES3Queue>(
+      ES3Queue::Type::kPresentation, platform_context_);
 }
 
 ES3Context::~ES3Context() {

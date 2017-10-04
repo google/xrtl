@@ -20,7 +20,9 @@
 #include "glslang/Public/ShaderLang.h"
 #include "SPIRV/GlslangToSpv.h"
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/debugging.h"
+#include "xrtl/base/logging.h"
 #include "xrtl/base/tracing.h"
 
 namespace xrtl {
@@ -31,8 +33,8 @@ namespace {
 
 // TODO(benvanik): allow this to be cleaned up.
 void InitializeGlslang() {
-  static std::once_flag initialized_flag;
-  std::call_once(initialized_flag, []() {
+  static absl::once_flag initialized_flag;
+  absl::call_once(initialized_flag, []() {
     WTF_SCOPE0("ShaderCompiler#InitializeGlslang");
     debugging::LeakCheckDisabler leak_check_disabler;
     glslang::InitializeProcess();
@@ -159,7 +161,7 @@ void ShaderCompiler::AddSource(const std::string& file_name,
 }
 
 void ShaderCompiler::AddSource(const std::string& file_name,
-                               StringView source) {
+                               absl::string_view source) {
   source_files_.push_back({file_name, std::string(source)});
 }
 
@@ -190,8 +192,8 @@ bool ShaderCompiler::Compile(std::vector<uint32_t>* spirv_data) {
       sh_language = EShLangCompute;
       break;
   }
-  shader_ = make_unique<glslang::TShader>(sh_language);
-  program_ = make_unique<glslang::TProgram>();
+  shader_ = absl::make_unique<glslang::TShader>(sh_language);
+  program_ = absl::make_unique<glslang::TProgram>();
   compile_log_.clear();
   compile_log_verbose_.clear();
 

@@ -17,7 +17,7 @@
 
 #include <memory>
 
-#include "xrtl/base/string_view.h"
+#include "absl/strings/string_view.h"
 
 namespace xrtl {
 namespace testing {
@@ -36,7 +36,7 @@ class ImageLoader {
  public:
   // Loads the image at the specified path with the desired number of channels.
   // If the image failed to load, its fields will be empty.
-  static Image LoadImage(StringView path, int image_channels);
+  static Image LoadImage(absl::string_view path, int image_channels);
 };
 
 }  // namespace testing

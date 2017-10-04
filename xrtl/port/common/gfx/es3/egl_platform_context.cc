@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/debugging.h"
 #include "xrtl/base/tracing.h"
 #include "xrtl/port/common/gfx/es3/egl_strings.h"
@@ -75,9 +76,9 @@ class EGLDisplayCache {
 
     // Attempt to bind ES. Note that this has likely already been performed
     // somewhere by someone but lets us ensure we have it.
-    static std::once_flag bind_flag;
+    static absl::once_flag bind_flag;
     static std::atomic<bool> bind_result{false};
-    std::call_once(bind_flag, []() {
+    absl::call_once(bind_flag, []() {
       debugging::LeakCheckDisabler leak_check_disabler;
       if (!eglBindAPI(EGL_OPENGL_ES_API)) {
         EGLint error_code = eglGetError();
@@ -169,9 +170,9 @@ class EGLDisplayCache {
 
 // Returns a shared DisplayCache initialized upon first request.
 EGLDisplayCache* shared_display_cache() {
-  static std::once_flag create_flag;
+  static absl::once_flag create_flag;
   static EGLDisplayCache* shared_instance;
-  std::call_once(create_flag, []() {
+  absl::call_once(create_flag, []() {
     shared_instance = new EGLDisplayCache();
     atexit([]() { delete shared_instance; });
   });
@@ -398,9 +399,9 @@ bool EGLPlatformContext::InitializeContext(
   // Setup GL functions. We only need to do this once.
   // NOTE: GLAD is not thread safe! We must only be calling this from a single
   //       thread.
-  static std::once_flag load_gles2_flag;
+  static absl::once_flag load_gles2_flag;
   static std::atomic<bool> loaded_gles2{false};
-  std::call_once(load_gles2_flag, []() {
+  absl::call_once(load_gles2_flag, []() {
     loaded_gles2 = gladLoadGLES2Loader(LookupGlesFunction);
   });
   if (!loaded_gles2) {
@@ -409,8 +410,8 @@ bool EGLPlatformContext::InitializeContext(
   }
 
   // Grab GL info.
-  static std::once_flag log_gl_flag;
-  std::call_once(log_gl_flag, []() {
+  static absl::once_flag log_gl_flag;
+  absl::call_once(log_gl_flag, []() {
     LOG(INFO) << "GL initialized successfully:" << std::endl
               << "GL vendor: " << glGetString(GL_VENDOR) << std::endl
               << "GL renderer: " << glGetString(GL_RENDERER) << std::endl

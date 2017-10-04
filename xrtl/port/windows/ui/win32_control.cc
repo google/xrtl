@@ -30,6 +30,7 @@ typedef struct _MARGINS {
 
 #include <utility>
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/logging.h"
 
 namespace xrtl {
@@ -356,8 +357,8 @@ bool Win32Control::BeginCreate() {
 
   // Ensure we create the window class we use for the window.
   // This should be process-local so we only need to do it once.
-  static std::once_flag register_class_flag;
-  std::call_once(register_class_flag, []() {
+  static absl::once_flag register_class_flag;
+  absl::call_once(register_class_flag, []() {
     WNDCLASSEXW wcex = {0};
     wcex.cbSize = sizeof(WNDCLASSEXW);
     wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -1085,7 +1086,7 @@ bool Win32Control::HandleKeyboardMessage(UINT message, WPARAM w_param,
 }
 
 void Win32Control::OnFocusChanged(bool is_focused) {
-  for (int key_code = 0; key_code < count_of(key_down_map_); ++key_code) {
+  for (int key_code = 0; key_code < ABSL_ARRAYSIZE(key_down_map_); ++key_code) {
     if (key_down_map_[key_code]) {
       key_down_map_[key_code] = 0;
       PostInputEvent([key_code](InputListener* listener,

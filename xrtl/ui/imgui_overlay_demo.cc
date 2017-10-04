@@ -300,7 +300,7 @@ class ImGuiOverlayDemo : private Control::Listener {
 };
 
 int MyEntry(int argc, char** argv) {
-  auto demo = make_unique<ImGuiOverlayDemo>();
+  auto demo = absl::make_unique<ImGuiOverlayDemo>();
   Thread::Wait(demo->Run());
   demo.reset();
   LOG(INFO) << "Clean exit!";

@@ -18,6 +18,7 @@ cc_library(
         "//xrtl/port/common/ui:timer_display_link",
         "//xrtl/port/windows/base:windows_headers",
         "//xrtl/ui:control_hdrs",
+        "@com_google_absl//absl/base",
     ],
 )
 

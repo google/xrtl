@@ -11,10 +11,12 @@ cc_library(
     hdrs = ["shader_compiler.h"],
     deps = [
         "//xrtl/base:debugging",
-        "//xrtl/base:string_view",
+        "//xrtl/base:logging",
         "//xrtl/base:tracing",
         "@com_github_khronosgroup_glslang//:SPIRV",
         "@com_github_khronosgroup_glslang//:glslang",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/strings",
     ],
 )
 

@@ -19,5 +19,6 @@ cc_library(
         "//xrtl/base:macros",
         "//xrtl/base:tracing",
         "//xrtl/gfx/es3:es3_platform_context_hdrs",
+        "@com_google_absl//absl/base",
     ],
 )

@@ -20,15 +20,6 @@
 namespace xrtl {
 namespace {
 
-TEST(MacrosTest, CountOf) {
-  uint8_t a[1];
-  EXPECT_EQ(1, count_of(a));
-  uint8_t b[2];
-  EXPECT_EQ(2, count_of(b));
-  uint32_t c[2];
-  EXPECT_EQ(2, count_of(c));
-}
-
 TEST(MacrosTest, MakeArray) {
   std::array<int, 1> a1 = make_array(1);
   EXPECT_EQ(1, a1.size());

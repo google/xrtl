@@ -354,7 +354,7 @@ void ES3PlatformSwapChain::PerformPresent(
       GL_COLOR_ATTACHMENT0,
   };
   glInvalidateFramebuffer(GL_READ_FRAMEBUFFER,
-                          count_of(read_invalidate_attachments),
+                          ABSL_ARRAYSIZE(read_invalidate_attachments),
                           read_invalidate_attachments);
 
   // Detach framebuffer texture to ensure it's not in use on the read frame
@@ -372,7 +372,7 @@ void ES3PlatformSwapChain::PerformPresent(
       GL_COLOR,
   };
   glInvalidateFramebuffer(GL_DRAW_FRAMEBUFFER,
-                          count_of(draw_invalidate_attachments),
+                          ABSL_ARRAYSIZE(draw_invalidate_attachments),
                           draw_invalidate_attachments);
 
   // Mark the image as available.

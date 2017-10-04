@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "absl/base/optimization.h"
 #include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
 
@@ -77,7 +78,7 @@ int64_t MinVLogLevelFromEnv() {
 LogMessage::~LogMessage() {
   // Read the min log level once during the first call to logging.
   static int64_t min_log_level = MinLogLevelFromEnv();
-  if (XRTL_PREDICT_TRUE(severity_ >= min_log_level)) {
+  if (ABSL_PREDICT_TRUE(severity_ >= min_log_level)) {
     EmitLogMessage();
   }
 }
@@ -130,12 +131,10 @@ void MakeCheckOpValueString(std::ostream* os, const uint8_t& v) {
   }
 }
 
-#if LANG_CXX11
 template <>
 void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& p) {
   (*os) << "nullptr";
 }
-#endif
 
 CheckOpMessageBuilder::CheckOpMessageBuilder(const char* exprtext)
     : stream_(new std::ostringstream) {

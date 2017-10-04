@@ -67,7 +67,7 @@ ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
       GL_TEXTURE_3D,        // Image::Type::k3D
       GL_TEXTURE_CUBE_MAP,  // Image::Type::kCube
   };
-  DCHECK_LT(static_cast<int>(create_params.type), count_of(kTypeTarget));
+  DCHECK_LT(static_cast<int>(create_params.type), ABSL_ARRAYSIZE(kTypeTarget));
   target_ = kTypeTarget[static_cast<int>(create_params.type)];
   glBindTexture(target_, texture_id_);
 

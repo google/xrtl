@@ -15,6 +15,7 @@
 #include <mutex>
 #include <thread>
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/stopwatch.h"
 #include "xrtl/base/threading/thread.h"
@@ -95,8 +96,8 @@ class Win32Thread : public Win32WaitHandle<Thread> {
 // Ensures we have a TLS slot for the current thread.
 // Safe to call multiple times.
 void InitializeCurrentThreadStorage() {
-  static std::once_flag current_thread_fls_index_flag;
-  std::call_once(current_thread_fls_index_flag, []() {
+  static absl::once_flag current_thread_fls_index_flag;
+  absl::call_once(current_thread_fls_index_flag, []() {
     current_thread_fls_index_ = ::FlsAlloc([](void* data) {
       auto thread = reinterpret_cast<Win32Thread*>(data);
       if (thread) {
@@ -164,7 +165,7 @@ void Process::DisableHighResolutionTiming() {
 
 ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
                                std::function<void()> start_routine) {
-  auto start_data = make_unique<ThreadStartData>();
+  auto start_data = absl::make_unique<ThreadStartData>();
   start_data->start_routine_fn = std::move(start_routine);
   return Win32Thread::CreateThread(create_params, std::move(start_data));
 }
@@ -172,7 +173,7 @@ ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
 ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
                                ThreadStartRoutine start_routine,
                                void* start_param) {
-  auto start_data = make_unique<ThreadStartData>();
+  auto start_data = absl::make_unique<ThreadStartData>();
   start_data->start_routine = start_routine;
   start_data->start_param = start_param;
   return Win32Thread::CreateThread(create_params, std::move(start_data));
@@ -431,9 +432,9 @@ Win32Thread::Win32Thread(HANDLE handle, std::string name)
   // This must be called once on startup as the process affinity mask must be
   // initialized as the OS performs (thread mask & process mask) when setting
   // thread affinities.
-  static std::once_flag initialize_affinity_mask_flag;
+  static absl::once_flag initialize_affinity_mask_flag;
   static uint64_t initial_affinity_mask = 0;
-  std::call_once(initialize_affinity_mask_flag, []() {
+  absl::call_once(initialize_affinity_mask_flag, []() {
     HANDLE process_handle = ::GetCurrentProcess();
     DWORD_PTR process_affinity_mask = 0;
     DWORD_PTR system_affinity_mask = 0;

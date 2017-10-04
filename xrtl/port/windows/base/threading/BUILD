@@ -26,6 +26,7 @@ cc_library(
         "//xrtl/base/threading:thread",
         "//xrtl/base/threading:threading_hdrs",
         "//xrtl/port/windows/base:windows_headers",
+        "@com_google_absl//absl/base",
     ],
 )
 
@@ -52,6 +53,7 @@ cc_library(
         "//xrtl/base/threading:thread_base",
         "//xrtl/base/threading:threading_hdrs",
         "//xrtl/port/windows/base:windows_headers",
+        "@com_google_absl//absl/base",
     ],
 )
 

@@ -29,30 +29,20 @@
 // Debugging macros pull in leak checking/sanitization/etc based on config.
 #include "xrtl/base/debugging_settings.h"  // IWYU pragma: export
 
-// Temporary make_unique (until C++14 is everywhere).
-#include "xrtl/base/make_unique.h"  // IWYU pragma: export
+// Bring in absl macros so we aren't double-including a macros.h everywhere.
+#include "absl/base/attributes.h"
+#include "absl/base/macros.h"  // IWYU pragma: export
+
+// make_unique (until C++14 is everywhere).
+#include "absl/memory/memory.h"  // IWYU pragma: export
 
 #if defined(XRTL_COMPILER_GCC_COMPAT)
 
-#define XRTL_ALWAYS_INLINE __attribute__((always_inline)) inline
-#define XRTL_ATTRIBUTE_NORETURN __attribute__((noreturn))
-#define XRTL_ATTRIBUTE_NOINLINE __attribute__((noinline))
-#define XRTL_ATTRIBUTE_UNUSED __attribute__((unused))
-#define XRTL_ATTRIBUTE_COLD __attribute__((cold))
-#define XRTL_ATTRIBUTE_WEAK __attribute__((weak))
-#define XRTL_ATTRIBUTE_NOSANITIZE __attribute__((no_sanitize_address))
 #define XRTL_EMPTY_FILE() static int dummy __attribute__((unused, used)) = 0;
 #define XRTL_UNREACHABLE_DEFAULT()
 
 #elif defined(XRTL_COMPILER_MSVC)
 
-#define XRTL_ALWAYS_INLINE __forceinline
-#define XRTL_ATTRIBUTE_NORETURN __declspec(noreturn)
-#define XRTL_ATTRIBUTE_NOINLINE
-#define XRTL_ATTRIBUTE_UNUSED
-#define XRTL_ATTRIBUTE_COLD
-#define XRTL_ATTRIBUTE_WEAK
-#define XRTL_ATTRIBUTE_NOSANITIZE
 #define XRTL_EMPTY_FILE()
 #define XRTL_UNREACHABLE_DEFAULT() \
   default:                         \
@@ -60,38 +50,12 @@
 
 #else
 
-#define XRTL_ALWAYS_INLINE inline
-#define XRTL_ATTRIBUTE_NORETURN
-#define XRTL_ATTRIBUTE_NOINLINE
-#define XRTL_ATTRIBUTE_UNUSED
-#define XRTL_ATTRIBUTE_COLD
-#define XRTL_ATTRIBUTE_WEAK
-#define XRTL_ATTRIBUTE_NOSANITIZE
 #define XRTL_EMPTY_FILE()
 #define XRTL_UNREACHABLE_DEFAULT() \
   default:                         \
     DCHECK(false);
 
 #endif  // XRTL_COMPILER_[GCC_COMPAT/MSVC/etc]
-
-#define XRTL_PREDICT_FALSE(x) (x)
-#define XRTL_PREDICT_TRUE(x) (x)
-
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-// Define this to 1 if the code is compiled in C++11 mode.
-#define LANG_CXX11 1
-#endif
-
-#if defined(__clang__) && defined(LANG_CXX11) && defined(__has_warning)
-#if __has_feature(cxx_attributes) && __has_warning("-Wimplicit-fallthrough")
-#define XRTL_FALLTHROUGH_INTENDED [[clang::fallthrough]]  // NOLINT
-#endif  // -Wimplicit-fallthrough
-#endif  // clang && c++11+
-#ifndef XRTL_FALLTHROUGH_INTENDED
-#define XRTL_FALLTHROUGH_INTENDED \
-  do {                            \
-  } while (0)
-#endif  // !XRTL_FALLTHROUGH_INTENDED
 
 // We're redefining this here, because pulling base/macros ends up pulling a
 // ton of stuff that prevents us from bare metal compiling.
@@ -112,12 +76,6 @@
 #endif  // other compiler case
 
 namespace xrtl {
-
-// Type-safe countof for determining constant array length.
-template <typename T, std::size_t N>
-inline constexpr std::size_t count_of(T const (&)[N]) noexcept {
-  return N;
-}
 
 // Makes an std::array from a list of arguments.
 //

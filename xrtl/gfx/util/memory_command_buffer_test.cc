@@ -171,7 +171,7 @@ TEST(MemoryCommandBufferTest, SimpleCommands) {
 
 // Tests encoding a command that requires ref counted objects.
 TEST(MemoryCommandBufferTest, RefCountedObjects) {
-  auto command_buffer = make_unique<MemoryCommandBuffer>();
+  auto command_buffer = absl::make_unique<MemoryCommandBuffer>();
 
   // Allocate dummy fences.
   EXPECT_EQ(0, MyCommandFence::alloc_count);

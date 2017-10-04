@@ -225,7 +225,7 @@ class WindowPongDemo : private Control::Listener {
 };
 
 int DemoEntryPoint(int argc, char** argv) {
-  auto demo = make_unique<WindowPongDemo>();
+  auto demo = absl::make_unique<WindowPongDemo>();
   demo->Run();  // Blocks until the demo is exited.
   demo.reset();
   LOG(INFO) << "Clean exit!";

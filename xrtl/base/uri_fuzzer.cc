@@ -18,7 +18,7 @@ namespace xrtl {
 namespace uri {
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  StringView input_uri(reinterpret_cast<const char*>(data), size);
+  absl::string_view input_uri(reinterpret_cast<const char*>(data), size);
   IsSchemeless(input_uri);
   GetScheme(input_uri);
   GetHost(input_uri);

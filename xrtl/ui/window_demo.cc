@@ -130,7 +130,7 @@ class WindowDemo : private Control::Listener, private Control::InputListener {
 };
 
 int MyEntry(int argc, char** argv) {
-  auto demo = make_unique<WindowDemo>();
+  auto demo = absl::make_unique<WindowDemo>();
   Thread::Wait(demo->Run());
   demo.reset();
   LOG(INFO) << "Clean exit!";

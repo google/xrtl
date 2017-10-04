@@ -432,7 +432,7 @@ int ShaderToolMain(int argc, char** argv) {
     for (i = 0; i + 6 < spirv_data.size(); i += 6) {
       // Write rows of size dwords.
       char line[80 + 1];
-      std::snprintf(line, count_of(line),
+      std::snprintf(line, ABSL_ARRAYSIZE(line),
                     "    0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X,\n",
                     spirv_data[i + 0], spirv_data[i + 1], spirv_data[i + 2],
                     spirv_data[i + 3], spirv_data[i + 4], spirv_data[i + 5]);
@@ -443,11 +443,11 @@ int ShaderToolMain(int argc, char** argv) {
       output_file_cc << "    ";
       char dword[16];
       for (; i < spirv_data.size() - 1; ++i) {
-        std::snprintf(dword, count_of(dword), "0x%08X, ", spirv_data[i]);
+        std::snprintf(dword, ABSL_ARRAYSIZE(dword), "0x%08X, ", spirv_data[i]);
         output_file_cc << dword;
       }
       for (; i < spirv_data.size(); ++i) {
-        std::snprintf(dword, count_of(dword), "0x%08X,", spirv_data[i]);
+        std::snprintf(dword, ABSL_ARRAYSIZE(dword), "0x%08X,", spirv_data[i]);
         output_file_cc << dword;
       }
       output_file_cc << std::endl;
