@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "xrtl/gfx/command_encoder.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/framebuffer.h"
@@ -436,7 +437,8 @@ class ES3RenderPassCommandEncoder : public RenderPassCommandEncoder {
     size_t offset = 0;
     VertexFormat format = VertexFormats::kUndefined;
   };
-  FixedVector<VertexBufferAttribs, kMaxVertexInputs> vertex_buffer_attribs_;
+  absl::InlinedVector<VertexBufferAttribs, kMaxVertexInputs>
+      vertex_buffer_attribs_;
   bool vertex_inputs_dirty_ = true;
   uint32_t vertex_attrib_enable_mask_ = 0;
   GLuint scratch_vao_id_ = 0;

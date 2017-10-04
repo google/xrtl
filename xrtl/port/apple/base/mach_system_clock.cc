@@ -66,7 +66,7 @@ class MachSystemClock : public SystemClock {
 };
 
 std::unique_ptr<SystemClock> CreateMachSystemClock() {
-  return make_unique<MachSystemClock>();
+  return absl::make_unique<MachSystemClock>();
 }
 
 }  // namespace xrtl

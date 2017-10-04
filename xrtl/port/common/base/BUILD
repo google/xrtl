@@ -33,6 +33,7 @@ cc_library(
         "//xrtl/base:flags",
         "//xrtl/base:logging_hdrs",
         "//xrtl/base:macros",
+        "@com_google_absl//absl/base",
     ] + select({
         "//xrtl/tools/target_platform:android": [
             "//xrtl/port/android/base:android_logging_sink",

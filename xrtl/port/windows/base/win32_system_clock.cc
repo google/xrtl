@@ -83,7 +83,7 @@ class Win32SystemClock : public SystemClock {
 };
 
 std::unique_ptr<SystemClock> CreateWin32SystemClock() {
-  return make_unique<Win32SystemClock>();
+  return absl::make_unique<Win32SystemClock>();
 }
 
 }  // namespace xrtl

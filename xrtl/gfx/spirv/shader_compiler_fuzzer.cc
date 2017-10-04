@@ -21,7 +21,7 @@ namespace spirv {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   ShaderCompiler shader_compiler(ShaderCompiler::SourceLanguage::kGlsl,
                                  ShaderCompiler::ShaderStage::kVertex);
-  shader_compiler.AddSource(StringView{data, size});
+  shader_compiler.AddSource(absl::string_view{data, size});
   std::vector<uint32_t> spirv_data;
   shader_compiler.Compile(&spirv_data);
   return 0;

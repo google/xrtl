@@ -17,13 +17,13 @@
 
 #include <string>
 
-#include "xrtl/base/string_view.h"
+#include "absl/strings/string_view.h"
 
 namespace xrtl {
 namespace uri {
 
 // Returns true if the given endpoint is schemeless.
-bool IsSchemeless(StringView uri);
+bool IsSchemeless(absl::string_view uri);
 
 // Gets the scheme part of the given URI.
 // If the URI is schemeless the empty string is returned.
@@ -31,7 +31,7 @@ bool IsSchemeless(StringView uri);
 // Examples:
 //   scheme://host        -> "scheme"
 //   //host               -> ""
-StringView GetScheme(StringView uri);
+absl::string_view GetScheme(absl::string_view uri);
 
 // Gets the host part of the given URI.
 // If no host exists (as the URI is path-only) the empty string is returned.
@@ -42,7 +42,7 @@ StringView GetScheme(StringView uri);
 //   scheme://host:123    -> "host:123"
 //   scheme://host/path   -> "host"
 //   //host/path          -> "host"
-StringView GetHost(StringView uri);
+absl::string_view GetHost(absl::string_view uri);
 
 // Gets the fully-qualified origin of a URI.
 //
@@ -51,7 +51,7 @@ StringView GetHost(StringView uri);
 //   scheme://host:123    -> "scheme://host:123"
 //   scheme://host/path   -> "scheme://host"
 //   //host/path          -> "//host"
-StringView GetOrigin(StringView uri);
+absl::string_view GetOrigin(absl::string_view uri);
 
 // Gets the path part of the given URI.
 // If no path part exists the empty string is returned. Trailing slashes are
@@ -64,7 +64,7 @@ StringView GetOrigin(StringView uri);
 //   scheme://host/path/  -> "path/"
 //   path                 -> "path"
 //   /path                -> "/path"
-StringView GetPath(StringView uri);
+absl::string_view GetPath(absl::string_view uri);
 
 // Returns true if the given path fragment is absolute.
 //
@@ -73,7 +73,7 @@ StringView GetPath(StringView uri);
 //   path                 -> false
 //   /                    -> true
 //   /path                -> true
-bool IsPathAbsolute(StringView path);
+bool IsPathAbsolute(absl::string_view path);
 
 // Gets the full base path of a URL, removing the last path component.
 //
@@ -81,14 +81,14 @@ bool IsPathAbsolute(StringView path);
 //   http://foo/bar/deep/woo.html = http://foo/bar/deep/
 //   http://foo/bar/deep/         = http://foo/bar/
 //   http://foo/                  = http://foo/
-StringView GetBasePath(StringView url);
+absl::string_view GetBasePath(absl::string_view url);
 
 // Joins two URI parts together and canonicalizes the resulting URI.
 //
 // Examples:
 //   http://foo/bar/deep/woo.html + ../boo.txt  = http://foo/deep/boo.txt
 //   http://foo/bar/woo.html + /boo.txt         = http://foo/boo.txt
-std::string JoinParts(StringView left, StringView right);
+std::string JoinParts(absl::string_view left, absl::string_view right);
 
 }  // namespace uri
 }  // namespace xrtl

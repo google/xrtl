@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/threading/event.h"
 #include "xrtl/base/threading/message_loop.h"
 #include "xrtl/base/threading/thread.h"
@@ -85,8 +86,8 @@ Win32MessageLoop::Win32MessageLoop() {
 
   // Ensure we create the window class we use for the hidden message window.
   // This should be process-local so we only need to do it once.
-  static std::once_flag register_class_flag;
-  std::call_once(register_class_flag, []() {
+  static absl::once_flag register_class_flag;
+  absl::call_once(register_class_flag, []() {
     WNDCLASSEXW wcex = {0};
     wcex.cbSize = sizeof(WNDCLASSEXW);
     wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;

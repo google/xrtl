@@ -555,7 +555,7 @@ void ES3RenderPassCommandEncoder::PrepareSubpass() {
 
   // Setup color attachments on the framebuffer.
   GLenum draw_buffers[8] = {GL_NONE};
-  DCHECK_LE(subpass.color_attachments.size(), count_of(draw_buffers));
+  DCHECK_LE(subpass.color_attachments.size(), ABSL_ARRAYSIZE(draw_buffers));
   for (int i = 0; i < subpass.color_attachments.size(); ++i) {
     const auto& attachment_ref = subpass.color_attachments[i];
     if (attachment_ref.index == RenderPass::AttachmentReference::kUnused) {
@@ -829,7 +829,7 @@ void ES3RenderPassCommandEncoder::RefreshInputAssemblyState(
   };
   int primitive_topology_index =
       static_cast<int>(input_assembly_state.primitive_topology());
-  DCHECK_LT(primitive_topology_index, count_of(kPrimitiveTopologyLookup));
+  DCHECK_LT(primitive_topology_index, ABSL_ARRAYSIZE(kPrimitiveTopologyLookup));
   draw_primitive_mode_ = kPrimitiveTopologyLookup[primitive_topology_index];
 }
 
@@ -917,13 +917,13 @@ void ES3RenderPassCommandEncoder::RefreshColorBlendState(
       GL_SRC_ALPHA_SATURATE,        // BlendFactor::kSrcAlphaSaturate
   };
   DCHECK_LT(static_cast<int>(attachment_state.src_color_blend_factor()),
-            count_of(kBlendFactorLookup));
+            ABSL_ARRAYSIZE(kBlendFactorLookup));
   DCHECK_LT(static_cast<int>(attachment_state.dst_color_blend_factor()),
-            count_of(kBlendFactorLookup));
+            ABSL_ARRAYSIZE(kBlendFactorLookup));
   DCHECK_LT(static_cast<int>(attachment_state.src_alpha_blend_factor()),
-            count_of(kBlendFactorLookup));
+            ABSL_ARRAYSIZE(kBlendFactorLookup));
   DCHECK_LT(static_cast<int>(attachment_state.dst_alpha_blend_factor()),
-            count_of(kBlendFactorLookup));
+            ABSL_ARRAYSIZE(kBlendFactorLookup));
   GLenum src_rgb = kBlendFactorLookup[static_cast<int>(
       attachment_state.src_color_blend_factor())];
   GLenum dst_rgb = kBlendFactorLookup[static_cast<int>(
@@ -942,9 +942,9 @@ void ES3RenderPassCommandEncoder::RefreshColorBlendState(
       GL_MAX,                    // BlendOp::kMax
   };
   DCHECK_LT(static_cast<int>(attachment_state.color_blend_op()),
-            count_of(kBlendEquationLookup));
+            ABSL_ARRAYSIZE(kBlendEquationLookup));
   DCHECK_LT(static_cast<int>(attachment_state.alpha_blend_op()),
-            count_of(kBlendEquationLookup));
+            ABSL_ARRAYSIZE(kBlendEquationLookup));
   GLenum mode_rgb =
       kBlendEquationLookup[static_cast<int>(attachment_state.color_blend_op())];
   GLenum mode_alpha =
@@ -1129,7 +1129,8 @@ void ES3RenderPassCommandEncoder::UpdateResourceSets() {
 
   uint32_t new_texture_binding_mask = 0;
   uint32_t new_uniform_buffer_binding_mask = 0;
-  for (int set_index = 0; set_index < count_of(resource_sets_); ++set_index) {
+  for (int set_index = 0; set_index < ABSL_ARRAYSIZE(resource_sets_);
+       ++set_index) {
     if (!resource_sets_[set_index]) {
       continue;
     }

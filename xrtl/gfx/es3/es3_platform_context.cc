@@ -264,9 +264,10 @@ void ES3PlatformContext::InitializeDebugging() {
                // GL_ARRAY_BUFFER_ARB, usage hint is GL_STREAM_DRAW) will use
                // VIDEO memory as the source for buffer object operations.
   };
-  glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE,
-                        static_cast<GLsizei>(count_of(disable_message_ids)),
-                        disable_message_ids, GL_FALSE);
+  glDebugMessageControl(
+      GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE,
+      static_cast<GLsizei>(ABSL_ARRAYSIZE(disable_message_ids)),
+      disable_message_ids, GL_FALSE);
 
   // Callback will be made from driver threads.
   glDebugMessageCallback(reinterpret_cast<GLDEBUGPROC>(&OnDebugMessage), this);

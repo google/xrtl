@@ -131,25 +131,6 @@ cc_library(
 )
 
 cc_library(
-    name = "fixed_vector",
-    hdrs = ["fixed_vector.h"],
-    deps = [
-        ":logging",
-        ":macros",
-    ],
-)
-
-cc_test(
-    name = "fixed_vector_test",
-    size = "small",
-    srcs = ["fixed_vector_test.cc"],
-    deps = [
-        ":fixed_vector",
-        "//xrtl/testing:gtest_main",
-    ],
-)
-
-cc_library(
     name = "flags",
     hdrs = ["flags.h"],
     deps = [
@@ -270,6 +251,7 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":macros",
+        "@com_google_absl//absl/base",
     ] + select({
         "//xrtl/tools/target_config:google_internal": [
             "//xrtl/port/google/base:logging_forward",
@@ -294,12 +276,13 @@ cc_library(
     name = "macros",
     hdrs = [
         "macros.h",
-        "make_unique.h",
     ],
     deps = [
         ":debugging_settings",
         "//xrtl/tools/target_config",
         "//xrtl/tools/target_platform",
+        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/memory",
     ],
 )
 
@@ -368,23 +351,6 @@ cc_test(
 )
 
 cc_library(
-    name = "string_view",
-    srcs = ["string_view.cc"],
-    hdrs = ["string_view.h"],
-    deps = [":logging"],
-)
-
-cc_test(
-    name = "string_view_test",
-    size = "small",
-    srcs = ["string_view_test.cc"],
-    deps = [
-        ":string_view",
-        "//xrtl/testing:gtest_main",
-    ],
-)
-
-cc_library(
     name = "system_clock",
     srcs = ["system_clock.cc"],
     hdrs = ["system_clock.h"],
@@ -437,7 +403,9 @@ cc_library(
     name = "uri",
     srcs = ["uri.cc"],
     hdrs = ["uri.h"],
-    deps = [":string_view"],
+    deps = [
+        "@com_google_absl//absl/strings",
+    ],
 )
 
 cc_test(

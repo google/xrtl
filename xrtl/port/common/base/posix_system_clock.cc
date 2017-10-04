@@ -54,7 +54,7 @@ class PosixSystemClock : public SystemClock {
 };
 
 std::unique_ptr<SystemClock> CreatePosixSystemClock() {
-  return make_unique<PosixSystemClock>();
+  return absl::make_unique<PosixSystemClock>();
 }
 
 }  // namespace xrtl

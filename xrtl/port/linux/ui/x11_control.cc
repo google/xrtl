@@ -1135,7 +1135,7 @@ bool X11Control::OnXEvent(::XEvent* x_event) {
       }
       // Reset keyboard state.
       PostInputEvent([this](InputListener* listener, ref_ptr<Control> control) {
-        for (size_t i = 0; i < count_of(virtual_key_state_); ++i) {
+        for (size_t i = 0; i < ABSL_ARRAYSIZE(virtual_key_state_); ++i) {
           if (virtual_key_state_[i]) {
             virtual_key_state_[i] = false;
             KeyboardEvent keyboard_event{0, static_cast<VirtualKey>(i),

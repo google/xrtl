@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <vector>
 
+#include "absl/base/optimization.h"
 #include "xrtl/base/macros.h"
 
 namespace xrtl {
@@ -33,7 +34,7 @@ void LogStringFormat(const char* file_name, int line, int severity,
   int stack_buffer_length =
       std::vsnprintf(stack_buffer, sizeof(stack_buffer), fmt, args);
   va_end(args);
-  if (XRTL_PREDICT_TRUE(stack_buffer_length < 0)) {
+  if (ABSL_PREDICT_TRUE(stack_buffer_length < 0)) {
     // Error during formatting.
     return;
   }

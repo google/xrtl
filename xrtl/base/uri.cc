@@ -17,28 +17,28 @@
 namespace xrtl {
 namespace uri {
 
-bool IsSchemeless(StringView uri) {
+bool IsSchemeless(absl::string_view uri) {
   size_t first_slash = uri.find_first_of('/');
-  if (first_slash == 0 || first_slash == StringView::npos) {
+  if (first_slash == 0 || first_slash == absl::string_view::npos) {
     return true;
   }
   return uri.find_first_of("://") != first_slash - 1;
 }
 
-StringView GetScheme(StringView uri) {
+absl::string_view GetScheme(absl::string_view uri) {
   size_t first_slash = uri.find_first_of('/');
-  if (first_slash == 0 || first_slash == StringView::npos ||
+  if (first_slash == 0 || first_slash == absl::string_view::npos ||
       uri.find_first_of("://") != first_slash - 1) {
-    return StringView();
+    return absl::string_view();
   }
   size_t end = first_slash - 1;
   return uri.substr(0, end);
 }
 
-StringView GetHost(StringView uri) {
+absl::string_view GetHost(absl::string_view uri) {
   size_t first_slash = uri.find_first_of('/');
-  if (first_slash == StringView::npos) {
-    return StringView();
+  if (first_slash == absl::string_view::npos) {
+    return absl::string_view();
   }
   size_t start = 0;
   if (first_slash == 0 && uri.size() >= 2 && uri[1] == '/') {
@@ -49,19 +49,19 @@ StringView GetHost(StringView uri) {
     // "scheme://..."
     start = first_slash + 2;
   } else {
-    return StringView();
+    return absl::string_view();
   }
   size_t end = uri.find_first_of('/', start);
-  if (end == StringView::npos) {
+  if (end == absl::string_view::npos) {
     end = uri.size();
   }
   return uri.substr(start, end - start);
 }
 
-StringView GetOrigin(StringView uri) {
+absl::string_view GetOrigin(absl::string_view uri) {
   size_t first_slash = uri.find_first_of('/');
-  if (first_slash == StringView::npos) {
-    return StringView("//");
+  if (first_slash == absl::string_view::npos) {
+    return absl::string_view("//");
   }
   size_t scan_start = 0;
   if (first_slash == 0 && uri.size() >= 2 && uri[1] == '/') {
@@ -71,18 +71,18 @@ StringView GetOrigin(StringView uri) {
     // "scheme://..."
     scan_start = first_slash + 2;
   } else {
-    return StringView("//");
+    return absl::string_view("//");
   }
   size_t end = uri.find_first_of('/', scan_start);
-  if (end == StringView::npos) {
+  if (end == absl::string_view::npos) {
     end = uri.size();
   }
   return uri.substr(0, end);
 }
 
-StringView GetPath(StringView uri) {
+absl::string_view GetPath(absl::string_view uri) {
   size_t first_slash = uri.find_first_of('/');
-  if (first_slash == StringView::npos) {
+  if (first_slash == absl::string_view::npos) {
     return uri;
   }
   size_t host_start = 0;
@@ -96,21 +96,23 @@ StringView GetPath(StringView uri) {
     return uri;
   }
   size_t start = uri.find_first_of('/', host_start);
-  if (start == StringView::npos) {
-    return StringView();
+  if (start == absl::string_view::npos) {
+    return absl::string_view();
   }
   return uri.substr(start);
 }
 
-bool IsPathAbsolute(StringView path) { return !path.empty() && path[0] == '/'; }
+bool IsPathAbsolute(absl::string_view path) {
+  return !path.empty() && path[0] == '/';
+}
 
-StringView GetBasePath(StringView url) {
+absl::string_view GetBasePath(absl::string_view url) {
   size_t first_slash = url.find_first_of('/');
-  if (first_slash == StringView::npos || first_slash + 2 >= url.size()) {
+  if (first_slash == absl::string_view::npos || first_slash + 2 >= url.size()) {
     return url;
   }
   first_slash = url.find_first_of('/', first_slash + 2);
-  if (first_slash == StringView::npos) {
+  if (first_slash == absl::string_view::npos) {
     return url;
   }
 
@@ -124,7 +126,7 @@ StringView GetBasePath(StringView url) {
   return url.substr(0, last_slash + 1);
 }
 
-std::string JoinParts(StringView left, StringView right) {
+std::string JoinParts(absl::string_view left, absl::string_view right) {
   if (left.empty()) {
     return std::string(right);
   } else if (IsPathAbsolute(right)) {

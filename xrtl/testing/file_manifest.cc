@@ -50,7 +50,7 @@ void FileManifest::ParseFromManifest(const std::string& executable_path) {
   manifest_file_stream.close();
 }
 
-StringView FileManifest::ResolvePath(StringView relative_path) {
+absl::string_view FileManifest::ResolvePath(absl::string_view relative_path) {
   std::string target_path = std::string(std::getenv("TEST_WORKSPACE")) + "/" +
                             std::string(relative_path);
   for (auto file_path_pair : file_paths_map) {

@@ -264,8 +264,8 @@ class TriangleFullExample : private Control::Listener {
     // Compile a shader module from GLSL. Real applications would want to do
     // this offline.
     auto vert_shader_compiler =
-        make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
-                                    ShaderCompiler::ShaderStage::kVertex);
+        absl::make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
+                                          ShaderCompiler::ShaderStage::kVertex);
     vert_shader_compiler->AddSource(R"""(#version 310 es
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -283,9 +283,9 @@ void main() {
       LOG(FATAL) << "Could not compile vertex shader: " << std::endl
                  << vert_shader_compiler->compile_log();
     }
-    auto frag_shader_compiler =
-        make_unique<ShaderCompiler>(ShaderCompiler::SourceLanguage::kGlsl,
-                                    ShaderCompiler::ShaderStage::kFragment);
+    auto frag_shader_compiler = absl::make_unique<ShaderCompiler>(
+        ShaderCompiler::SourceLanguage::kGlsl,
+        ShaderCompiler::ShaderStage::kFragment);
     frag_shader_compiler->AddSource(R"""(#version 310 es
 precision highp float;
 layout(push_constant, std140) uniform PushConstants {
@@ -579,7 +579,7 @@ void main() {
 };
 
 int TriangleFullEntry(int argc, char** argv) {
-  auto demo = make_unique<TriangleFullExample>();
+  auto demo = absl::make_unique<TriangleFullExample>();
   Thread::Wait(demo->Run());
   demo.reset();
   LOG(INFO) << "Clean exit!";

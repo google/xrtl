@@ -24,13 +24,14 @@ namespace xrtl {
 namespace math {
 
 // Returns true if the difference between two values is within epsilon.
-XRTL_ALWAYS_INLINE bool AreAlmostEqual(double a, double b, double epsilon) {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr bool AreAlmostEqual(double a, double b,
+                                                           double epsilon) {
   return std::abs(a - b) <= epsilon;
 }
 
 // Returns -1 or 1 depending on the sign of the input.
 template <typename T>
-XRTL_ALWAYS_INLINE constexpr T Sign(T v) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr T Sign(T v) noexcept {
   return v >= 0 ? T(1) : T(-1);
 }
 
@@ -39,7 +40,7 @@ XRTL_ALWAYS_INLINE constexpr T Sign(T v) noexcept {
 //   b: Upper bound on interpolation range.
 //   t: Interpolation value [0, 1].
 template <typename T, typename V>
-XRTL_ALWAYS_INLINE constexpr V Lerp(T a, T b, V t) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr V Lerp(T a, T b, V t) noexcept {
   return a + t * (b - a);
 }
 
@@ -55,7 +56,7 @@ XRTL_ALWAYS_INLINE constexpr V Lerp(T a, T b, V t) noexcept {
 //   x: Value between a and b to find t for.
 //   Returns the interpolation value t [0, 1] for x between a and b.
 template <typename T, typename V>
-XRTL_ALWAYS_INLINE constexpr V InverseLerp(T a, T b, V x) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr V InverseLerp(T a, T b, V x) noexcept {
   return (x - a) / (b - a);
 }
 
@@ -69,8 +70,8 @@ XRTL_ALWAYS_INLINE constexpr V InverseLerp(T a, T b, V x) noexcept {
 //   max_value: Maximum value after which the value will be constrained.
 //   scale: Scale applied to the value when stretching. 1/2 and 1/3 are common.
 template <typename T>
-XRTL_ALWAYS_INLINE T Constrain(T value, T min_value, T max_value,
-                               T scale) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE T Constrain(T value, T min_value, T max_value,
+                                         T scale) noexcept {
   if (value < min_value) {
     return min_value + (value - min_value) * scale;
   } else if (value > max_value) {
@@ -82,7 +83,7 @@ XRTL_ALWAYS_INLINE T Constrain(T value, T min_value, T max_value,
 
 // Clamps a value between a min and max.
 template <typename T>
-XRTL_ALWAYS_INLINE T Clamp(T value, T min, T max) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE T Clamp(T value, T min, T max) noexcept {
   return value <= min ? min : value >= max ? max : value;
 }
 
@@ -92,19 +93,21 @@ XRTL_ALWAYS_INLINE T Clamp(T value, T min, T max) noexcept {
 //    Wrap(4, 4) = 0
 //    Wrap(5, 4) = 1
 //   Wrap(-1, 4) = 3
-XRTL_ALWAYS_INLINE constexpr int Wrap(int value, int max) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr int Wrap(int value, int max) noexcept {
   return (value % max + max) % max;
 }
 
 // Rounds up to the next alignment value, if it is not already aligned.
 template <typename T>
-XRTL_ALWAYS_INLINE constexpr T RoundToAlignment(T value, T alignment) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr T RoundToAlignment(
+    T value, T alignment) noexcept {
   return ((value + alignment - 1) / alignment) * alignment;
 }
 
 // Rounds the value up to the next power of two, if not a power of two already.
 template <typename T>
-XRTL_ALWAYS_INLINE constexpr int RoundToNextPowerOfTwo(T value) noexcept {
+ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr int RoundToNextPowerOfTwo(
+    T value) noexcept {
   return static_cast<T>(std::pow(2, std::ceil(std::log(value) / std::log(2))));
 }
 

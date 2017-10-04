@@ -130,7 +130,7 @@ TEST(SpirVOptimizerTest, Empty) {
 // Tests optimizing various bad inputs that should cause graceful failures.
 TEST(SpirVOptimizerTest, InvalidInput) {
   std::vector<uint32_t> source_spirv;
-  source_spirv.resize(count_of(kInvalidFragmentShader));
+  source_spirv.resize(ABSL_ARRAYSIZE(kInvalidFragmentShader));
   std::memcpy(source_spirv.data(), kInvalidFragmentShader,
               sizeof(kInvalidFragmentShader));
 
@@ -145,7 +145,7 @@ TEST(SpirVOptimizerTest, InvalidInput) {
 // Tests valid optimization.
 TEST(SpirVOptimizerTest, Optimization) {
   std::vector<uint32_t> source_spirv;
-  source_spirv.resize(count_of(kValidVertexShader));
+  source_spirv.resize(ABSL_ARRAYSIZE(kValidVertexShader));
   std::memcpy(source_spirv.data(), kValidVertexShader,
               sizeof(kValidVertexShader));
 
@@ -164,7 +164,7 @@ TEST(SpirVOptimizerTest, Reuse) {
   SpirVOptimizer optimizer(options);
 
   std::vector<uint32_t> vertex_source_spirv;
-  vertex_source_spirv.resize(count_of(kValidVertexShader));
+  vertex_source_spirv.resize(ABSL_ARRAYSIZE(kValidVertexShader));
   std::memcpy(vertex_source_spirv.data(), kValidVertexShader,
               sizeof(kValidVertexShader));
 
@@ -173,7 +173,7 @@ TEST(SpirVOptimizerTest, Reuse) {
   EXPECT_EQ(194, vertex_target_spirv.size());
 
   std::vector<uint32_t> fragment_source_spirv;
-  fragment_source_spirv.resize(count_of(kValidFragmentShader));
+  fragment_source_spirv.resize(ABSL_ARRAYSIZE(kValidFragmentShader));
   std::memcpy(fragment_source_spirv.data(), kValidFragmentShader,
               sizeof(kValidFragmentShader));
 

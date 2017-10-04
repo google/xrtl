@@ -58,7 +58,8 @@ bool is_debugger_attached();
 // Breaks into the debugger if it is currently attached.
 // If no debugger is present a signal will be raised and the user will either
 // receive a crash or a prompt to attach a debugger.
-XRTL_ALWAYS_INLINE void Break() {
+template <int x = 0>
+ABSL_ATTRIBUTE_ALWAYS_INLINE void Break() {
 // We implement this directly in the header with ALWAYS_INLINE so that the
 // stack doesn't get all messed up.
 #if defined(XRTL_PLATFORM_WINDOWS)

@@ -169,7 +169,7 @@ bool ImGuiOverlay::InitializeImGui(ImGuiIO* io) {
 
 bool ImGuiOverlay::InitializeFont(ImGuiIO* io) {
   // Setup the font atlas that imgui will use to stash characters.
-  font_atlas_ = make_unique<ImFontAtlas>();
+  font_atlas_ = absl::make_unique<ImFontAtlas>();
   io->Fonts = font_atlas_.get();
 
   // Add ProggyTiny font, which covers basic latin characters. That's enough for

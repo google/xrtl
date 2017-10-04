@@ -19,8 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "xrtl/base/array_view.h"
-#include "xrtl/base/string_view.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 
@@ -82,7 +82,7 @@ class ES3Shader : public RefObject<ES3Shader> {
   // Returns false if the compilation fails.
   bool CompileSource(GLenum shader_type, ArrayView<const char*> sources);
   bool CompileSource(GLenum shader_type, ArrayView<std::string> sources);
-  bool CompileSource(GLenum shader_type, ArrayView<StringView> sources);
+  bool CompileSource(GLenum shader_type, ArrayView<absl::string_view> sources);
 
   // Attempts to translate a SPIR-V binary into GLSL and compile that.
   // Returns false if the binary cannot be translated or if compilation fails.

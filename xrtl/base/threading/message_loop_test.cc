@@ -242,7 +242,7 @@ TEST(MessageLoopTest, MarshalAsyncCancelReentrant) {
   // queued up the next task. That way when we cancel we can be sure of the
   // timing.
   auto fence_event = Event::CreateFence();
-  auto task_list = make_unique<MessageLoop::TaskList>();
+  auto task_list = absl::make_unique<MessageLoop::TaskList>();
   loop->MarshalAsync(task_list.get(), [&]() {
     // Cancel ourselves.
     task_list.reset();
@@ -265,7 +265,7 @@ TEST(MessageLoopTest, MarshalAsyncCancelInLoop) {
   // timing.
   auto fence_event = Event::CreateFence();
   MessageLoop::TaskList persistent_task_list;
-  auto task_list = make_unique<MessageLoop::TaskList>();
+  auto task_list = absl::make_unique<MessageLoop::TaskList>();
   loop->MarshalAsync(&persistent_task_list, [&]() {
     // Wait in the loop thread.
     Thread::Wait(fence_event);
@@ -307,7 +307,7 @@ TEST(MessageLoopTest, MarshalAsyncCancelOffThread) {
 
   // Queue up the task we will cancel.
   bool did_task_run = false;
-  auto task_list = make_unique<MessageLoop::TaskList>();
+  auto task_list = absl::make_unique<MessageLoop::TaskList>();
   loop->MarshalAsync(task_list.get(), [&]() {
     EXPECT_FALSE(did_task_run);
     did_task_run = true;
@@ -400,7 +400,7 @@ TEST(MessageLoopTest, DeferCancelImplicit) {
 
   // Queue up the task.
   bool did_run = false;
-  auto task_list = make_unique<MessageLoop::TaskList>();
+  auto task_list = absl::make_unique<MessageLoop::TaskList>();
   loop->Defer(task_list.get(), [&]() {
     EXPECT_FALSE(did_run);
     did_run = true;
@@ -496,7 +496,7 @@ TEST(MessageLoopTest, DelayedDeferCancelImplicit) {
 
   // Queue up the task.
   bool did_run = false;
-  auto task_list = make_unique<MessageLoop::TaskList>();
+  auto task_list = absl::make_unique<MessageLoop::TaskList>();
   loop->Defer(task_list.get(),
               [&]() {
                 EXPECT_FALSE(did_run);
@@ -602,7 +602,7 @@ TEST(MessageLoopTest, DeferRepeatingCancelImplicit) {
 
   // Queue up the task.
   bool did_run = false;
-  auto task_list = make_unique<MessageLoop::TaskList>();
+  auto task_list = absl::make_unique<MessageLoop::TaskList>();
   loop->DeferRepeating(task_list.get(),
                        [&]() {
                          EXPECT_FALSE(did_run);

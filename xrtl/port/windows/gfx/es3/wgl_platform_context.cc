@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/debugging.h"
 #include "xrtl/base/flags.h"
 #include "xrtl/base/tracing.h"
@@ -89,7 +90,7 @@ std::string GetWglErrorDescription(uint32_t error) {
   char buffer[256];
   if (::FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error,
                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer,
-                       count_of(buffer), NULL) == 0) {
+                       ABSL_ARRAYSIZE(buffer), NULL) == 0) {
     return "UNKNOWN";
   }
   return std::string(buffer);
@@ -152,8 +153,8 @@ HWND WGLPlatformContext::CreateDummyWindow() {
 
   // Ensure we create the window class we use for the window.
   // This should be process-local so we only need to do it once.
-  static std::once_flag register_class_flag;
-  std::call_once(register_class_flag, []() {
+  static absl::once_flag register_class_flag;
+  absl::call_once(register_class_flag, []() {
     WNDCLASSEXW wcex = {0};
     wcex.cbSize = sizeof(WNDCLASSEXW);
     wcex.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
@@ -346,9 +347,9 @@ bool WGLPlatformContext::Initialize(HDC native_display, HWND native_window,
   // Setup GL functions. We only need to do this once.
   // NOTE: GLAD is not thread safe! We must only be calling this from a single
   //       thread.
-  static std::once_flag load_gles2_flag;
+  static absl::once_flag load_gles2_flag;
   static std::atomic<bool> loaded_gles2{false};
-  std::call_once(load_gles2_flag, []() {
+  absl::call_once(load_gles2_flag, []() {
     loaded_gles2 = gladLoadGLES2Loader(LoadOpenGLFunction);
   });
   if (!loaded_gles2) {
@@ -357,8 +358,8 @@ bool WGLPlatformContext::Initialize(HDC native_display, HWND native_window,
   }
 
   // Grab GL info.
-  static std::once_flag log_gl_flag;
-  std::call_once(log_gl_flag, []() {
+  static absl::once_flag log_gl_flag;
+  absl::call_once(log_gl_flag, []() {
     LOG(INFO) << "GL initialized successfully:" << std::endl
               << "GL vendor: " << glGetString(GL_VENDOR) << std::endl
               << "GL renderer: " << glGetString(GL_RENDERER) << std::endl
@@ -391,9 +392,9 @@ bool WGLPlatformContext::InitializeWGL(HDC hdc) {
   WTF_SCOPE0("WGLPlatformContext#InitializeWGL");
 
   // Attempt to load WGL.
-  static std::once_flag load_flag;
+  static absl::once_flag load_flag;
   static std::atomic<bool> load_result{false};
-  std::call_once(load_flag, [this]() {
+  absl::call_once(load_flag, [this]() {
     // Grab the few imports we need from OpenGL32 that GLAD doesn't pull in.
     if (!InitializeCoreWglFunctions()) {
       LOG(ERROR) << "Failed to initialize core WGL functions";

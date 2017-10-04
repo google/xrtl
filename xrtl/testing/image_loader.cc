@@ -24,7 +24,7 @@
 namespace xrtl {
 namespace testing {
 
-Image ImageLoader::LoadImage(StringView path, int image_channels) {
+Image ImageLoader::LoadImage(absl::string_view path, int image_channels) {
   Image image;
   ImageDataPtr image_data = {
       stbi_load(FileManifest::ResolvePath(path).data(), &image.width,

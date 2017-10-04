@@ -176,7 +176,7 @@ void EpollMessageLoop::ThreadMain() {
     epoll_event events[kMaxEvents];
     int num_events = -1;
     do {
-      num_events = epoll_wait(epoll_fd_, events, count_of(events),
+      num_events = epoll_wait(epoll_fd_, events, ABSL_ARRAYSIZE(events),
                               timeout_millis.count());
     } while (num_events == -1 && errno == EINTR);
     DCHECK_GE(num_events, 0);

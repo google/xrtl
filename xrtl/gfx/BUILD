@@ -103,7 +103,6 @@ cc_library(
 
 alias(
     name = "port_context_factory",
-    visibility = ["//visibility:private"],
     actual = select(
         {
             # "//xrtl/tools/target_platform:android": "",
@@ -115,6 +114,7 @@ alias(
         },
         no_match_error = "No graphics context support on this platform",
     ),
+    visibility = ["//visibility:private"],
 )
 
 cc_library(
@@ -283,7 +283,7 @@ cc_library(
     deps = [
         ":pixel_format",
         ":vertex_format",
-        "//xrtl/base:fixed_vector",
+        "@com_google_absl//absl/container:inlined_vector",
     ],
 )
 

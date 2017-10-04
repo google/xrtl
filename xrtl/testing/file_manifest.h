@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/string_view.h"
+#include "absl/strings/string_view.h"
 
 namespace xrtl {
 namespace testing {
@@ -36,7 +36,7 @@ class FileManifest {
   // Returns the input relative path without modifications if the exact relative
   // path is not found in the runfiles MANIFEST.
   // Only files specified in the "data" field of tests will be available here.
-  static StringView ResolvePath(StringView relative_path);
+  static absl::string_view ResolvePath(absl::string_view relative_path);
 
  private:
   static std::vector<std::pair<std::string, std::string>> file_paths_map;

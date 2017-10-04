@@ -17,7 +17,7 @@
 
 #include <cstdint>
 
-#include "xrtl/base/fixed_vector.h"
+#include "absl/container/inlined_vector.h"
 #include "xrtl/gfx/pixel_format.h"
 #include "xrtl/gfx/vertex_format.h"
 
@@ -221,8 +221,9 @@ class RenderState {
    public:
     VertexInputState() = default;
 
-    FixedVector<VertexInputBinding, kMaxVertexInputs> vertex_bindings;
-    FixedVector<VertexInputAttribute, kMaxVertexInputs> vertex_attributes;
+    absl::InlinedVector<VertexInputBinding, kMaxVertexInputs> vertex_bindings;
+    absl::InlinedVector<VertexInputAttribute, kMaxVertexInputs>
+        vertex_attributes;
   };
   VertexInputState vertex_input_state;
 
@@ -612,7 +613,8 @@ class RenderState {
     //
     // Compatibility note:
     // - OpenGL ES: all attachments must have the same state.
-    FixedVector<ColorBlendAttachmentState, kMaxColorAttachments> attachments;
+    absl::InlinedVector<ColorBlendAttachmentState, kMaxColorAttachments>
+        attachments;
 
    private:
   };

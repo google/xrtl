@@ -29,6 +29,7 @@
 #include <sys/syscall.h>   // gettid
 #endif                     // XRTL_PLATFORM_APPLE
 
+#include "absl/base/call_once.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/stopwatch.h"
 #include "xrtl/base/threading/event.h"
@@ -132,8 +133,8 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
 // Ensures we have a TLS slot for the current thread.
 // Safe to call multiple times.
 void InitializeCurrentThreadStorage() {
-  static std::once_flag current_thread_key_flag;
-  std::call_once(current_thread_key_flag, []() {
+  static absl::once_flag current_thread_key_flag;
+  absl::call_once(current_thread_key_flag, []() {
     pthread_key_create(&current_thread_key_, [](void* data) {
       auto thread = reinterpret_cast<PthreadsThread*>(data);
       if (thread) {
@@ -197,7 +198,7 @@ void Process::DisableHighResolutionTiming() {
 
 ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
                                std::function<void()> start_routine) {
-  auto start_data = make_unique<ThreadStartData>();
+  auto start_data = absl::make_unique<ThreadStartData>();
   start_data->start_routine_fn = std::move(start_routine);
   return PthreadsThread::CreateThread(create_params, std::move(start_data));
 }
@@ -205,7 +206,7 @@ ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
 ref_ptr<Thread> Thread::Create(const CreateParams& create_params,
                                ThreadStartRoutine start_routine,
                                void* start_param) {
-  auto start_data = make_unique<ThreadStartData>();
+  auto start_data = absl::make_unique<ThreadStartData>();
   start_data->start_routine = start_routine;
   start_data->start_param = start_param;
   return PthreadsThread::CreateThread(create_params, std::move(start_data));

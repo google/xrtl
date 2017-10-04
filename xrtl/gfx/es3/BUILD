@@ -41,6 +41,7 @@ cc_library(
         "//xrtl/base:debugging",
         "//xrtl/gfx:command_encoder",
         "//xrtl/gfx:framebuffer",
+        "@com_google_absl//absl/container:inlined_vector",
     ],
 )
 
@@ -344,8 +345,8 @@ cc_library(
         ":es3_platform_context",
         "//xrtl/base:array_view",
         "//xrtl/base:debugging",
-        "//xrtl/base:string_view",
         "//xrtl/base:tracing",
+        "@com_google_absl//absl/strings",
         "@spirv_cross//:spirv_cross_lib",
     ],
 )

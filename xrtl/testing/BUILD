@@ -95,7 +95,7 @@ cc_library(
     hdrs = ["file_manifest.h"],
     deps = [
         "//xrtl/base:logging",
-        "//xrtl/base:string_view",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -108,7 +108,7 @@ cc_library(
         ":file_manifest",
         "//external:stb_image",
         "//xrtl/base:logging",
-        "//xrtl/base:string_view",
+        "@com_google_absl//absl/strings",
     ],
 )
 

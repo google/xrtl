@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/string_view.h"
+#include "absl/strings/string_view.h"
 
 // Forward declarations as glslang headers are terrible.
 namespace glslang {
@@ -73,9 +73,9 @@ class ShaderCompiler {
   // Multiple sources will be concatenated. Add newlines to ensure that source
   // is properly attributed to the source file.
   void AddSource(const std::string& file_name, std::string source);
-  void AddSource(const std::string& file_name, StringView source);
+  void AddSource(const std::string& file_name, absl::string_view source);
   void AddSource(const std::string& file_name, const char* source) {
-    return AddSource(file_name, StringView{source});
+    return AddSource(file_name, absl::string_view{source});
   }
 
   // Adds source code to compile.
@@ -85,7 +85,7 @@ class ShaderCompiler {
   void AddSource(std::string source) {
     return AddSource("", std::move(source));
   }
-  void AddSource(StringView source) { return AddSource("", source); }
+  void AddSource(absl::string_view source) { return AddSource("", source); }
   void AddSource(const char* source) { return AddSource("", source); }
 
   // TODO(benvanik): preprocessor APIs for evaluation and #include support.
