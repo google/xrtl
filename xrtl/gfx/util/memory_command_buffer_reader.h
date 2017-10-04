@@ -52,11 +52,11 @@ class MemoryCommandBufferReader {
 
   // Reads an array of primitives/structs from the command buffer.
   template <typename T>
-  ArrayView<T> ReadArray(size_t value_count) {
+  ArrayView<const T> ReadArray(size_t value_count) {
     if (!value_count) {
-      return {};
+      return ArrayView<const T>();
     }
-    return ArrayView<T>(
+    return ArrayView<const T>(
         reinterpret_cast<const T*>(ReadData(value_count * sizeof(T))),
         value_count);
   }
@@ -73,7 +73,8 @@ class MemoryCommandBufferReader {
     // ref_ptrs - will need to ensure the references remain valid until they
     // are adjusted.
     return ArrayView<ref_ptr<T>>(
-        reinterpret_cast<const ref_ptr<T>*>(ReadData(value_count * sizeof(T*))),
+        const_cast<ref_ptr<T>*>(reinterpret_cast<const ref_ptr<T>*>(
+            ReadData(value_count * sizeof(T*)))),
         value_count);
   }
 

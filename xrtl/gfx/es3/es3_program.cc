@@ -25,7 +25,7 @@ namespace es3 {
 ES3Program::ES3Program(ref_ptr<ES3PlatformContext> platform_context,
                        ArrayView<ref_ptr<ES3Shader>> shaders)
     : platform_context_(std::move(platform_context)),
-      shaders_(std::vector<ref_ptr<ES3Shader>>(shaders)) {
+      shaders_(shaders.begin(), shaders.end()) {
   auto context_lock =
       ES3PlatformContext::LockTransientContext(platform_context_);
 

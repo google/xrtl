@@ -45,7 +45,7 @@ class Framebuffer : public RefObject<Framebuffer> {
               ArrayView<ref_ptr<ImageView>> attachments)
       : render_pass_(std::move(render_pass)),
         size_(size),
-        attachments_(attachments) {}
+        attachments_(attachments.begin(), attachments.end()) {}
 
   ref_ptr<RenderPass> render_pass_;
   Size3D size_;

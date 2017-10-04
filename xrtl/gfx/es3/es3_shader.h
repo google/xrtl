@@ -80,8 +80,6 @@ class ES3Shader : public RefObject<ES3Shader> {
 
   // Attempts to compile the given GLSL source code into a shader.
   // Returns false if the compilation fails.
-  bool CompileSource(GLenum shader_type, ArrayView<const char*> sources);
-  bool CompileSource(GLenum shader_type, ArrayView<std::string> sources);
   bool CompileSource(GLenum shader_type, ArrayView<absl::string_view> sources);
 
   // Attempts to translate a SPIR-V binary into GLSL and compile that.

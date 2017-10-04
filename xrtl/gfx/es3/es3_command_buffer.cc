@@ -76,7 +76,7 @@ void ES3CommandBuffer::EndRenderCommands(RenderCommandEncoderPtr encoder) {
 
 RenderPassCommandEncoderPtr ES3CommandBuffer::BeginRenderPass(
     ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-    ArrayView<ClearColor> clear_colors) {
+    ArrayView<const ClearColor> clear_colors) {
   // unique_ptr wrapper so that we implicitly end the command encoding when it
   // goes out of scope. It's safe if the user has already ended it explicitly.
   render_pass_encoder_.BeginRenderPass(render_pass, framebuffer, clear_colors);

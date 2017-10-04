@@ -100,9 +100,10 @@ class ES3Queue {
                ArrayView<ref_ptr<CommandBuffer>> command_buffers,
                ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
                ref_ptr<Event> signal_handle)
-        : wait_queue_fences(wait_queue_fences),
-          command_buffers(command_buffers),
-          signal_queue_fences(signal_queue_fences),
+        : wait_queue_fences(wait_queue_fences.begin(), wait_queue_fences.end()),
+          command_buffers(command_buffers.begin(), command_buffers.end()),
+          signal_queue_fences(signal_queue_fences.begin(),
+                              signal_queue_fences.end()),
           signal_handle(std::move(signal_handle)) {}
     QueueEntry(ref_ptr<ES3PlatformContext> exclusive_context,
                ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
@@ -110,9 +111,10 @@ class ES3Queue {
                ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
                ref_ptr<Event> signal_handle)
         : exclusive_context(std::move(exclusive_context)),
-          wait_queue_fences(wait_queue_fences),
+          wait_queue_fences(wait_queue_fences.begin(), wait_queue_fences.end()),
           callback(std::move(callback)),
-          signal_queue_fences(signal_queue_fences),
+          signal_queue_fences(signal_queue_fences.begin(),
+                              signal_queue_fences.end()),
           signal_handle(std::move(signal_handle)) {}
   };
 

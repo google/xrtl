@@ -51,8 +51,34 @@ class ArrayView {
       : size_(N), data_(N ? value.data() : nullptr) {}
   ArrayView(std::initializer_list<T> const& value)  // NOLINT
       : size_(value.size()), data_(value.size() ? value.begin() : nullptr) {}
-  ArrayView(std::vector<T> const& value)  // NOLINT
+
+  explicit ArrayView(std::vector<T> const& value)  // NOLINT
       : size_(value.size()), data_(value.size() ? value.data() : nullptr) {}
+
+  ArrayView(ArrayView<T> const& other)
+      : size_(other.size_), data_(other.data_) {}
+  ArrayView<T>& operator=(ArrayView<T> const& other) {
+    size_ = other.size_;
+    data_ = other.data_;
+    return *this;
+  }
+  XRTL_ALLOW_RVALUE_REFERENCES_PUSH
+  // std::move support. Requires -Wgoogle3-rvalue-reference.
+  // && is against style guide but required for proper move support for ptr
+  // types (and since the style guide allows std::move for unique_ptr/etc it
+  // should be allowed here too).
+  ArrayView(ArrayView<T>&& rhs) : size_(rhs.size_), data_(rhs.data_) {
+    rhs.size_ = 0;
+    rhs.data_ = nullptr;
+  }                                              // NOLINT
+  ArrayView<T>& operator=(ArrayView<T>&& rhs) {  // NOLINT
+    size_ = rhs.size_;
+    data_ = rhs.data_;
+    rhs.size_ = 0;
+    rhs.data_ = nullptr;
+    return *this;
+  }
+  XRTL_ALLOW_RVALUE_REFERENCES_POP
 
   const_iterator begin() const noexcept { return data_; }
   const_iterator end() const noexcept {
@@ -81,17 +107,6 @@ class ArrayView {
   }
   // Supports unary expression evaluation.
   bool operator!() const { return size_ == 0; }
-
-  // Conversion into std::vector for storage.
-  // The data elements will be copied, not moved.
-  operator std::vector<T>() const {
-    std::vector<T> result;
-    result.resize(size_);
-    for (size_t i = 0; i < size_; ++i) {
-      result[i] = data_[i];
-    }
-    return result;
-  }
 
  private:
   size_t size_ = 0;

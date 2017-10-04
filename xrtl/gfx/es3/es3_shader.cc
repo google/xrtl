@@ -46,26 +46,6 @@ ES3Shader::~ES3Shader() {
 }
 
 bool ES3Shader::CompileSource(GLenum shader_type,
-                              ArrayView<const char*> sources) {
-  std::vector<absl::string_view> string_view_sources;
-  string_view_sources.reserve(sources.size());
-  for (const auto& source : sources) {
-    string_view_sources.push_back(absl::string_view(source));
-  }
-  return CompileSource(shader_type, string_view_sources);
-}
-
-bool ES3Shader::CompileSource(GLenum shader_type,
-                              ArrayView<std::string> sources) {
-  std::vector<absl::string_view> string_view_sources;
-  string_view_sources.reserve(sources.size());
-  for (const auto& source : sources) {
-    string_view_sources.push_back(absl::string_view(source));
-  }
-  return CompileSource(shader_type, string_view_sources);
-}
-
-bool ES3Shader::CompileSource(GLenum shader_type,
                               ArrayView<absl::string_view> sources) {
   WTF_SCOPE0("ES3Shader#CompileSource");
   auto context_lock =
@@ -291,7 +271,7 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
           << translated_source;
 
   // Attempt to compile GLSL to a native GL shader.
-  return CompileSource(shader_type, ArrayView<std::string>{translated_source});
+  return CompileSource(shader_type, {translated_source});
 }
 
 bool ES3Shader::ApplyBindings(GLuint program_id,

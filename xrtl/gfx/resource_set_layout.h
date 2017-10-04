@@ -80,7 +80,7 @@ class ResourceSetLayout : public RefObject<ResourceSetLayout> {
 
  protected:
   explicit ResourceSetLayout(ArrayView<BindingSlot> binding_slots)
-      : binding_slots_(binding_slots) {}
+      : binding_slots_(binding_slots.begin(), binding_slots.end()) {}
 
   std::vector<BindingSlot> binding_slots_;
 };

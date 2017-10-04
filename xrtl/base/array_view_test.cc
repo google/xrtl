@@ -151,7 +151,7 @@ TEST(ArrayViewTest, StdVector) {
   EXPECT_EQ(0, view.size());
 
   std::vector<int> list_1 = {0};
-  view = {list_1};
+  view = ArrayView<int>{list_1};
   EXPECT_FALSE(view.empty());
   EXPECT_TRUE(view);
   EXPECT_FALSE(!view);
@@ -160,7 +160,7 @@ TEST(ArrayViewTest, StdVector) {
   EXPECT_EQ(0, view[0]);
 
   std::vector<int> list_3 = {0, 1, 2};
-  view = {list_3};
+  view = ArrayView<int>{list_3};
   EXPECT_FALSE(view.empty());
   EXPECT_EQ(3, view.size());
   EXPECT_EQ(list_3.data(), view.data());
@@ -173,7 +173,7 @@ TEST(ArrayViewTest, StdVector) {
 TEST(ArrayViewTest, ConvertToVector) {
   ArrayView<int> view({});
   EXPECT_TRUE(view.empty());
-  std::vector<int> converted = view;
+  std::vector<int> converted = {view.begin(), view.end()};
   EXPECT_TRUE(converted.empty());
 
   view = {0, 1, 2};
@@ -182,7 +182,7 @@ TEST(ArrayViewTest, ConvertToVector) {
   EXPECT_EQ(1, view[1]);
   EXPECT_EQ(2, view[2]);
 
-  converted = view;
+  converted = {view.begin(), view.end()};
   EXPECT_EQ(3, converted.size());
   EXPECT_EQ(0, converted[0]);
   EXPECT_EQ(1, converted[1]);

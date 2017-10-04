@@ -98,16 +98,15 @@ void ES3TransferCommandEncoder::UpdateBuffer(ref_ptr<Buffer> base_target_buffer,
 
 void ES3TransferCommandEncoder::CopyBuffer(
     ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
-    ArrayView<CopyBufferRegion> regions) {
+    ArrayView<const CopyBufferRegion> regions) {
   // TODO(benvanik): this.
   LOG(WARNING) << "CopyBuffer not yet implemented";
 }
 
-void ES3TransferCommandEncoder::CopyImage(ref_ptr<Image> source_image,
-                                          Image::Layout source_image_layout,
-                                          ref_ptr<Image> target_image,
-                                          Image::Layout target_image_layout,
-                                          ArrayView<CopyImageRegion> regions) {
+void ES3TransferCommandEncoder::CopyImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    ArrayView<const CopyImageRegion> regions) {
   // TODO(benvanik): this.
   LOG(WARNING) << "CopyImage not yet implemented";
 }
@@ -115,14 +114,15 @@ void ES3TransferCommandEncoder::CopyImage(ref_ptr<Image> source_image,
 void ES3TransferCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
-    ArrayView<CopyBufferImageRegion> regions) {
+    ArrayView<const CopyBufferImageRegion> regions) {
   // TODO(benvanik): this.
   LOG(WARNING) << "CopyBufferToImage not yet implemented";
 }
 
 void ES3TransferCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
-    ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
+    ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferImageRegion> regions) {
   // TODO(benvanik): this.
   LOG(WARNING) << "CopyImageToBuffer not yet implemented";
 }
@@ -147,7 +147,7 @@ void ES3TransferCommandEncoder::WaitFences(
 
 void ES3TransferCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
-    ArrayView<Image::LayerRange> ranges) {
+    ArrayView<const Image::LayerRange> ranges) {
   // TODO(benvanik): this.
   LOG(WARNING) << "ClearColorImage not yet implemented";
 }
@@ -210,18 +210,17 @@ void ES3ComputeCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
                                source_data, source_data_length);
 }
 
-void ES3ComputeCommandEncoder::CopyBuffer(ref_ptr<Buffer> source_buffer,
-                                          ref_ptr<Buffer> target_buffer,
-                                          ArrayView<CopyBufferRegion> regions) {
+void ES3ComputeCommandEncoder::CopyBuffer(
+    ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferRegion> regions) {
   common_encoder_.CopyBuffer(std::move(source_buffer), std::move(target_buffer),
                              regions);
 }
 
-void ES3ComputeCommandEncoder::CopyImage(ref_ptr<Image> source_image,
-                                         Image::Layout source_image_layout,
-                                         ref_ptr<Image> target_image,
-                                         Image::Layout target_image_layout,
-                                         ArrayView<CopyImageRegion> regions) {
+void ES3ComputeCommandEncoder::CopyImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    ArrayView<const CopyImageRegion> regions) {
   common_encoder_.CopyImage(std::move(source_image), source_image_layout,
                             std::move(target_image), target_image_layout,
                             regions);
@@ -230,7 +229,7 @@ void ES3ComputeCommandEncoder::CopyImage(ref_ptr<Image> source_image,
 void ES3ComputeCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
-    ArrayView<CopyBufferImageRegion> regions) {
+    ArrayView<const CopyBufferImageRegion> regions) {
   common_encoder_.CopyBufferToImage(std::move(source_buffer),
                                     std::move(target_image),
                                     target_image_layout, regions);
@@ -238,7 +237,8 @@ void ES3ComputeCommandEncoder::CopyBufferToImage(
 
 void ES3ComputeCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
-    ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
+    ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferImageRegion> regions) {
   common_encoder_.CopyImageToBuffer(std::move(source_image),
                                     source_image_layout,
                                     std::move(target_buffer), regions);
@@ -261,7 +261,7 @@ void ES3ComputeCommandEncoder::WaitFences(
 
 void ES3ComputeCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
-    ArrayView<Image::LayerRange> ranges) {
+    ArrayView<const Image::LayerRange> ranges) {
   common_encoder_.ClearColorImage(std::move(image), image_layout, clear_color,
                                   ranges);
 }
@@ -273,7 +273,7 @@ void ES3ComputeCommandEncoder::BindPipeline(ref_ptr<ComputePipeline> pipeline) {
 
 void ES3ComputeCommandEncoder::BindResourceSet(
     int set_index, ref_ptr<ResourceSet> resource_set,
-    ArrayView<size_t> dynamic_offsets) {
+    ArrayView<const size_t> dynamic_offsets) {
   // TODO(benvanik): this.
   LOG(WARNING) << "BindResourceSet not yet implemented";
 }
@@ -354,18 +354,17 @@ void ES3RenderCommandEncoder::UpdateBuffer(ref_ptr<Buffer> target_buffer,
                                source_data, source_data_length);
 }
 
-void ES3RenderCommandEncoder::CopyBuffer(ref_ptr<Buffer> source_buffer,
-                                         ref_ptr<Buffer> target_buffer,
-                                         ArrayView<CopyBufferRegion> regions) {
+void ES3RenderCommandEncoder::CopyBuffer(
+    ref_ptr<Buffer> source_buffer, ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferRegion> regions) {
   common_encoder_.CopyBuffer(std::move(source_buffer), std::move(target_buffer),
                              regions);
 }
 
-void ES3RenderCommandEncoder::CopyImage(ref_ptr<Image> source_image,
-                                        Image::Layout source_image_layout,
-                                        ref_ptr<Image> target_image,
-                                        Image::Layout target_image_layout,
-                                        ArrayView<CopyImageRegion> regions) {
+void ES3RenderCommandEncoder::CopyImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    ArrayView<const CopyImageRegion> regions) {
   common_encoder_.CopyImage(std::move(source_image), source_image_layout,
                             std::move(target_image), target_image_layout,
                             regions);
@@ -374,7 +373,7 @@ void ES3RenderCommandEncoder::CopyImage(ref_ptr<Image> source_image,
 void ES3RenderCommandEncoder::CopyBufferToImage(
     ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
     Image::Layout target_image_layout,
-    ArrayView<CopyBufferImageRegion> regions) {
+    ArrayView<const CopyBufferImageRegion> regions) {
   common_encoder_.CopyBufferToImage(std::move(source_buffer),
                                     std::move(target_image),
                                     target_image_layout, regions);
@@ -382,7 +381,8 @@ void ES3RenderCommandEncoder::CopyBufferToImage(
 
 void ES3RenderCommandEncoder::CopyImageToBuffer(
     ref_ptr<Image> source_image, Image::Layout source_image_layout,
-    ref_ptr<Buffer> target_buffer, ArrayView<CopyBufferImageRegion> regions) {
+    ref_ptr<Buffer> target_buffer,
+    ArrayView<const CopyBufferImageRegion> regions) {
   common_encoder_.CopyImageToBuffer(std::move(source_image),
                                     source_image_layout,
                                     std::move(target_buffer), regions);
@@ -405,33 +405,30 @@ void ES3RenderCommandEncoder::WaitFences(
 
 void ES3RenderCommandEncoder::ClearColorImage(
     ref_ptr<Image> image, Image::Layout image_layout, ClearColor clear_color,
-    ArrayView<Image::LayerRange> ranges) {
+    ArrayView<const Image::LayerRange> ranges) {
   common_encoder_.ClearColorImage(std::move(image), image_layout, clear_color,
                                   ranges);
 }
 
 void ES3RenderCommandEncoder::ClearDepthStencilImage(
     ref_ptr<Image> image, Image::Layout image_layout, float depth_value,
-    uint32_t stencil_value, ArrayView<Image::LayerRange> ranges) {
+    uint32_t stencil_value, ArrayView<const Image::LayerRange> ranges) {
   // TODO(benvanik): this.
   LOG(WARNING) << "ClearDepthStencilImage not yet implemented";
 }
 
-void ES3RenderCommandEncoder::BlitImage(ref_ptr<Image> source_image,
-                                        Image::Layout source_image_layout,
-                                        ref_ptr<Image> target_image,
-                                        Image::Layout target_image_layout,
-                                        Sampler::Filter scaling_filter,
-                                        ArrayView<BlitImageRegion> regions) {
+void ES3RenderCommandEncoder::BlitImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    Sampler::Filter scaling_filter, ArrayView<const BlitImageRegion> regions) {
   // TODO(benvanik): this.
   LOG(WARNING) << "BlitImage not yet implemented";
 }
 
-void ES3RenderCommandEncoder::ResolveImage(ref_ptr<Image> source_image,
-                                           Image::Layout source_image_layout,
-                                           ref_ptr<Image> target_image,
-                                           Image::Layout target_image_layout,
-                                           ArrayView<CopyImageRegion> regions) {
+void ES3RenderCommandEncoder::ResolveImage(
+    ref_ptr<Image> source_image, Image::Layout source_image_layout,
+    ref_ptr<Image> target_image, Image::Layout target_image_layout,
+    ArrayView<const CopyImageRegion> regions) {
   // TODO(benvanik): this.
   LOG(WARNING) << "ResolveImage not yet implemented";
 }
@@ -496,7 +493,7 @@ void ES3RenderPassCommandEncoder::WaitFences(
 
 void ES3RenderPassCommandEncoder::ClearColorAttachment(
     int color_attachment_index, ClearColor clear_color,
-    ArrayView<ClearRect> clear_rects) {
+    ArrayView<const ClearRect> clear_rects) {
   for (const auto& clear_rect : clear_rects) {
     glScissor(clear_rect.rect.origin.x, clear_rect.rect.origin.y,
               clear_rect.rect.size.width, clear_rect.rect.size.height);
@@ -508,7 +505,7 @@ void ES3RenderPassCommandEncoder::ClearColorAttachment(
 
 void ES3RenderPassCommandEncoder::ClearDepthStencilAttachment(
     float depth_value, uint32_t stencil_value,
-    ArrayView<ClearRect> clear_rects) {
+    ArrayView<const ClearRect> clear_rects) {
   for (const auto& clear_rect : clear_rects) {
     glScissor(clear_rect.rect.origin.x, clear_rect.rect.origin.y,
               clear_rect.rect.size.width, clear_rect.rect.size.height);
@@ -520,10 +517,10 @@ void ES3RenderPassCommandEncoder::ClearDepthStencilAttachment(
 
 void ES3RenderPassCommandEncoder::BeginRenderPass(
     ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-    ArrayView<ClearColor> clear_colors) {
+    ArrayView<const ClearColor> clear_colors) {
   render_pass_ = std::move(render_pass);
   framebuffer_ = std::move(framebuffer);
-  clear_colors_ = std::vector<ClearColor>(clear_colors);
+  clear_colors_ = {clear_colors.begin(), clear_colors.end()};
   subpass_index_ = 0;
 
   DCHECK_LE(framebuffer_->attachments().size(), 64);
@@ -655,8 +652,8 @@ void ES3RenderPassCommandEncoder::EndRenderPass() {
   scratch_vao_id_ = 0;
 }
 
-void ES3RenderPassCommandEncoder::SetScissors(int first_scissor,
-                                              ArrayView<Rect2D> scissors) {
+void ES3RenderPassCommandEncoder::SetScissors(
+    int first_scissor, ArrayView<const Rect2D> scissors) {
   // TODO(benvanik): multiple scissors?
   DCHECK_EQ(first_scissor, 0);
   DCHECK_EQ(scissors.size(), 1);
@@ -666,8 +663,8 @@ void ES3RenderPassCommandEncoder::SetScissors(int first_scissor,
             scissor.size.height);
 }
 
-void ES3RenderPassCommandEncoder::SetViewports(int first_viewport,
-                                               ArrayView<Viewport> viewports) {
+void ES3RenderPassCommandEncoder::SetViewports(
+    int first_viewport, ArrayView<const Viewport> viewports) {
   // TODO(benvanik): multiple viewports?
   DCHECK_EQ(first_viewport, 0);
   DCHECK_EQ(viewports.size(), 1);
@@ -960,10 +957,11 @@ void ES3RenderPassCommandEncoder::RefreshColorBlendState(
 
 void ES3RenderPassCommandEncoder::BindResourceSet(
     int set_index, ref_ptr<ResourceSet> resource_set,
-    ArrayView<size_t> dynamic_offsets) {
+    ArrayView<const size_t> dynamic_offsets) {
   resource_sets_[set_index] = resource_set;
   // TODO(benvanik): reserve to avoid allocations.
-  dynamic_offsets_[set_index] = dynamic_offsets;
+  dynamic_offsets_[set_index] = {dynamic_offsets.begin(),
+                                 dynamic_offsets.end()};
 
   // Ensure that UpdateResourceSets is called before we draw again.
   resource_sets_dirty_ = true;
@@ -984,7 +982,7 @@ void ES3RenderPassCommandEncoder::BindVertexBuffers(
 
 void ES3RenderPassCommandEncoder::BindVertexBuffers(
     int first_binding, ArrayView<ref_ptr<Buffer>> buffers,
-    ArrayView<size_t> buffer_offsets) {
+    ArrayView<const size_t> buffer_offsets) {
   for (int i = 0; i < buffers.size(); ++i) {
     int binding_index = first_binding + i;
     auto& binding_slot = vertex_buffer_bindings_[binding_index];

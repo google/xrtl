@@ -106,7 +106,7 @@ class ContextFactory : public RefObject<ContextFactory> {
   CreateResult CreateContext(ref_ptr<Device> device,
                              Device::Features required_features,
                              ref_ptr<Context>* out_context) {
-    return CreateContext(std::array<ref_ptr<Device>, 1>{{device}},
+    return CreateContext(ArrayView<ref_ptr<Device>>{device},
                          std::move(required_features), out_context);
   }
 

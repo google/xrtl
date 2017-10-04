@@ -62,8 +62,10 @@ class PipelineLayout : public RefObject<PipelineLayout> {
   PipelineLayout(
       ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
       ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
-      : resource_set_layouts_(resource_set_layouts),
-        push_constant_ranges_(push_constant_ranges) {}
+      : resource_set_layouts_(resource_set_layouts.begin(),
+                              resource_set_layouts.end()),
+        push_constant_ranges_(push_constant_ranges.begin(),
+                              push_constant_ranges.end()) {}
 
   std::vector<ref_ptr<ResourceSetLayout>> resource_set_layouts_;
   std::vector<PipelineLayout::PushConstantRange> push_constant_ranges_;
