@@ -40,7 +40,7 @@ $ ./xtool setup
 * Install clang (and clang-tools-extra) from the [LLVM downloads page](http://releases.llvm.org/download.html)
 * Install bazel via your package manager or the [bazel releases page](https://github.com/bazelbuild/bazel/releases):
 ```
-$ sudo apt-get install bazel golang-go
+$ sudo apt-get install bazel golang-go libegl1-mesa-dev libgles2-mesa-dev
 ```
 * Run initial setup with xtool:
 ```
