@@ -12,34 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef XRTL_TESTING_IMAGE_LOADER_H_
-#define XRTL_TESTING_IMAGE_LOADER_H_
+#include "xrtl/testing/diffing/data_differ.h"
 
-#include <memory>
-
-#include "absl/strings/string_view.h"
+#include "xrtl/testing/gtest.h"
 
 namespace xrtl {
 namespace testing {
+namespace diffing {
+namespace {
 
-using ImageDataPtr = std::unique_ptr<uint8_t, void (*)(uint8_t*)>;
+// Tests a variety of normal data types.
+TEST(DataDifferTest, SimpleComparisons) {
+  EXPECT_TRUE(DataDiffer::CompareBuffers({}, {}, {}));
+  EXPECT_TRUE(DataDiffer::CompareBuffers({1}, {1}, {}));
+  EXPECT_FALSE(DataDiffer::CompareBuffers({1}, {}, {}));
+  EXPECT_FALSE(DataDiffer::CompareBuffers({1}, {2}, {}));
+}
 
-struct Image {
-  ImageDataPtr data = {nullptr, nullptr};
-  int width = 0;
-  int height = 0;
-  int channels = 0;
-};
-
-// Utilities for loading images from the file system.
-class ImageLoader {
- public:
-  // Loads the image at the specified path with the desired number of channels.
-  // If the image failed to load, its fields will be empty.
-  static Image LoadImage(absl::string_view path, int image_channels);
-};
-
+}  // namespace
+}  // namespace diffing
 }  // namespace testing
 }  // namespace xrtl
-
-#endif  // XRTL_TESTING_IMAGE_LOADER_H_

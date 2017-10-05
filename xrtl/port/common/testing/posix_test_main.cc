@@ -14,7 +14,7 @@
 
 #include "xrtl/base/flags.h"
 #include "xrtl/base/logging.h"
-#include "xrtl/testing/file_manifest.h"
+#include "xrtl/testing/file_util.h"
 #include "xrtl/testing/gtest.h"
 
 extern "C" int main(int argc, char** argv) {
@@ -23,7 +23,7 @@ extern "C" int main(int argc, char** argv) {
 
   ::testing::InitGoogleTest(&argc, argv);
 
-  xrtl::testing::FileManifest::ParseFromManifest(std::string(argv[0]));
+  xrtl::testing::FileUtil::LoadFileManifest(std::string(argv[0]));
 
   int exit_code = RUN_ALL_TESTS();
 

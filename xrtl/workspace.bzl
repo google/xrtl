@@ -95,10 +95,6 @@ def xrtl_workspace(path_prefix=""):
       path = path_prefix + "third_party/stblib/",
       build_file = path_prefix + "third_party/stblib.BUILD",
   )
-  native.bind(
-      name = "stb_image",
-      actual = "@com_github_nothings_stb//:stb_image",
-  )
 
   # //third_party/swiftshader/
   native.new_local_repository(

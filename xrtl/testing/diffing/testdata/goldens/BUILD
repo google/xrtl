@@ -1,21 +1,15 @@
 # Description:
-#  gfx test data.
+#  Diff test goldens.
 
 package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
 filegroup(
-    name = "image_buffer_data",
+    name = "test_files",
     srcs = [
+        "data_file.bin",
         "image_file.png",
-    ],
-)
-
-filegroup(
-    name = "file_util_data",
-    srcs = [
-        "empty_file",
-        "text_file",
+        "text_file.txt",
     ],
 )

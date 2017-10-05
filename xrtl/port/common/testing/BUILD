@@ -40,7 +40,7 @@ cc_library(
     deps = [
         "//xrtl/base:flags",
         "//xrtl/base:logging",
-        "//xrtl/testing:file_manifest",
+        "//xrtl/testing:file_util",
         "//xrtl/testing:gtest",
     ],
 )
