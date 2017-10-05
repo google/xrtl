@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/pipeline_layout.h"
 #include "xrtl/gfx/render_state.h"
@@ -49,11 +50,12 @@ class ComputePipeline : public Pipeline {
   // Source shader module.
   ref_ptr<ShaderModule> shader_module() const { return shader_module_; }
   // Entry point name within the shader module.
-  const std::string& entry_point() const { return entry_point_; }
+  absl::string_view entry_point() const { return entry_point_; }
 
  protected:
   ComputePipeline(ref_ptr<PipelineLayout> pipeline_layout,
-                  ref_ptr<ShaderModule> shader_module, std::string entry_point)
+                  ref_ptr<ShaderModule> shader_module,
+                  absl::string_view entry_point)
       : Pipeline(std::move(pipeline_layout)),
         shader_module_(std::move(shader_module)),
         entry_point_(std::move(entry_point)) {}

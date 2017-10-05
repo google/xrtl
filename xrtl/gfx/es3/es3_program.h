@@ -17,8 +17,8 @@
 
 #include <string>
 #include <utility>
-#include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
@@ -35,14 +35,14 @@ class ES3Program : public RefObject<ES3Program> {
   ~ES3Program();
 
   GLuint program_id() const { return program_id_; }
-  const std::vector<ref_ptr<ES3Shader>>& shaders() const { return shaders_; }
+  absl::Span<const ref_ptr<ES3Shader>> shaders() const { return shaders_; }
 
   // Program linking info log containing warnings and errors that accumulated
   // during linking.
   const std::string& info_log() const { return info_log_; }
 
   // Returns a mapping of binding slot binding index to GL binding index.
-  const std::vector<GLuint>& set_binding_map(int set_index) const {
+  absl::Span<const GLuint> set_binding_map(int set_index) const {
     return set_binding_maps_.set_bindings[set_index];
   }
 
@@ -51,7 +51,7 @@ class ES3Program : public RefObject<ES3Program> {
 
   // Returns a list of all used push constant members across all shaders paired
   // with the GL uniform location of the member.
-  const std::vector<PushConstantMemberPair>& push_constant_members() const {
+  absl::Span<const PushConstantMemberPair> push_constant_members() const {
     return push_constant_members_;
   }
 
@@ -62,13 +62,13 @@ class ES3Program : public RefObject<ES3Program> {
 
  private:
   ref_ptr<ES3PlatformContext> platform_context_;
-  std::vector<ref_ptr<ES3Shader>> shaders_;
+  absl::InlinedVector<ref_ptr<ES3Shader>, 4> shaders_;
   GLuint program_id_ = 0;
 
   std::string info_log_;
 
   ES3Shader::SetBindingMaps set_binding_maps_;
-  std::vector<PushConstantMemberPair> push_constant_members_;
+  absl::InlinedVector<PushConstantMemberPair, 8> push_constant_members_;
 };
 
 }  // namespace es3

@@ -66,7 +66,7 @@ class ES3Context : public Context {
   ref_ptr<ComputePipeline> CreateComputePipeline(
       ref_ptr<PipelineLayout> pipeline_layout,
       ref_ptr<ShaderModule> shader_module,
-      const std::string& entry_point) override;
+      absl::string_view entry_point) override;
 
   ref_ptr<RenderPipeline> CreateRenderPipeline(
       ref_ptr<PipelineLayout> pipeline_layout, ref_ptr<RenderPass> render_pass,

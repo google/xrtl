@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/base/threading/event.h"
@@ -59,7 +60,7 @@ class Context : public RefObject<Context> {
   virtual ~Context() = default;
 
   // The devices that are in use by the context.
-  const std::vector<ref_ptr<Device>>& devices() const { return devices_; }
+  absl::Span<const ref_ptr<Device>> devices() const { return devices_; }
 
   // Limits of the device (or devices). Attempting to use values out of these
   // ranges will result in failures that are difficult to detect so always check
@@ -112,7 +113,7 @@ class Context : public RefObject<Context> {
   // Creates a compute pipeline with the given shader.
   virtual ref_ptr<ComputePipeline> CreateComputePipeline(
       ref_ptr<PipelineLayout> pipeline_layout,
-      ref_ptr<ShaderModule> shader_module, const std::string& entry_point) = 0;
+      ref_ptr<ShaderModule> shader_module, absl::string_view entry_point) = 0;
 
   // Creates a render pipeline with the given shaders and parameters.
   virtual ref_ptr<RenderPipeline> CreateRenderPipeline(

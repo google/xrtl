@@ -21,7 +21,7 @@ namespace es3 {
 ES3ComputePipeline::ES3ComputePipeline(
     ref_ptr<ES3PlatformContext> platform_context,
     ref_ptr<PipelineLayout> pipeline_layout,
-    ref_ptr<ShaderModule> shader_module, std::string entry_point,
+    ref_ptr<ShaderModule> shader_module, absl::string_view entry_point,
     ref_ptr<ES3Program> program)
     : ComputePipeline(std::move(pipeline_layout), std::move(shader_module),
                       std::move(entry_point)),

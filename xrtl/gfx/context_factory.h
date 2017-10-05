@@ -17,7 +17,6 @@
 
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
@@ -60,7 +59,7 @@ class ContextFactory : public RefObject<ContextFactory> {
   // Returns a list of all devices currently available for use by this API.
   // Note that not all backends support all devices that may be present in
   // a system.
-  virtual const std::vector<ref_ptr<Device>>& devices() const = 0;
+  virtual absl::Span<const ref_ptr<Device>> devices() const = 0;
 
   // Returns the device that can be used for the best performance on the system.
   // May return nullptr if there are no devices available for use.

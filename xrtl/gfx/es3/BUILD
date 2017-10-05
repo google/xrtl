@@ -262,6 +262,7 @@ cc_library(
         ":es3_platform_context",
         ":es3_shader",
         "//xrtl/base:tracing",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -280,6 +281,7 @@ cc_library(
         "//xrtl/base/threading:thread",
         "//xrtl/gfx/util:memory_command_buffer",
         "//xrtl/gfx/util:memory_command_decoder",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )

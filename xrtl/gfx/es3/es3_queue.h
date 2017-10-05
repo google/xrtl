@@ -18,8 +18,8 @@
 #include <functional>
 #include <queue>
 #include <utility>
-#include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/threading/event.h"
 #include "xrtl/base/threading/thread.h"
@@ -74,7 +74,7 @@ class ES3Queue {
   static void QueueThreadMain(void* param);
   void RunQueue();
   void ExecuteCommandBuffers(
-      const std::vector<ref_ptr<CommandBuffer>>& command_buffers,
+      absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
       ref_ptr<ES3CommandBuffer> implementation_command_buffer);
 
   // Base platform context used by the parent ES3Context.
@@ -92,10 +92,10 @@ class ES3Queue {
 
   struct QueueEntry {
     ref_ptr<ES3PlatformContext> exclusive_context;
-    std::vector<ref_ptr<QueueFence>> wait_queue_fences;
-    std::vector<ref_ptr<CommandBuffer>> command_buffers;
+    absl::InlinedVector<ref_ptr<QueueFence>, 4> wait_queue_fences;
+    absl::InlinedVector<ref_ptr<CommandBuffer>, 4> command_buffers;
     std::function<void()> callback;
-    std::vector<ref_ptr<QueueFence>> signal_queue_fences;
+    absl::InlinedVector<ref_ptr<QueueFence>, 4> signal_queue_fences;
     ref_ptr<Event> signal_handle;
     QueueEntry() = default;
     QueueEntry(absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,

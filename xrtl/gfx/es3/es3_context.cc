@@ -100,7 +100,7 @@ ref_ptr<PipelineLayout> ES3Context::CreatePipelineLayout(
 
 ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
     ref_ptr<PipelineLayout> pipeline_layout,
-    ref_ptr<ShaderModule> shader_module, const std::string& entry_point) {
+    ref_ptr<ShaderModule> shader_module, absl::string_view entry_point) {
   WTF_SCOPE0("ES3Context#CreateComputePipeline");
 
   auto shader = shader_module.As<ES3ShaderModule>()->Lookup(entry_point);

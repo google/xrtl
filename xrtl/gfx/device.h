@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 
 namespace xrtl {
@@ -174,7 +175,7 @@ class Device : public RefObject<Device> {
   const Features& features() const { return features_; }
 
   // A list of the queue families and capabilities available on the device.
-  const std::vector<QueueFamily>& queue_families() const {
+  absl::Span<const QueueFamily> queue_families() const {
     return queue_families_;
   }
 

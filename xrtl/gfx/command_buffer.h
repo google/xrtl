@@ -191,6 +191,7 @@ class CommandBuffer : public RefObject<CommandBuffer> {
     void (*release_fn)(void* value_ptr);
     void* value_ptr;
   };
+  // TODO(benvanik): replace with a more efficient structure.
   std::vector<DependencyEntry> dependencies_;
 };
 

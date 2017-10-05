@@ -98,6 +98,7 @@ cc_library(
         "//xrtl/base:ref_ptr",
         "//xrtl/base/threading:event",
         "//xrtl/ui:control",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -168,6 +169,7 @@ cc_library(
     hdrs = ["device.h"],
     deps = [
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -179,6 +181,7 @@ cc_library(
         ":render_pass",
         "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -224,6 +227,7 @@ cc_library(
         ":render_state",
         ":shader_module",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -233,6 +237,7 @@ cc_library(
     deps = [
         ":resource_set_layout",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -274,6 +279,7 @@ cc_library(
         ":render_state",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -306,6 +312,7 @@ cc_library(
         ":resource_set_layout",
         ":sampler",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -316,6 +323,7 @@ cc_library(
     deps = [
         ":render_pass",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
 )

@@ -197,7 +197,7 @@ void ES3Queue::RunQueue() {
 }
 
 void ES3Queue::ExecuteCommandBuffers(
-    const std::vector<ref_ptr<CommandBuffer>>& command_buffers,
+    absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
     ref_ptr<ES3CommandBuffer> implementation_command_buffer) {
   for (const auto& command_buffer : command_buffers) {
     // Reset GL state.

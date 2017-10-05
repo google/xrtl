@@ -190,6 +190,10 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
 
   // Record and reflect push constant buffers. We emulate push constants with
   // normal nested GL struct uniform locations.
+  if (shader_resources.push_constant_buffers.size() > 1) {
+    LOG(ERROR) << "A maximum of one push constant buffer may be defined";
+    return false;
+  }
   for (const auto& resource : shader_resources.push_constant_buffers) {
     push_constant_block_name_ = resource.name;
     const SPIRType& type = compiler.get_type(resource.base_type_id);
