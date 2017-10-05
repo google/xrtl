@@ -16,8 +16,8 @@
 #define XRTL_GFX_FRAMEBUFFER_H_
 
 #include <utility>
-#include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/geometry.h"
 #include "xrtl/base/ref_ptr.h"
@@ -38,7 +38,7 @@ class Framebuffer : public RefObject<Framebuffer> {
   Size3D size() const { return size_; }
   // Attachments for the framebuffer in the same order as specified in the
   // render pass.
-  const std::vector<ref_ptr<ImageView>>& attachments() const {
+  absl::Span<const ref_ptr<ImageView>> attachments() const {
     return attachments_;
   }
 
@@ -51,7 +51,7 @@ class Framebuffer : public RefObject<Framebuffer> {
 
   ref_ptr<RenderPass> render_pass_;
   Size3D size_;
-  std::vector<ref_ptr<ImageView>> attachments_;
+  absl::InlinedVector<ref_ptr<ImageView>, 4> attachments_;
 };
 
 }  // namespace gfx

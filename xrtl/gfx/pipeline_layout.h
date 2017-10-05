@@ -15,8 +15,7 @@
 #ifndef XRTL_GFX_PIPELINE_LAYOUT_H_
 #define XRTL_GFX_PIPELINE_LAYOUT_H_
 
-#include <vector>
-
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/resource_set_layout.h"
@@ -51,10 +50,10 @@ class PipelineLayout : public RefObject<PipelineLayout> {
 
   virtual ~PipelineLayout() = default;
 
-  const std::vector<ref_ptr<ResourceSetLayout>>& resource_set_layouts() const {
+  absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts() const {
     return resource_set_layouts_;
   }
-  const std::vector<PushConstantRange>& push_constant_ranges() const {
+  absl::Span<const PushConstantRange> push_constant_ranges() const {
     return push_constant_ranges_;
   }
 
@@ -67,8 +66,9 @@ class PipelineLayout : public RefObject<PipelineLayout> {
         push_constant_ranges_(push_constant_ranges.begin(),
                               push_constant_ranges.end()) {}
 
-  std::vector<ref_ptr<ResourceSetLayout>> resource_set_layouts_;
-  std::vector<PipelineLayout::PushConstantRange> push_constant_ranges_;
+  absl::InlinedVector<ref_ptr<ResourceSetLayout>, 4> resource_set_layouts_;
+  absl::InlinedVector<PipelineLayout::PushConstantRange, 8>
+      push_constant_ranges_;
 };
 
 }  // namespace gfx

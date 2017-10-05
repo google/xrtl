@@ -60,17 +60,17 @@ class ES3Shader : public RefObject<ES3Shader> {
             std::string entry_point);
   ~ES3Shader();
 
-  const std::string& entry_point() const { return entry_point_; }
+  absl::string_view entry_point() const { return entry_point_; }
   GLenum shader_type() const { return shader_type_; }
   GLuint shader_id() const { return shader_id_; }
 
   // Returns a list of all uniform assignments.
   // The assignments are sorted by set+binding.
-  const std::vector<UniformAssignment>& uniform_assignments() const {
+  absl::Span<const UniformAssignment> uniform_assignments() const {
     return uniform_assignments_;
   }
   // Returns a list of all push constant members.
-  const std::vector<PushConstantMember>& push_constant_members() const {
+  absl::Span<const PushConstantMember> push_constant_members() const {
     return push_constant_members_;
   }
 

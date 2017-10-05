@@ -30,7 +30,7 @@ void ES3ShaderModule::Register(ref_ptr<ES3Shader> shader) {
 }
 
 ref_ptr<ES3Shader> ES3ShaderModule::Lookup(
-    const std::string& entry_point) const {
+    absl::string_view entry_point) const {
   for (const auto& shader : shaders_) {
     if (entry_point == shader->entry_point()) {
       return shader;

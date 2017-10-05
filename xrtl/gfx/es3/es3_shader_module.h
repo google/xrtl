@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_shader.h"
@@ -38,7 +39,7 @@ class ES3ShaderModule : public ShaderModule {
   void Register(ref_ptr<ES3Shader> shader);
 
   // Finds a shader by entry point name, if it exists.
-  ref_ptr<ES3Shader> Lookup(const std::string& entry_point) const;
+  ref_ptr<ES3Shader> Lookup(absl::string_view entry_point) const;
 
  private:
   ref_ptr<ES3PlatformContext> platform_context_;

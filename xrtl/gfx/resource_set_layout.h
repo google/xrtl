@@ -15,8 +15,7 @@
 #ifndef XRTL_GFX_RESOURCE_SET_LAYOUT_H_
 #define XRTL_GFX_RESOURCE_SET_LAYOUT_H_
 
-#include <vector>
-
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/render_pass.h"
@@ -75,17 +74,17 @@ struct BindingSlot {
 // - Vulkan: descriptor set layouts
 class ResourceSetLayout : public RefObject<ResourceSetLayout> {
  public:
+  static constexpr int kInlinedBindingSlotCount = 8;
+
   virtual ~ResourceSetLayout() = default;
 
-  const std::vector<BindingSlot>& binding_slots() const {
-    return binding_slots_;
-  }
+  absl::Span<const BindingSlot> binding_slots() const { return binding_slots_; }
 
  protected:
   explicit ResourceSetLayout(absl::Span<const BindingSlot> binding_slots)
       : binding_slots_(binding_slots.begin(), binding_slots.end()) {}
 
-  std::vector<BindingSlot> binding_slots_;
+  absl::InlinedVector<BindingSlot, kInlinedBindingSlotCount> binding_slots_;
 };
 
 }  // namespace gfx

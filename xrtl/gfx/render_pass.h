@@ -15,8 +15,7 @@
 #ifndef XRTL_GFX_RENDER_PASS_H_
 #define XRTL_GFX_RENDER_PASS_H_
 
-#include <vector>
-
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/base/ref_ptr.h"
@@ -302,7 +301,7 @@ class RenderPass : public RefObject<RenderPass> {
     // attachment provided in input_attachments[X]. Input attachments must also
     // be bound to the pipeline with a descriptor set with the input attachment
     // descriptor written in the location (set=Y, binding=Z).
-    std::vector<AttachmentReference> input_attachments;
+    absl::InlinedVector<AttachmentReference, 4> input_attachments;
 
     // An array listing which of the render pass’s attachments will be used as
     // color attachments in the subpass and what layout each attachment will be
@@ -310,14 +309,14 @@ class RenderPass : public RefObject<RenderPass> {
     // fragment shader output location, i.e. if the shader declared an output
     // variable `layout(location=X)` then it uses the attachment provided in
     // color_attachments[X].
-    std::vector<AttachmentReference> color_attachments;
+    absl::InlinedVector<AttachmentReference, 4> color_attachments;
 
     // An array listing which of the render pass’s attachments are resolved to
     // at the end of the subpass and what layout each attachment will be in
     // during the multisample resolve operation. If this is not empty it must be
     // the same size as color_attachments and the indices between the two
     // correspond.
-    std::vector<AttachmentReference> resolve_attachments;
+    absl::InlinedVector<AttachmentReference, 4> resolve_attachments;
 
     // Specifies which attachment will be used for depth/stencil data and the
     // layout it will be in during the subpass. Setting the attachment index to
@@ -327,7 +326,7 @@ class RenderPass : public RefObject<RenderPass> {
 
     // An array listing which of the render pass's attachments are not used by a
     // subpass but whose contents must be preserved throughout the subpass.
-    std::vector<AttachmentReference> preserve_attachments;
+    absl::InlinedVector<AttachmentReference, 4> preserve_attachments;
   };
 
   // Specifies a subpass dependency.
@@ -351,18 +350,16 @@ class RenderPass : public RefObject<RenderPass> {
   // A list of attachment descriptions.
   // Framebuffers must contain attachments corresponding to the indices of the
   // attachments described here. Each attachment must be format-compatible.
-  const std::vector<AttachmentDescription>& attachments() const {
+  absl::Span<const AttachmentDescription> attachments() const {
     return attachments_;
   }
 
   // A list of subpasses within the render pass.
   // All render passes need at least one subpass.
-  const std::vector<SubpassDescription>& subpasses() const {
-    return subpasses_;
-  }
+  absl::Span<const SubpassDescription> subpasses() const { return subpasses_; }
 
   // Declarations of dependencies between the subpasses within this render pass.
-  const std::vector<SubpassDependency>& subpass_dependencies() const {
+  absl::Span<const SubpassDependency> subpass_dependencies() const {
     return subpass_dependencies_;
   }
 
@@ -375,9 +372,9 @@ class RenderPass : public RefObject<RenderPass> {
         subpass_dependencies_(subpass_dependencies.begin(),
                               subpass_dependencies.end()) {}
 
-  std::vector<AttachmentDescription> attachments_;
-  std::vector<SubpassDescription> subpasses_;
-  std::vector<SubpassDependency> subpass_dependencies_;
+  absl::InlinedVector<AttachmentDescription, 4> attachments_;
+  absl::InlinedVector<SubpassDescription, 4> subpasses_;
+  absl::InlinedVector<SubpassDependency, 4> subpass_dependencies_;
 };
 
 }  // namespace gfx

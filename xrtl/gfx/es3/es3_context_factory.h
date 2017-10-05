@@ -36,7 +36,7 @@ class ES3ContextFactory : public ContextFactory {
   // permissions or dll presence.
   static bool IsSupported();
 
-  const std::vector<ref_ptr<Device>>& devices() const override {
+  absl::Span<const ref_ptr<Device>> devices() const override {
     return devices_;
   }
 

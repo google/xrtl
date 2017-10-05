@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/buffer.h"
@@ -105,7 +106,7 @@ class ResourceSet : public RefObject<ResourceSet> {
   ref_ptr<ResourceSetLayout> layout() const { return layout_; }
 
   // All bindings for the resource set.
-  const std::vector<BindingValue>& binding_values() const {
+  absl::Span<const BindingValue> binding_values() const {
     return binding_values_;
   }
 
@@ -116,7 +117,8 @@ class ResourceSet : public RefObject<ResourceSet> {
         binding_values_(binding_values.begin(), binding_values.end()) {}
 
   ref_ptr<ResourceSetLayout> layout_;
-  std::vector<BindingValue> binding_values_;
+  absl::InlinedVector<BindingValue, ResourceSetLayout::kInlinedBindingSlotCount>
+      binding_values_;
 };
 
 }  // namespace gfx

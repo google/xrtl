@@ -26,6 +26,7 @@ namespace xrtl {
 namespace examples {
 namespace {
 
+using gfx::BindingSlot;
 using gfx::Buffer;
 using gfx::Context;
 using gfx::ContextFactory;
