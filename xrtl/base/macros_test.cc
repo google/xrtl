@@ -30,13 +30,6 @@ TEST(MacrosTest, MakeArray) {
   EXPECT_EQ(2, a2[1]);
 }
 
-TEST(MacrosTest, BitCast) {
-  EXPECT_EQ(0x3F9DF3B6, bit_cast<uint32_t>(1.234f));
-  EXPECT_EQ(0x3FF3C0CA428C51F2ull, bit_cast<uint64_t>(1.234567890123));
-  EXPECT_EQ(1.234f, bit_cast<float>(0x3F9DF3B6));
-  EXPECT_EQ(1.234567890123, bit_cast<double>(0x3FF3C0CA428C51F2ull));
-}
-
 enum class MyBitmask : uint8_t {
   kNone = 0,
   kFoo = 0b01,
