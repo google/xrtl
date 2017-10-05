@@ -74,7 +74,9 @@ cc_library(
     name = "platform_gtest_main",
     testonly = 1,
     visibility = ["//visibility:private"],
-    deps = select({
+    deps = [
+        "//xrtl/testing/diffing:html_diff_provider_create",
+    ] + select({
         "//xrtl/tools/target_platform:android": [],
         "//xrtl/tools/target_platform:emscripten": [],
         "//xrtl/tools/target_platform:ios": [],
@@ -89,50 +91,58 @@ cc_library(
 )
 
 cc_library(
-    name = "file_manifest",
+    name = "file_util",
     testonly = 1,
-    srcs = ["file_manifest.cc"],
-    hdrs = ["file_manifest.h"],
+    srcs = ["file_util.cc"],
+    hdrs = ["file_util.h"],
     deps = [
         "//xrtl/base:logging",
+        "//xrtl/base:tracing",
         "@com_google_absl//absl/strings",
-    ],
-)
-
-cc_library(
-    name = "image_loader",
-    testonly = 1,
-    srcs = ["image_loader.cc"],
-    hdrs = ["image_loader.h"],
-    deps = [
-        ":file_manifest",
-        "//external:stb_image",
-        "//xrtl/base:logging",
-        "@com_google_absl//absl/strings",
-    ],
-)
-
-cc_library(
-    name = "image_comparison",
-    testonly = 1,
-    srcs = ["image_comparison.cc"],
-    hdrs = ["image_comparison.h"],
-    deps = [
-        ":gtest",
-        "//xrtl/base:logging",
+        "@com_google_absl//absl/types:optional",
     ],
 )
 
 cc_test(
-    name = "image_comparison_test",
+    name = "file_util_test",
     size = "small",
-    srcs = ["image_comparison_test.cc"],
+    srcs = ["file_util_test.cc"],
     data = [
-        "//xrtl/testing/testdata:test_images",
+        "//xrtl/testing/testdata:file_util_data",
     ],
     deps = [
-        ":gtest_main",
-        ":image_comparison",
-        ":image_loader",
+        ":file_util",
+        "//xrtl/testing:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "image_buffer",
+    testonly = 1,
+    srcs = ["image_buffer.cc"],
+    hdrs = ["image_buffer.h"],
+    deps = [
+        ":file_util",
+        "//xrtl/base:logging",
+        "//xrtl/base:tracing",
+        "@com_github_nothings_stb//:stb_image",
+        "@com_github_nothings_stb//:stb_image_write",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "image_buffer_test",
+    size = "small",
+    srcs = ["image_buffer_test.cc"],
+    data = [
+        "//xrtl/testing/testdata:image_buffer_data",
+    ],
+    deps = [
+        ":file_util",
+        ":image_buffer",
+        "//xrtl/testing:gtest_main",
+        "//xrtl/testing/diffing:image_differ",
     ],
 )

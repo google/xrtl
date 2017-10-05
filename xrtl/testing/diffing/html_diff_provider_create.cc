@@ -12,32 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/testing/image_loader.h"
+#include "xrtl/testing/diffing/html_diff_provider.h"
 
-#include <stb_image.h>
-
-#include <utility>
-
-#include "xrtl/base/logging.h"
-#include "xrtl/testing/file_manifest.h"
+#include "xrtl/base/macros.h"
 
 namespace xrtl {
 namespace testing {
+namespace diffing {
 
-Image ImageLoader::LoadImage(absl::string_view path, int image_channels) {
-  Image image;
-  ImageDataPtr image_data = {
-      stbi_load(FileManifest::ResolvePath(path).data(), &image.width,
-                &image.height, &image.channels, image_channels),
-      [](uint8_t* data) { stbi_image_free(data); }};
-  image.data = std::move(image_data);
-
-  if (!image.data) {
-    LOG(ERROR) << "Couldn't load the image at '" << path.data() << "'";
-  }
-
-  return image;
+// Factory function to create the HtmlDiffProvider as the default provider.
+// Depend on //xrtl/testing/diffing:html_diff_provider_create to link this in.
+std::unique_ptr<DiffProvider> DiffProvider::Create() {
+  return absl::make_unique<HtmlDiffProvider>();
 }
 
+}  // namespace diffing
 }  // namespace testing
 }  // namespace xrtl
