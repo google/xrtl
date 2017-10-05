@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_shader.h"
@@ -31,7 +31,7 @@ namespace es3 {
 class ES3Program : public RefObject<ES3Program> {
  public:
   ES3Program(ref_ptr<ES3PlatformContext> platform_context,
-             ArrayView<ref_ptr<ES3Shader>> shaders);
+             absl::Span<const ref_ptr<ES3Shader>> shaders);
   ~ES3Program();
 
   GLuint program_id() const { return program_id_; }

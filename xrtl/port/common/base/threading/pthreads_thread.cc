@@ -90,9 +90,9 @@ class PthreadsThread : public PthreadsWaitHandle<Thread> {
   // Runs the thread entry point specified by the Thread::Create call.
   static void* ThreadStartRoutine(void* param);
 
-  static WaitAnyResult WaitMultiple(ArrayView<ref_ptr<WaitHandle>> wait_handles,
-                                    std::chrono::milliseconds timeout,
-                                    bool require_all);
+  static WaitAnyResult WaitMultiple(
+      absl::Span<const ref_ptr<WaitHandle>> wait_handles,
+      std::chrono::milliseconds timeout, bool require_all);
 
   bool CheckCondition() const override { return zombie_; }
 
@@ -474,18 +474,19 @@ Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
 }
 
 Thread::WaitAnyResult Thread::WaitAny(
-    ArrayView<ref_ptr<WaitHandle>> wait_handles,
+    absl::Span<const ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout) {
   return PthreadsThread::WaitMultiple(wait_handles, timeout, false);
 }
 
-Thread::WaitResult Thread::WaitAll(ArrayView<ref_ptr<WaitHandle>> wait_handles,
-                                   std::chrono::milliseconds timeout) {
+Thread::WaitResult Thread::WaitAll(
+    absl::Span<const ref_ptr<WaitHandle>> wait_handles,
+    std::chrono::milliseconds timeout) {
   return PthreadsThread::WaitMultiple(wait_handles, timeout, true).wait_result;
 }
 
 Thread::WaitAnyResult PthreadsThread::WaitMultiple(
-    ArrayView<ref_ptr<WaitHandle>> wait_handles,
+    absl::Span<const ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout, bool require_all) {
   // pthreads has no way of doing multi-waits, so our performance won't be as
   // good as on systems that do support it. That's generally ok, as multi-waits

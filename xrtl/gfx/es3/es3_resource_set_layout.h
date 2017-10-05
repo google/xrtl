@@ -24,7 +24,7 @@ namespace es3 {
 
 class ES3ResourceSetLayout : public ResourceSetLayout {
  public:
-  explicit ES3ResourceSetLayout(ArrayView<BindingSlot> binding_slots)
+  explicit ES3ResourceSetLayout(absl::Span<const BindingSlot> binding_slots)
       : ResourceSetLayout(binding_slots) {}
 };
 

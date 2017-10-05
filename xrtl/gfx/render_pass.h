@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/image.h"
@@ -367,9 +367,9 @@ class RenderPass : public RefObject<RenderPass> {
   }
 
  protected:
-  RenderPass(ArrayView<AttachmentDescription> attachments,
-             ArrayView<SubpassDescription> subpasses,
-             ArrayView<SubpassDependency> subpass_dependencies)
+  RenderPass(absl::Span<const AttachmentDescription> attachments,
+             absl::Span<const SubpassDescription> subpasses,
+             absl::Span<const SubpassDependency> subpass_dependencies)
       : attachments_(attachments.begin(), attachments.end()),
         subpasses_(subpasses.begin(), subpasses.end()),
         subpass_dependencies_(subpass_dependencies.begin(),

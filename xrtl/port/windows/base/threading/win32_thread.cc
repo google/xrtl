@@ -80,9 +80,9 @@ class Win32Thread : public Win32WaitHandle<Thread> {
   // Runs the thread entry point specified by the Thread::Create call.
   static DWORD WINAPI ThreadStartRoutine(LPVOID param);
 
-  static WaitAnyResult WaitMultiple(ArrayView<ref_ptr<WaitHandle>> wait_handles,
-                                    std::chrono::milliseconds timeout,
-                                    bool require_all);
+  static WaitAnyResult WaitMultiple(
+      absl::Span<const ref_ptr<WaitHandle>> wait_handles,
+      std::chrono::milliseconds timeout, bool require_all);
 
   // There's no easy way to get this so we cache it. It's not thread safe but
   // the affinity mask should really only be specified on startup once.
@@ -378,18 +378,19 @@ Thread::WaitResult Thread::SignalAndWait(ref_ptr<WaitHandle> signal_handle,
 }
 
 Thread::WaitAnyResult Thread::WaitAny(
-    ArrayView<ref_ptr<WaitHandle>> wait_handles,
+    absl::Span<const ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout) {
   return Win32Thread::WaitMultiple(wait_handles, timeout, false);
 }
 
-Thread::WaitResult Thread::WaitAll(ArrayView<ref_ptr<WaitHandle>> wait_handles,
-                                   std::chrono::milliseconds timeout) {
+Thread::WaitResult Thread::WaitAll(
+    absl::Span<const ref_ptr<WaitHandle>> wait_handles,
+    std::chrono::milliseconds timeout) {
   return Win32Thread::WaitMultiple(wait_handles, timeout, true).wait_result;
 }
 
 Thread::WaitAnyResult Win32Thread::WaitMultiple(
-    ArrayView<ref_ptr<WaitHandle>> wait_handles,
+    absl::Span<const ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout, bool require_all) {
   // NOTE: the wait handle count is limited so we can stack allocate.
   DCHECK_LE(wait_handles.size(), 64);

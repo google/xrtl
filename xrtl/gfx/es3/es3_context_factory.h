@@ -42,7 +42,7 @@ class ES3ContextFactory : public ContextFactory {
 
   ref_ptr<Device> default_device() const override { return default_device_; }
 
-  CreateResult CreateContext(ArrayView<ref_ptr<Device>> devices,
+  CreateResult CreateContext(absl::Span<const ref_ptr<Device>> devices,
                              Device::Features required_features,
                              ref_ptr<Context>* out_context) override;
 

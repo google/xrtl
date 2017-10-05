@@ -15,8 +15,8 @@
 #ifndef XRTL_GFX_UTIL_MEMORY_COMMAND_BUFFER_WRITER_H_
 #define XRTL_GFX_UTIL_MEMORY_COMMAND_BUFFER_WRITER_H_
 
+#include "absl/types/span.h"
 #include "xrtl/base/arena.h"
-#include "xrtl/base/array_view.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/util/memory_commands.h"
 
@@ -50,7 +50,7 @@ class MemoryCommandBufferWriter {
 
   // Writes an array of primitives/structs to the command buffer.
   template <typename T>
-  void WriteArray(const ArrayView<const T>& values) {
+  void WriteArray(const absl::Span<const T>& values) {
     if (values.empty()) {
       return;
     }
@@ -60,7 +60,7 @@ class MemoryCommandBufferWriter {
   // Writes an array of reference counted objects to the command buffer.
   // The reference counts will not be adjusted.
   template <typename T>
-  void WriteArray(const ArrayView<ref_ptr<T>>& values) {
+  void WriteArray(const absl::Span<const ref_ptr<T>>& values) {
     if (values.empty()) {
       return;
     }

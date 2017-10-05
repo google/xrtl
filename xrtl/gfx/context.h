@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/base/threading/event.h"
 #include "xrtl/gfx/command_buffer.h"
@@ -105,8 +105,9 @@ class Context : public RefObject<Context> {
 
   // Creates a pipeline layout.
   virtual ref_ptr<PipelineLayout> CreatePipelineLayout(
-      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
-      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges) = 0;
+      absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts,
+      absl::Span<const PipelineLayout::PushConstantRange>
+          push_constant_ranges) = 0;
 
   // Creates a compute pipeline with the given shader.
   virtual ref_ptr<ComputePipeline> CreateComputePipeline(
@@ -121,7 +122,7 @@ class Context : public RefObject<Context> {
 
   // Creates a resource set layout.
   virtual ref_ptr<ResourceSetLayout> CreateResourceSetLayout(
-      ArrayView<ResourceSetLayout::BindingSlot> binding_slots) = 0;
+      absl::Span<const BindingSlot> binding_slots) = 0;
 
   // Creates a binding set used to bind resources to pipelines.
   // A binding set is only tied to a particular pipeline layout and may be used
@@ -130,7 +131,7 @@ class Context : public RefObject<Context> {
   // the pipeline layout.
   virtual ref_ptr<ResourceSet> CreateResourceSet(
       ref_ptr<ResourceSetLayout> resource_set_layout,
-      ArrayView<ResourceSet::BindingValue> binding_values) = 0;
+      absl::Span<const BindingValue> binding_values) = 0;
 
   // Creates a new swap chain using the given control as a display surface.
   // The present_mode defines how the images are queued for display and
@@ -144,7 +145,7 @@ class Context : public RefObject<Context> {
   // target.
   virtual ref_ptr<SwapChain> CreateSwapChain(
       ref_ptr<ui::Control> control, SwapChain::PresentMode present_mode,
-      int image_count, ArrayView<PixelFormat> pixel_formats) = 0;
+      int image_count, absl::Span<const PixelFormat> pixel_formats) = 0;
 
   // Creates a new resource memory heap.
   // The heap can be used to create images and buffers of the given memory
@@ -166,9 +167,9 @@ class Context : public RefObject<Context> {
 
   // Creates a new render pass.
   virtual ref_ptr<RenderPass> CreateRenderPass(
-      ArrayView<RenderPass::AttachmentDescription> attachments,
-      ArrayView<RenderPass::SubpassDescription> subpasses,
-      ArrayView<RenderPass::SubpassDependency> subpass_dependencies) = 0;
+      absl::Span<const RenderPass::AttachmentDescription> attachments,
+      absl::Span<const RenderPass::SubpassDescription> subpasses,
+      absl::Span<const RenderPass::SubpassDependency> subpass_dependencies) = 0;
 
   // Creates a new framebuffer for the given render pass.
   // The sizes of the attachments provided must be greater than or equal to
@@ -178,7 +179,7 @@ class Context : public RefObject<Context> {
   // TODO(benvanik): device limits.
   virtual ref_ptr<Framebuffer> CreateFramebuffer(
       ref_ptr<RenderPass> render_pass, Size3D size,
-      ArrayView<ref_ptr<ImageView>> attachments) = 0;
+      absl::Span<const ref_ptr<ImageView>> attachments) = 0;
 
   // Creates a new command buffer.
   // When submitted the command buffer may be executed in parallel with other
@@ -217,9 +218,9 @@ class Context : public RefObject<Context> {
   // If the submit call fails immediately due to device loss the signal will not
   // be set.
   virtual SubmitResult Submit(
-      ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-      ArrayView<ref_ptr<CommandBuffer>> command_buffers,
-      ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
       ref_ptr<Event> signal_handle) = 0;
   SubmitResult Submit(ref_ptr<CommandBuffer> command_buffer,
                       ref_ptr<QueueFence> signal_queue_fence) {
@@ -260,7 +261,7 @@ class Context : public RefObject<Context> {
   virtual WaitResult WaitUntilQueuesIdle(OperationQueueMask queue_mask) = 0;
 
  protected:
-  Context(ArrayView<ref_ptr<Device>> devices, Device::Features features)
+  Context(absl::Span<const ref_ptr<Device>> devices, Device::Features features)
       : devices_(devices.begin(), devices.end()),
         features_(std::move(features)) {}
 

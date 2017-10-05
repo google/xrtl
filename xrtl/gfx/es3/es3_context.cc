@@ -39,7 +39,7 @@ namespace gfx {
 namespace es3 {
 
 ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
-                       ArrayView<ref_ptr<Device>> devices,
+                       absl::Span<const ref_ptr<Device>> devices,
                        Device::Features features,
                        ref_ptr<ES3PlatformContext> platform_context)
     : Context(devices, features),
@@ -92,8 +92,8 @@ ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
 }
 
 ref_ptr<PipelineLayout> ES3Context::CreatePipelineLayout(
-    ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
-    ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges) {
+    absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts,
+    absl::Span<const PipelineLayout::PushConstantRange> push_constant_ranges) {
   return make_ref<ES3PipelineLayout>(resource_set_layouts,
                                      push_constant_ranges);
 }
@@ -187,8 +187,8 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
     }
   }
 
-  auto program = make_ref<ES3Program>(platform_context_,
-                                      ArrayView<ref_ptr<ES3Shader>>(shaders));
+  auto program = make_ref<ES3Program>(
+      platform_context_, absl::Span<const ref_ptr<ES3Shader>>(shaders));
   if (!program->Link()) {
     LOG(ERROR) << "Unable to link render program";
     return nullptr;
@@ -200,19 +200,19 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
 }
 
 ref_ptr<ResourceSetLayout> ES3Context::CreateResourceSetLayout(
-    ArrayView<ResourceSetLayout::BindingSlot> binding_slots) {
+    absl::Span<const BindingSlot> binding_slots) {
   return make_ref<ES3ResourceSetLayout>(binding_slots);
 }
 
 ref_ptr<ResourceSet> ES3Context::CreateResourceSet(
     ref_ptr<ResourceSetLayout> resource_set_layout,
-    ArrayView<ResourceSet::BindingValue> binding_values) {
+    absl::Span<const BindingValue> binding_values) {
   return make_ref<ES3ResourceSet>(resource_set_layout, binding_values);
 }
 
 ref_ptr<SwapChain> ES3Context::CreateSwapChain(
     ref_ptr<ui::Control> control, SwapChain::PresentMode present_mode,
-    int image_count, ArrayView<PixelFormat> pixel_formats) {
+    int image_count, absl::Span<const PixelFormat> pixel_formats) {
   // Shared memory pool for all frame buffer images.
   // TODO(benvanik): pool across swap chains.
   auto memory_heap =
@@ -235,15 +235,15 @@ ref_ptr<Sampler> ES3Context::CreateSampler(Sampler::Params params) {
 }
 
 ref_ptr<RenderPass> ES3Context::CreateRenderPass(
-    ArrayView<RenderPass::AttachmentDescription> attachments,
-    ArrayView<RenderPass::SubpassDescription> subpasses,
-    ArrayView<RenderPass::SubpassDependency> subpass_dependencies) {
+    absl::Span<const RenderPass::AttachmentDescription> attachments,
+    absl::Span<const RenderPass::SubpassDescription> subpasses,
+    absl::Span<const RenderPass::SubpassDependency> subpass_dependencies) {
   return make_ref<ES3RenderPass>(attachments, subpasses, subpass_dependencies);
 }
 
 ref_ptr<Framebuffer> ES3Context::CreateFramebuffer(
     ref_ptr<RenderPass> render_pass, Size3D size,
-    ArrayView<ref_ptr<ImageView>> attachments) {
+    absl::Span<const ref_ptr<ImageView>> attachments) {
   return make_ref<ES3Framebuffer>(render_pass, size, attachments);
 }
 
@@ -253,9 +253,9 @@ ref_ptr<CommandBuffer> ES3Context::CreateCommandBuffer() {
 }
 
 Context::SubmitResult ES3Context::Submit(
-    ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-    ArrayView<ref_ptr<CommandBuffer>> command_buffers,
-    ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
   primary_queue_->EnqueueCommandBuffers(wait_queue_fences, command_buffers,
                                         signal_queue_fences,

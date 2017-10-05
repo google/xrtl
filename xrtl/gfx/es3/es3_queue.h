@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/threading/event.h"
 #include "xrtl/base/threading/thread.h"
 #include "xrtl/gfx/es3/es3_command_buffer.h"
@@ -51,18 +51,20 @@ class ES3Queue {
   ~ES3Queue();
 
   // Enqueues a set of command buffers to be executed from the queue.
-  void EnqueueCommandBuffers(ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-                             ArrayView<ref_ptr<CommandBuffer>> command_buffers,
-                             ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
-                             ref_ptr<Event> signal_handle);
+  void EnqueueCommandBuffers(
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle);
 
   // Enqueues a callback to be executed from the queue.
   // The provided context will be locked exclusively during the execution.
-  void EnqueueCallback(ref_ptr<ES3PlatformContext> exclusive_context,
-                       ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-                       std::function<void()> callback,
-                       ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
-                       ref_ptr<Event> signal_handle);
+  void EnqueueCallback(
+      ref_ptr<ES3PlatformContext> exclusive_context,
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      std::function<void()> callback,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle);
 
   // Waits until all commands in the queue have completed.
   // Returns false if the device was lost and the wait will never complete.
@@ -96,9 +98,9 @@ class ES3Queue {
     std::vector<ref_ptr<QueueFence>> signal_queue_fences;
     ref_ptr<Event> signal_handle;
     QueueEntry() = default;
-    QueueEntry(ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-               ArrayView<ref_ptr<CommandBuffer>> command_buffers,
-               ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+    QueueEntry(absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+               absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+               absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
                ref_ptr<Event> signal_handle)
         : wait_queue_fences(wait_queue_fences.begin(), wait_queue_fences.end()),
           command_buffers(command_buffers.begin(), command_buffers.end()),
@@ -106,9 +108,9 @@ class ES3Queue {
                               signal_queue_fences.end()),
           signal_handle(std::move(signal_handle)) {}
     QueueEntry(ref_ptr<ES3PlatformContext> exclusive_context,
-               ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
+               absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
                std::function<void()> callback,
-               ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+               absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
                ref_ptr<Event> signal_handle)
         : exclusive_context(std::move(exclusive_context)),
           wait_queue_fences(wait_queue_fences.begin(), wait_queue_fences.end()),

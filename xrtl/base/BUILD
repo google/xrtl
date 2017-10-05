@@ -26,25 +26,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "array_view",
-    hdrs = ["array_view.h"],
-    deps = [
-        ":logging",
-        ":macros",
-    ],
-)
-
-cc_test(
-    name = "array_view_test",
-    size = "small",
-    srcs = ["array_view_test.cc"],
-    deps = [
-        ":array_view",
-        "//xrtl/testing:gtest_main",
-    ],
-)
-
 # CLI main() entry point.
 # This is linked in to CLI cc_binaries.
 cc_library(

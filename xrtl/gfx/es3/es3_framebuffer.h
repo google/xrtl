@@ -27,7 +27,7 @@ namespace es3 {
 class ES3Framebuffer : public Framebuffer {
  public:
   ES3Framebuffer(ref_ptr<RenderPass> render_pass, Size3D size,
-                 ArrayView<ref_ptr<ImageView>> attachments)
+                 absl::Span<const ref_ptr<ImageView>> attachments)
       : Framebuffer(std::move(render_pass), size, attachments) {}
 };
 

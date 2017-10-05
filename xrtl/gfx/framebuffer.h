@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/geometry.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/image_view.h"
@@ -38,11 +38,13 @@ class Framebuffer : public RefObject<Framebuffer> {
   Size3D size() const { return size_; }
   // Attachments for the framebuffer in the same order as specified in the
   // render pass.
-  std::vector<ref_ptr<ImageView>> attachments() const { return attachments_; }
+  const std::vector<ref_ptr<ImageView>>& attachments() const {
+    return attachments_;
+  }
 
  protected:
   Framebuffer(ref_ptr<RenderPass> render_pass, Size3D size,
-              ArrayView<ref_ptr<ImageView>> attachments)
+              absl::Span<const ref_ptr<ImageView>> attachments)
       : render_pass_(std::move(render_pass)),
         size_(size),
         attachments_(attachments.begin(), attachments.end()) {}

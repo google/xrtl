@@ -36,10 +36,10 @@ cc_library(
     hdrs = ["memory_command_buffer_reader.h"],
     deps = [
         ":memory_commands",
-        "//xrtl/base:array_view",
         "//xrtl/base:logging",
         "//xrtl/base:ref_ptr",
         "//xrtl/gfx:command_encoder",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -50,10 +50,10 @@ cc_library(
     deps = [
         ":memory_commands",
         "//xrtl/base:arena",
-        "//xrtl/base:array_view",
         "//xrtl/base:logging",
         "//xrtl/base:ref_ptr",
         "//xrtl/gfx:command_encoder",
+        "@com_google_absl//absl/types:span",
     ],
 )
 

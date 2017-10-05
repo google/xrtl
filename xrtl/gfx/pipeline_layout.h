@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/resource_set_layout.h"
 
@@ -60,8 +60,8 @@ class PipelineLayout : public RefObject<PipelineLayout> {
 
  protected:
   PipelineLayout(
-      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
-      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
+      absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts,
+      absl::Span<const PipelineLayout::PushConstantRange> push_constant_ranges)
       : resource_set_layouts_(resource_set_layouts.begin(),
                               resource_set_layouts.end()),
         push_constant_ranges_(push_constant_ranges.begin(),

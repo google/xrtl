@@ -38,7 +38,7 @@ class ES3SwapChain : public SwapChain {
       ref_ptr<ES3PlatformContext> shared_platform_context,
       ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
       ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
-      ArrayView<PixelFormat> pixel_formats);
+      absl::Span<const PixelFormat> pixel_formats);
 
   ~ES3SwapChain() override = default;
 
@@ -46,7 +46,7 @@ class ES3SwapChain : public SwapChain {
 
  protected:
   ES3SwapChain(PresentMode present_mode, int image_count,
-               ArrayView<PixelFormat> pixel_formats)
+               absl::Span<const PixelFormat> pixel_formats)
       : SwapChain(present_mode, image_count),
         available_pixel_formats_(pixel_formats.begin(), pixel_formats.end()) {}
 
@@ -59,7 +59,7 @@ class ES3PlatformSwapChain : public ES3SwapChain {
                        ref_ptr<ui::Control> control,
                        ref_ptr<ES3PlatformContext> platform_context,
                        PresentMode present_mode, int image_count,
-                       ArrayView<PixelFormat> pixel_formats);
+                       absl::Span<const PixelFormat> pixel_formats);
   ~ES3PlatformSwapChain() override;
 
   bool Initialize() override;

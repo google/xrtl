@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_platform_context.h"
 
@@ -80,7 +80,8 @@ class ES3Shader : public RefObject<ES3Shader> {
 
   // Attempts to compile the given GLSL source code into a shader.
   // Returns false if the compilation fails.
-  bool CompileSource(GLenum shader_type, ArrayView<absl::string_view> sources);
+  bool CompileSource(GLenum shader_type,
+                     absl::Span<const absl::string_view> sources);
 
   // Attempts to translate a SPIR-V binary into GLSL and compile that.
   // Returns false if the binary cannot be translated or if compilation fails.

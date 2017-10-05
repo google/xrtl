@@ -50,7 +50,7 @@ class MemoryCommandBuffer : public CommandBuffer {
 
   RenderPassCommandEncoderPtr BeginRenderPass(
       ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-      ArrayView<const ClearColor> clear_colors) override;
+      absl::Span<const ClearColor> clear_colors) override;
   void EndRenderPass(RenderPassCommandEncoderPtr encoder) override;
 
  protected:

@@ -261,8 +261,8 @@ cc_library(
         ":es3_common",
         ":es3_platform_context",
         ":es3_shader",
-        "//xrtl/base:array_view",
         "//xrtl/base:tracing",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -275,12 +275,12 @@ cc_library(
         ":es3_common",
         ":es3_platform_context",
         ":es3_queue_fence",
-        "//xrtl/base:array_view",
         "//xrtl/base:tracing",
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
         "//xrtl/gfx/util:memory_command_buffer",
         "//xrtl/gfx/util:memory_command_decoder",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -343,10 +343,10 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_platform_context",
-        "//xrtl/base:array_view",
         "//xrtl/base:debugging",
         "//xrtl/base:tracing",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
         "@spirv_cross//:spirv_cross_lib",
     ],
 )

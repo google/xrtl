@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/base/ref_ptr.h"
@@ -313,7 +313,7 @@ class TransferCommandEncoder : public CommandEncoder {
   // target_buffer must have Usage::kTransferTarget.
   virtual void CopyBuffer(ref_ptr<Buffer> source_buffer,
                           ref_ptr<Buffer> target_buffer,
-                          ArrayView<const CopyBufferRegion> regions) = 0;
+                          absl::Span<const CopyBufferRegion> regions) = 0;
 
   // Copies data between two images without performing conversion.
   // This is effectively a memcpy, and as such cannot scale/resize/convert the
@@ -342,7 +342,7 @@ class TransferCommandEncoder : public CommandEncoder {
                          Image::Layout source_image_layout,
                          ref_ptr<Image> target_image,
                          Image::Layout target_image_layout,
-                         ArrayView<const CopyImageRegion> regions) = 0;
+                         absl::Span<const CopyImageRegion> regions) = 0;
 
   // Copies data from a buffer to an image.
   //
@@ -355,7 +355,7 @@ class TransferCommandEncoder : public CommandEncoder {
   virtual void CopyBufferToImage(
       ref_ptr<Buffer> source_buffer, ref_ptr<Image> target_image,
       Image::Layout target_image_layout,
-      ArrayView<const CopyBufferImageRegion> regions) = 0;
+      absl::Span<const CopyBufferImageRegion> regions) = 0;
 
   // Copies data from an image to a buffer.
   //
@@ -368,7 +368,7 @@ class TransferCommandEncoder : public CommandEncoder {
   virtual void CopyImageToBuffer(
       ref_ptr<Image> source_image, Image::Layout source_image_layout,
       ref_ptr<Buffer> target_buffer,
-      ArrayView<const CopyBufferImageRegion> regions) = 0;
+      absl::Span<const CopyBufferImageRegion> regions) = 0;
 
  protected:
   explicit TransferCommandEncoder(CommandBuffer* command_buffer)
@@ -407,7 +407,7 @@ class ComputeCommandEncoder : public TransferCommandEncoder {
   // Waits for the given fence to be signaled.
   // If it is already signaled the wait will continue immediately.
   // This is usually followed by one or more barriers to ensure memory safety.
-  virtual void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) = 0;
+  virtual void WaitFences(absl::Span<const ref_ptr<CommandFence>> fences) = 0;
   void WaitFence(ref_ptr<CommandFence> fence) { WaitFences({fence}); }
 
   // Clears regions of a color image.
@@ -418,7 +418,7 @@ class ComputeCommandEncoder : public TransferCommandEncoder {
   // image_layout must be kGeneral or kTransferTargetOptimal.
   virtual void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
                                ClearColor clear_color,
-                               ArrayView<const Image::LayerRange> ranges) = 0;
+                               absl::Span<const Image::LayerRange> ranges) = 0;
 
   // Binds a pipeline object to a command buffer.
   // All future compute dispatches will use this pipeline until another is
@@ -435,7 +435,7 @@ class ComputeCommandEncoder : public TransferCommandEncoder {
   //
   // Queue: compute.
   virtual void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
-                               ArrayView<const size_t> dynamic_offsets) = 0;
+                               absl::Span<const size_t> dynamic_offsets) = 0;
   void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set) {
     BindResourceSet(set_index, std::move(resource_set), {});
   }
@@ -494,7 +494,7 @@ class RenderCommandEncoder : public TransferCommandEncoder {
   // Waits for the given fence to be signaled.
   // If it is already signaled the wait will continue immediately.
   // This is usually followed by one or more barriers to ensure memory safety.
-  virtual void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) = 0;
+  virtual void WaitFences(absl::Span<const ref_ptr<CommandFence>> fences) = 0;
   void WaitFence(ref_ptr<CommandFence> fence) { WaitFences({fence}); }
 
   // Clears regions of a color image.
@@ -505,7 +505,7 @@ class RenderCommandEncoder : public TransferCommandEncoder {
   // image_layout must be kGeneral or kTransferTargetOptimal.
   virtual void ClearColorImage(ref_ptr<Image> image, Image::Layout image_layout,
                                ClearColor clear_color,
-                               ArrayView<const Image::LayerRange> ranges) = 0;
+                               absl::Span<const Image::LayerRange> ranges) = 0;
 
   // Fills regions of a combined depth/stencil image.
   //
@@ -515,7 +515,7 @@ class RenderCommandEncoder : public TransferCommandEncoder {
   // image_layout must be kGeneral or kTransferTargetOptimal.
   virtual void ClearDepthStencilImage(
       ref_ptr<Image> image, Image::Layout image_layout, float depth_value,
-      uint32_t stencil_value, ArrayView<const Image::LayerRange> ranges) = 0;
+      uint32_t stencil_value, absl::Span<const Image::LayerRange> ranges) = 0;
 
   // Copies regions of an image potentially performing format conversion.
   // There are tons of restrictions on this. See the reference.
@@ -534,7 +534,7 @@ class RenderCommandEncoder : public TransferCommandEncoder {
                          ref_ptr<Image> target_image,
                          Image::Layout target_image_layout,
                          Sampler::Filter scaling_filter,
-                         ArrayView<const BlitImageRegion> regions) = 0;
+                         absl::Span<const BlitImageRegion> regions) = 0;
 
   // Resolves regions of a multisample image to a non-multisample image.
   //
@@ -546,7 +546,7 @@ class RenderCommandEncoder : public TransferCommandEncoder {
                             Image::Layout source_image_layout,
                             ref_ptr<Image> target_image,
                             Image::Layout target_image_layout,
-                            ArrayView<const CopyImageRegion> regions) = 0;
+                            absl::Span<const CopyImageRegion> regions) = 0;
 
   // TODO(benvanik): specify layer range?
   // Generates mipmaps for the given image.
@@ -579,16 +579,16 @@ class RenderPassCommandEncoder : public CommandEncoder {
   // Waits for the given fence to be signaled.
   // If it is already signaled the wait will continue immediately.
   // This is usually followed by one or more barriers to ensure memory safety.
-  virtual void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) = 0;
+  virtual void WaitFences(absl::Span<const ref_ptr<CommandFence>> fences) = 0;
   void WaitFence(ref_ptr<CommandFence> fence) { WaitFences({fence}); }
 
   // Clears one or more regions of color attachments inside a render pass.
   // The attachment must be active in the current subpass.
   //
   // Queue: render.
-  virtual void ClearColorAttachment(int color_attachment_index,
-                                    ClearColor clear_color,
-                                    ArrayView<const ClearRect> clear_rects) = 0;
+  virtual void ClearColorAttachment(
+      int color_attachment_index, ClearColor clear_color,
+      absl::Span<const ClearRect> clear_rects) = 0;
 
   // Clears one or more regions of a depth/stencil attachment inside a render
   // pass. The current subpass must have a depth/stencil attachment.
@@ -596,7 +596,7 @@ class RenderPassCommandEncoder : public CommandEncoder {
   // Queue: render.
   virtual void ClearDepthStencilAttachment(
       float depth_value, uint32_t stencil_value,
-      ArrayView<const ClearRect> clear_rects) = 0;
+      absl::Span<const ClearRect> clear_rects) = 0;
 
   // Transitions to the next sub pass in the render pass.
   //
@@ -607,14 +607,14 @@ class RenderPassCommandEncoder : public CommandEncoder {
   //
   // Queue: render
   virtual void SetScissors(int first_scissor,
-                           ArrayView<const Rect2D> scissors) = 0;
+                           absl::Span<const Rect2D> scissors) = 0;
   void SetScissor(Rect2D rect) { SetScissors(0, {rect}); }
 
   // Sets the viewports on a command buffer.
   //
   // Queue: render.
   virtual void SetViewports(int first_viewport,
-                            ArrayView<const Viewport> viewports) = 0;
+                            absl::Span<const Viewport> viewports) = 0;
   void SetViewport(Viewport viewport) { SetViewports(0, {viewport}); }
   void SetViewport(Point2D origin, Size2D size) {
     SetViewport(Viewport{origin, size});
@@ -674,7 +674,7 @@ class RenderPassCommandEncoder : public CommandEncoder {
   //
   // Queue: render.
   virtual void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set,
-                               ArrayView<const size_t> dynamic_offsets) = 0;
+                               absl::Span<const size_t> dynamic_offsets) = 0;
   void BindResourceSet(int set_index, ref_ptr<ResourceSet> resource_set) {
     BindResourceSet(set_index, std::move(resource_set), {});
   }
@@ -691,10 +691,10 @@ class RenderPassCommandEncoder : public CommandEncoder {
   //
   // Queue: render.
   virtual void BindVertexBuffers(int first_binding,
-                                 ArrayView<ref_ptr<Buffer>> buffers) = 0;
+                                 absl::Span<const ref_ptr<Buffer>> buffers) = 0;
   virtual void BindVertexBuffers(int first_binding,
-                                 ArrayView<ref_ptr<Buffer>> buffers,
-                                 ArrayView<const size_t> buffer_offsets) = 0;
+                                 absl::Span<const ref_ptr<Buffer>> buffers,
+                                 absl::Span<const size_t> buffer_offsets) = 0;
 
   // Binds an index buffer to a command buffer.
   //

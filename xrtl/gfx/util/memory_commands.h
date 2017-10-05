@@ -139,7 +139,7 @@ struct ResetFenceCommand {
 
 struct WaitFencesCommand {
   size_t fence_count;
-  // ArrayView<CommandFence*> fences;
+  // absl::Span<const CommandFence*> fences;
 };
 
 struct PipelineBarrierCommand {
@@ -197,7 +197,7 @@ struct CopyBufferCommand {
   Buffer* source_buffer;
   Buffer* target_buffer;
   size_t region_count;
-  // ArrayView<const CopyBufferRegion> regions;
+  // absl::Span<const CopyBufferRegion> regions;
 };
 
 struct CopyImageCommand {
@@ -206,7 +206,7 @@ struct CopyImageCommand {
   Image* target_image;
   Image::Layout target_image_layout;
   size_t region_count;
-  // ArrayView<const CopyImageRegion> regions;
+  // absl::Span<const CopyImageRegion> regions;
 };
 
 struct CopyBufferToImageCommand {
@@ -214,7 +214,7 @@ struct CopyBufferToImageCommand {
   Image* target_image;
   Image::Layout target_image_layout;
   size_t region_count;
-  // ArrayView<const CopyBufferImageRegion> regions;
+  // absl::Span<const CopyBufferImageRegion> regions;
 };
 
 struct CopyImageToBufferCommand {
@@ -222,7 +222,7 @@ struct CopyImageToBufferCommand {
   Image::Layout source_image_layout;
   Buffer* target_buffer;
   size_t region_count;
-  // ArrayView<const CopyBufferImageRegion> regions;
+  // absl::Span<const CopyBufferImageRegion> regions;
 };
 
 struct BlitImageCommand {
@@ -232,7 +232,7 @@ struct BlitImageCommand {
   Image::Layout target_image_layout;
   Sampler::Filter scaling_filter;
   size_t region_count;
-  // ArrayView<const BlitImageRegion> regions;
+  // absl::Span<const BlitImageRegion> regions;
 };
 
 struct ResolveImageCommand {
@@ -241,7 +241,7 @@ struct ResolveImageCommand {
   Image* target_image;
   Image::Layout target_image_layout;
   size_t region_count;
-  // ArrayView<const CopyImageRegion> regions;
+  // absl::Span<const CopyImageRegion> regions;
 };
 
 struct GenerateMipmapsCommand {
@@ -253,7 +253,7 @@ struct ClearColorImageCommand {
   Image::Layout image_layout;
   ClearColor clear_color;
   size_t range_count;
-  // ArrayView<const Image::LayerRange> ranges;
+  // absl::Span<const Image::LayerRange> ranges;
 };
 
 struct ClearDepthStencilImageCommand {
@@ -262,21 +262,21 @@ struct ClearDepthStencilImageCommand {
   float depth_value;
   uint32_t stencil_value;
   size_t range_count;
-  // ArrayView<const Image::LayerRange> ranges;
+  // absl::Span<const Image::LayerRange> ranges;
 };
 
 struct ClearColorAttachmentCommand {
   int color_attachment_index;
   ClearColor clear_color;
   size_t clear_rect_count;
-  // ArrayView<const ClearRect> clear_rects;
+  // absl::Span<const ClearRect> clear_rects;
 };
 
 struct ClearDepthStencilAttachmentCommand {
   float depth_value;
   uint32_t stencil_value;
   size_t clear_rect_count;
-  // ArrayView<const ClearRect> clear_rects;
+  // absl::Span<const ClearRect> clear_rects;
 };
 
 struct BindComputePipelineCommand {
@@ -291,7 +291,7 @@ struct BindResourceSetCommand {
   int set_index;
   ResourceSet* resource_set;
   size_t dynamic_offset_count;
-  // ArrayView<const size_t> dynamic_offsets;
+  // absl::Span<const size_t> dynamic_offsets;
 };
 
 struct PushConstantsCommand {
@@ -318,13 +318,13 @@ struct NextSubpassCommand {};
 struct SetScissorsCommand {
   int first_scissor;
   size_t scissor_count;
-  // ArrayView<const Rect2D> scissors;
+  // absl::Span<const Rect2D> scissors;
 };
 
 struct SetViewportsCommand {
   int first_viewport;
   size_t viewport_count;
-  // ArrayView<const Viewport> viewports;
+  // absl::Span<const Viewport> viewports;
 };
 
 struct SetLineWidthCommand {
@@ -365,9 +365,9 @@ struct BindVertexBuffersCommand {
   int first_binding;
   bool has_offsets;
   size_t buffer_count;
-  // ArrayView<Buffer*> buffers;
+  // absl::Span<const Buffer*> buffers;
   // if has_offsets:
-  //   ArrayView<const size_t> buffer_offsets;
+  //   absl::Span<const size_t> buffer_offsets;
 };
 
 struct BindIndexBufferCommand {

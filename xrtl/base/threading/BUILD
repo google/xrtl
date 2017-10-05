@@ -20,9 +20,9 @@ cc_library(
         ":thread",
         ":timer",
         ":wait_handle",
-        "//xrtl/base:array_view",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -38,12 +38,12 @@ cc_library(
     ],
     visibility = ["//xrtl/port:ports_only"],
     deps = [
-        "//xrtl/base:array_view",
         "//xrtl/base:intrusive_list",
         "//xrtl/base:intrusive_pool",
         "//xrtl/base:logging",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -147,7 +147,7 @@ cc_library(
     deps = [
         ":thread_base",
         ":wait_handle",
-        "//xrtl/base:array_view",
+        "@com_google_absl//absl/types:span",
         "//xrtl/base:macros",
     ] + select({
         "//xrtl/tools/target_platform:windows": [
@@ -166,8 +166,8 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":wait_handle",
-        "//xrtl/base:array_view",
         "//xrtl/base:macros",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
