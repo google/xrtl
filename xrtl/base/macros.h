@@ -31,6 +31,7 @@
 
 // Bring in absl macros so we aren't double-including a macros.h everywhere.
 #include "absl/base/attributes.h"
+#include "absl/base/casts.h"
 #include "absl/base/macros.h"  // IWYU pragma: export
 
 // make_unique (until C++14 is everywhere).
@@ -90,19 +91,6 @@ constexpr auto make_array(T&&... values) -> std::array<
   return std::array<
       typename std::decay<typename std::common_type<T...>::type>::type,
       sizeof...(T)>{{std::forward<T>(values)...}};
-}
-
-// Casts the bits of one type to another of equal size without conversion.
-// Example:
-//   float f = 3.14159265358979;
-//   int i = bit_cast<int32_t>(f);
-//   // i = 0x40490fdb
-template <class Dest, class Source>
-inline Dest bit_cast(const Source& source) {
-  static_assert(sizeof(Dest) == sizeof(Source), "Type sizes must match");
-  Dest dest;
-  std::memcpy(&dest, &source, sizeof(dest));
-  return dest;
 }
 
 // Utility to enable bitmask operators on enum classes.

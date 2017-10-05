@@ -105,7 +105,7 @@ TEST(ColorTest, Lerp) {
   EXPECT_EQ(rgba8_t(0xFD, 0x00, 0xFF, 0xFF),
             color::Lerp(rgba8_t(0xFF, 0x00, 0x00, 0xFF),
                         rgba8_t(0x00, 0x00, 0xFF, 0xFF),
-                        bit_cast<float>(0x3F008081)));
+                        absl::bit_cast<float>(0x3F008081)));
 }
 
 }  // namespace
