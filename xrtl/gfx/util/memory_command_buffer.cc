@@ -86,7 +86,7 @@ void MemoryCommandBuffer::EndRenderCommands(RenderCommandEncoderPtr encoder) {
 
 RenderPassCommandEncoderPtr MemoryCommandBuffer::BeginRenderPass(
     ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-    ArrayView<const ClearColor> clear_colors) {
+    absl::Span<const ClearColor> clear_colors) {
   queue_mask_ |= OperationQueueMask::kRender;
   AttachDependency(render_pass);
   AttachDependency(framebuffer);

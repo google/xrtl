@@ -25,8 +25,8 @@ namespace es3 {
 class ES3PipelineLayout : public PipelineLayout {
  public:
   ES3PipelineLayout(
-      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
-      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
+      absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts,
+      absl::Span<const PipelineLayout::PushConstantRange> push_constant_ranges)
       : PipelineLayout(resource_set_layouts, push_constant_ranges) {}
 };
 

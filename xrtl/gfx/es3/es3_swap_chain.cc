@@ -30,7 +30,7 @@ ref_ptr<ES3SwapChain> ES3SwapChain::Create(
     ref_ptr<ES3PlatformContext> shared_platform_context,
     ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
     ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
-    ArrayView<PixelFormat> pixel_formats) {
+    absl::Span<const PixelFormat> pixel_formats) {
   WTF_SCOPE0("ES3SwapChain#Create");
 
   // Create the context targeting the native window.
@@ -57,7 +57,7 @@ ES3PlatformSwapChain::ES3PlatformSwapChain(
     ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
     ref_ptr<ui::Control> control, ref_ptr<ES3PlatformContext> platform_context,
     PresentMode present_mode, int image_count,
-    ArrayView<PixelFormat> pixel_formats)
+    absl::Span<const PixelFormat> pixel_formats)
     : ES3SwapChain(present_mode, image_count, pixel_formats),
       present_queue_(present_queue),
       memory_heap_(std::move(memory_heap)),

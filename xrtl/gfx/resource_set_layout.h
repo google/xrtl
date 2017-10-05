@@ -17,12 +17,54 @@
 
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/render_pass.h"
 
 namespace xrtl {
 namespace gfx {
+
+// A resource binding slot as defined in a ResourceSetLayout.
+// Slots can have one or more resources bound to them at runtime via ResourceSet
+// instances populated with matching BindingValues.
+struct BindingSlot {
+  enum class Type {
+    kSampler = 0,
+    kCombinedImageSampler = 1,
+    kSampledImage = 2,
+    kStorageImage = 3,
+    kUniformTexelBuffer = 4,
+    kStorageTexelBuffer = 5,
+    kUniformBuffer = 6,
+    kStorageBuffer = 7,
+    kUniformBufferDynamic = 8,
+    kStorageBufferDynamic = 9,
+    kInputAttachment = 10,
+  };
+
+  // Binding number of this entry and corresponds to a resource of the same
+  // binding number in the shader stages.
+  int binding = 0;
+  // Specifies which type of resources are used for this binding.
+  Type type = Type::kCombinedImageSampler;
+  // The number of slots contained in the binding, accessed in a shader as
+  // an array.
+  int array_count = 1;
+  // A bitmask specifying which pipeline shader stages can access a resource
+  // for this binding.
+  ShaderStageFlag stage_mask = ShaderStageFlag::kAll;
+
+  BindingSlot() = default;
+  BindingSlot(int binding, Type type) : binding(binding), type(type) {}
+  BindingSlot(int binding, Type type, int array_count)
+      : binding(binding), type(type), array_count(array_count) {}
+  BindingSlot(int binding, Type type, int array_count,
+              ShaderStageFlag stage_mask)
+      : binding(binding),
+        type(type),
+        array_count(array_count),
+        stage_mask(stage_mask) {}
+};
 
 // Defines the binding slots used within a ResourceSet.
 // ResourceSets are considered compatible if they share the same layout.
@@ -33,45 +75,6 @@ namespace gfx {
 // - Vulkan: descriptor set layouts
 class ResourceSetLayout : public RefObject<ResourceSetLayout> {
  public:
-  struct BindingSlot {
-    enum class Type {
-      kSampler = 0,
-      kCombinedImageSampler = 1,
-      kSampledImage = 2,
-      kStorageImage = 3,
-      kUniformTexelBuffer = 4,
-      kStorageTexelBuffer = 5,
-      kUniformBuffer = 6,
-      kStorageBuffer = 7,
-      kUniformBufferDynamic = 8,
-      kStorageBufferDynamic = 9,
-      kInputAttachment = 10,
-    };
-
-    // Binding number of this entry and corresponds to a resource of the same
-    // binding number in the shader stages.
-    int binding = 0;
-    // Specifies which type of resources are used for this binding.
-    Type type = Type::kCombinedImageSampler;
-    // The number of slots contained in the binding, accessed in a shader as
-    // an array.
-    int array_count = 1;
-    // A bitmask specifying which pipeline shader stages can access a resource
-    // for this binding.
-    ShaderStageFlag stage_mask = ShaderStageFlag::kAll;
-
-    BindingSlot() = default;
-    BindingSlot(int binding, Type type) : binding(binding), type(type) {}
-    BindingSlot(int binding, Type type, int array_count)
-        : binding(binding), type(type), array_count(array_count) {}
-    BindingSlot(int binding, Type type, int array_count,
-                ShaderStageFlag stage_mask)
-        : binding(binding),
-          type(type),
-          array_count(array_count),
-          stage_mask(stage_mask) {}
-  };
-
   virtual ~ResourceSetLayout() = default;
 
   const std::vector<BindingSlot>& binding_slots() const {
@@ -79,7 +82,7 @@ class ResourceSetLayout : public RefObject<ResourceSetLayout> {
   }
 
  protected:
-  explicit ResourceSetLayout(ArrayView<BindingSlot> binding_slots)
+  explicit ResourceSetLayout(absl::Span<const BindingSlot> binding_slots)
       : binding_slots_(binding_slots.begin(), binding_slots.end()) {}
 
   std::vector<BindingSlot> binding_slots_;

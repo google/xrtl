@@ -74,8 +74,8 @@ bool ES3ContextFactory::QueryDevices() {
 }
 
 ContextFactory::CreateResult ES3ContextFactory::CreateContext(
-    ArrayView<ref_ptr<Device>> devices, Device::Features required_features,
-    ref_ptr<Context>* out_context) {
+    absl::Span<const ref_ptr<Device>> devices,
+    Device::Features required_features, ref_ptr<Context>* out_context) {
   if (!shared_context_) {
     LOG(ERROR) << "Context factory has no platform context";
     return CreateResult::kUnknownError;

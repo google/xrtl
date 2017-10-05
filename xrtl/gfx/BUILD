@@ -44,6 +44,7 @@ cc_library(
         "//xrtl/base:logging",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -58,10 +59,10 @@ cc_library(
         ":pipeline_layout",
         ":resource_set",
         ":sampler",
-        "//xrtl/base:array_view",
         "//xrtl/base:logging",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -94,10 +95,10 @@ cc_library(
         ":sampler",
         ":shader_module",
         ":swap_chain",
-        "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
         "//xrtl/base/threading:event",
         "//xrtl/ui:control",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -124,7 +125,7 @@ cc_library(
     deps = [
         ":context",
         ":device",
-        "//xrtl/base:array_view",
+        "@com_google_absl//absl/types:span",
         "//xrtl/base:ref_ptr",
         "//xrtl/base:flags",
         "//xrtl/base:logging",
@@ -146,8 +147,8 @@ cc_library(
     deps = [
         ":context",
         ":device",
-        "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -176,9 +177,9 @@ cc_library(
     deps = [
         ":image_view",
         ":render_pass",
-        "//xrtl/base:array_view",
         "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -231,8 +232,8 @@ cc_library(
     hdrs = ["pipeline_layout.h"],
     deps = [
         ":resource_set_layout",
-        "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -271,9 +272,9 @@ cc_library(
         ":image",
         ":pixel_format",
         ":render_state",
-        "//xrtl/base:array_view",
         "//xrtl/base:macros",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -304,8 +305,8 @@ cc_library(
         ":image_view",
         ":resource_set_layout",
         ":sampler",
-        "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -314,8 +315,8 @@ cc_library(
     hdrs = ["resource_set_layout.h"],
     deps = [
         ":render_pass",
-        "//xrtl/base:array_view",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/types:span",
     ],
 )
 

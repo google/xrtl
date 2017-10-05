@@ -24,9 +24,9 @@ namespace es3 {
 
 class ES3RenderPass : public RenderPass {
  public:
-  ES3RenderPass(ArrayView<AttachmentDescription> attachments,
-                ArrayView<SubpassDescription> subpasses,
-                ArrayView<SubpassDependency> subpass_dependencies)
+  ES3RenderPass(absl::Span<const AttachmentDescription> attachments,
+                absl::Span<const SubpassDescription> subpasses,
+                absl::Span<const SubpassDependency> subpass_dependencies)
       : RenderPass(attachments, subpasses, subpass_dependencies) {}
 };
 

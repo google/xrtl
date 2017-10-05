@@ -23,7 +23,7 @@ namespace gfx {
 namespace es3 {
 
 ES3Program::ES3Program(ref_ptr<ES3PlatformContext> platform_context,
-                       ArrayView<ref_ptr<ES3Shader>> shaders)
+                       absl::Span<const ref_ptr<ES3Shader>> shaders)
     : platform_context_(std::move(platform_context)),
       shaders_(shaders.begin(), shaders.end()) {
   auto context_lock =

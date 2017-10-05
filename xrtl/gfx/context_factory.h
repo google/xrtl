@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/context.h"
 #include "xrtl/gfx/device.h"
@@ -100,13 +100,13 @@ class ContextFactory : public RefObject<ContextFactory> {
   // failed. Failures may happen for many reasons and may happen upon creation
   // with parameters that have previously succeeded (such as if the system is
   // out of resources).
-  virtual CreateResult CreateContext(ArrayView<ref_ptr<Device>> devices,
+  virtual CreateResult CreateContext(absl::Span<const ref_ptr<Device>> devices,
                                      Device::Features required_features,
                                      ref_ptr<Context>* out_context) = 0;
   CreateResult CreateContext(ref_ptr<Device> device,
                              Device::Features required_features,
                              ref_ptr<Context>* out_context) {
-    return CreateContext(ArrayView<ref_ptr<Device>>{device},
+    return CreateContext(absl::Span<const ref_ptr<Device>>{device},
                          std::move(required_features), out_context);
   }
 

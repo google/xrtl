@@ -35,7 +35,8 @@ class ES3Queue;
 class ES3Context : public Context {
  public:
   ES3Context(ref_ptr<ContextFactory> context_factory,
-             ArrayView<ref_ptr<Device>> devices, Device::Features features,
+             absl::Span<const ref_ptr<Device>> devices,
+             Device::Features features,
              ref_ptr<ES3PlatformContext> platform_context);
   ~ES3Context() override;
 
@@ -58,8 +59,8 @@ class ES3Context : public Context {
                                            size_t data_length) override;
 
   ref_ptr<PipelineLayout> CreatePipelineLayout(
-      ArrayView<ref_ptr<ResourceSetLayout>> resource_set_layouts,
-      ArrayView<PipelineLayout::PushConstantRange> push_constant_ranges)
+      absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts,
+      absl::Span<const PipelineLayout::PushConstantRange> push_constant_ranges)
       override;
 
   ref_ptr<ComputePipeline> CreateComputePipeline(
@@ -73,15 +74,15 @@ class ES3Context : public Context {
       RenderPipeline::ShaderStages shader_stages) override;
 
   ref_ptr<ResourceSetLayout> CreateResourceSetLayout(
-      ArrayView<ResourceSetLayout::BindingSlot> binding_slots) override;
+      absl::Span<const BindingSlot> binding_slots) override;
 
   ref_ptr<ResourceSet> CreateResourceSet(
       ref_ptr<ResourceSetLayout> resource_set_layout,
-      ArrayView<ResourceSet::BindingValue> binding_values) override;
+      absl::Span<const BindingValue> binding_values) override;
 
   ref_ptr<SwapChain> CreateSwapChain(
       ref_ptr<ui::Control> control, SwapChain::PresentMode present_mode,
-      int image_count, ArrayView<PixelFormat> pixel_formats) override;
+      int image_count, absl::Span<const PixelFormat> pixel_formats) override;
 
   ref_ptr<MemoryHeap> CreateMemoryHeap(MemoryType memory_type_mask,
                                        size_t heap_size) override;
@@ -89,19 +90,20 @@ class ES3Context : public Context {
   ref_ptr<Sampler> CreateSampler(Sampler::Params params) override;
 
   ref_ptr<RenderPass> CreateRenderPass(
-      ArrayView<RenderPass::AttachmentDescription> attachments,
-      ArrayView<RenderPass::SubpassDescription> subpasses,
-      ArrayView<RenderPass::SubpassDependency> subpass_dependencies) override;
+      absl::Span<const RenderPass::AttachmentDescription> attachments,
+      absl::Span<const RenderPass::SubpassDescription> subpasses,
+      absl::Span<const RenderPass::SubpassDependency> subpass_dependencies)
+      override;
 
   ref_ptr<Framebuffer> CreateFramebuffer(
       ref_ptr<RenderPass> render_pass, Size3D size,
-      ArrayView<ref_ptr<ImageView>> attachments) override;
+      absl::Span<const ref_ptr<ImageView>> attachments) override;
 
   ref_ptr<CommandBuffer> CreateCommandBuffer() override;
 
-  SubmitResult Submit(ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-                      ArrayView<ref_ptr<CommandBuffer>> command_buffers,
-                      ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+  SubmitResult Submit(absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+                      absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+                      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
                       ref_ptr<Event> signal_handle) override;
 
   WaitResult WaitUntilQueuesIdle() override;

@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/macros.h"
 #include "xrtl/base/threading/wait_handle.h"
 
@@ -248,7 +248,7 @@ class Thread : public WaitHandle {
   // Returns a result containing the reason the wait ended and when successful
   // the index into wait_handles that was signaled.
   static WaitAnyResult WaitAny(
-      ArrayView<ref_ptr<WaitHandle>> wait_handles,
+      absl::Span<const ref_ptr<WaitHandle>> wait_handles,
       std::chrono::milliseconds timeout = kInfiniteTimeout);
 
   // Waits until all of the specified wait handles are in the signaled state or
@@ -260,7 +260,7 @@ class Thread : public WaitHandle {
   // Returns a result that indicates the reason the wait ended, with kSuccess
   // meaning that all objects were signaled.
   static WaitResult WaitAll(
-      ArrayView<ref_ptr<WaitHandle>> wait_handles,
+      absl::Span<const ref_ptr<WaitHandle>> wait_handles,
       std::chrono::milliseconds timeout = kInfiniteTimeout);
 
   virtual ~Thread();

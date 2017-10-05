@@ -30,6 +30,7 @@ namespace ui {
 
 namespace {
 
+using gfx::BindingSlot;
 using gfx::Buffer;
 using gfx::Image;
 using gfx::MemoryHeap;
@@ -332,7 +333,7 @@ bool ImGuiOverlay::InitializePipeline() {
 
   // Pipeline layout.
   resource_set_layout_ = context_->CreateResourceSetLayout({
-      {0, ResourceSetLayout::BindingSlot::Type::kCombinedImageSampler},
+      {0, BindingSlot::Type::kCombinedImageSampler},
   });
   render_pipeline_layout_ = context_->CreatePipelineLayout(
       {

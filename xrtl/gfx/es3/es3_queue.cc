@@ -48,9 +48,9 @@ ES3Queue::~ES3Queue() {
 }
 
 void ES3Queue::EnqueueCommandBuffers(
-    ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
-    ArrayView<ref_ptr<CommandBuffer>> command_buffers,
-    ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
   // Presentation queues cannot handle command buffers.
   DCHECK(queue_type_ != Type::kPresentation);
@@ -63,9 +63,9 @@ void ES3Queue::EnqueueCommandBuffers(
 
 void ES3Queue::EnqueueCallback(
     ref_ptr<ES3PlatformContext> exclusive_context,
-    ArrayView<ref_ptr<QueueFence>> wait_queue_fences,
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
     std::function<void()> callback,
-    ArrayView<ref_ptr<QueueFence>> signal_queue_fences,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
   std::lock_guard<std::mutex> lock(queue_mutex_);
   DCHECK(queue_running_);

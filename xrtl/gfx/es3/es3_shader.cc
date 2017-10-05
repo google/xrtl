@@ -46,7 +46,7 @@ ES3Shader::~ES3Shader() {
 }
 
 bool ES3Shader::CompileSource(GLenum shader_type,
-                              ArrayView<absl::string_view> sources) {
+                              absl::Span<const absl::string_view> sources) {
   WTF_SCOPE0("ES3Shader#CompileSource");
   auto context_lock =
       ES3PlatformContext::LockTransientContext(platform_context_);

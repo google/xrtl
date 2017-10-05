@@ -28,7 +28,7 @@ namespace es3 {
 class ES3ResourceSet : public ResourceSet {
  public:
   explicit ES3ResourceSet(ref_ptr<ResourceSetLayout> resource_set_layout,
-                          ArrayView<BindingValue> binding_values)
+                          absl::Span<const BindingValue> binding_values)
       : ResourceSet(std::move(resource_set_layout), binding_values) {}
 };
 

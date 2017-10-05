@@ -50,7 +50,7 @@ class MyTransferCommandEncoder
   std::vector<PipelineBarrierCallArgs> pipeline_barrier_calls;
 };
 
-using WaitFencesCallArgs = ArrayView<ref_ptr<CommandFence>>;
+using WaitFencesCallArgs = absl::Span<const ref_ptr<CommandFence>>;
 
 class MyComputeCommandEncoder
     : public gfx::testing::PartialComputeCommandEncoder {
@@ -58,7 +58,7 @@ class MyComputeCommandEncoder
   explicit MyComputeCommandEncoder(CommandBuffer* command_buffer)
       : gfx::testing::PartialComputeCommandEncoder(command_buffer) {}
 
-  void WaitFences(ArrayView<ref_ptr<CommandFence>> fences) override {
+  void WaitFences(absl::Span<const ref_ptr<CommandFence>> fences) override {
     wait_fences_calls.push_back(WaitFencesCallArgs{fences});
   }
 
@@ -91,7 +91,7 @@ class MyCommandBuffer : public CommandBuffer {
 
   RenderPassCommandEncoderPtr BeginRenderPass(
       ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-      ArrayView<const ClearColor> clear_colors) override {
+      absl::Span<const ClearColor> clear_colors) override {
     return {nullptr, nullptr};
   }
   void EndRenderPass(RenderPassCommandEncoderPtr encoder) override {}

@@ -15,7 +15,7 @@
 #ifndef XRTL_GFX_UTIL_MEMORY_COMMAND_BUFFER_READER_H_
 #define XRTL_GFX_UTIL_MEMORY_COMMAND_BUFFER_READER_H_
 
-#include "xrtl/base/array_view.h"
+#include "absl/types/span.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/util/memory_commands.h"
 
@@ -52,11 +52,11 @@ class MemoryCommandBufferReader {
 
   // Reads an array of primitives/structs from the command buffer.
   template <typename T>
-  ArrayView<const T> ReadArray(size_t value_count) {
+  absl::Span<const T> ReadArray(size_t value_count) {
     if (!value_count) {
-      return ArrayView<const T>();
+      return {};
     }
-    return ArrayView<const T>(
+    return absl::Span<const T>(
         reinterpret_cast<const T*>(ReadData(value_count * sizeof(T))),
         value_count);
   }
@@ -64,7 +64,7 @@ class MemoryCommandBufferReader {
   // Reads an array of reference counted objects from the command buffer.
   // The reference counts will not be adjusted.
   template <typename T>
-  ArrayView<ref_ptr<T>> ReadRefPtrArray(size_t value_count) {
+  absl::Span<const ref_ptr<T>> ReadRefPtrArray(size_t value_count) {
     if (!value_count) {
       return {};
     }
@@ -72,7 +72,7 @@ class MemoryCommandBufferReader {
     // This does not adjust references and the caller - if it copies the
     // ref_ptrs - will need to ensure the references remain valid until they
     // are adjusted.
-    return ArrayView<ref_ptr<T>>(
+    return absl::Span<const ref_ptr<T>>(
         const_cast<ref_ptr<T>*>(reinterpret_cast<const ref_ptr<T>*>(
             ReadData(value_count * sizeof(T*)))),
         value_count);

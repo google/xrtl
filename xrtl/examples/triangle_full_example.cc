@@ -334,8 +334,8 @@ void main() {
 
     // Pipeline layout.
     auto resource_set_layout = context_->CreateResourceSetLayout({
-        {0, ResourceSetLayout::BindingSlot::Type::kCombinedImageSampler},
-        {1, ResourceSetLayout::BindingSlot::Type::kUniformBuffer},
+        {0, BindingSlot::Type::kCombinedImageSampler},
+        {1, BindingSlot::Type::kUniformBuffer},
     });
     auto pipeline_layout = context_->CreatePipelineLayout(
         {

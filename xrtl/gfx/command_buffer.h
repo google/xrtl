@@ -152,7 +152,7 @@ class CommandBuffer : public RefObject<CommandBuffer> {
   //  command_buffer->EndRenderPass(std::move(encoder));
   virtual RenderPassCommandEncoderPtr BeginRenderPass(
       ref_ptr<RenderPass> render_pass, ref_ptr<Framebuffer> framebuffer,
-      ArrayView<const ClearColor> clear_colors) = 0;
+      absl::Span<const ClearColor> clear_colors) = 0;
   virtual void EndRenderPass(RenderPassCommandEncoderPtr encoder) = 0;
 
   // Attaches a dependency to the command buffer that will be released when the
@@ -168,7 +168,7 @@ class CommandBuffer : public RefObject<CommandBuffer> {
         value.get());
   }
   template <typename T>
-  void AttachDependencies(ArrayView<ref_ptr<T>> values) {
+  void AttachDependencies(absl::Span<const ref_ptr<T>> values) {
     for (const auto& value : values) {
       value->AddReference();
     }
