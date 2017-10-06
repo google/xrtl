@@ -24,6 +24,7 @@ namespace xrtl {
 namespace math {
 
 // Returns true if the difference between two values is within epsilon.
+template <int x = 0>
 ABSL_ATTRIBUTE_ALWAYS_INLINE constexpr bool AreAlmostEqual(double a, double b,
                                                            double epsilon) {
   return std::abs(a - b) <= epsilon;
