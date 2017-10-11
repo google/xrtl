@@ -96,14 +96,17 @@ cc_library(
         # TODO(benvanik): figure out if something similar is needed on macos.
         "//xrtl/tools/target_platform:linux": [
             "-Wl,-u__asan_default_options",
+            "-Wl,-u__asan_default_suppressions",
             "-Wl,-u__lsan_default_options",
             "-Wl,-u__lsan_default_suppressions",
             "-Wl,-u__msan_default_options",
             "-Wl,-u__tsan_default_options",
+            "-Wl,-u__tsan_default_suppressions",
             "-Wl,-u__ubsan_default_options",
         ],
         "//conditions:default": [],
     }),
+    linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
         "//xrtl/tools/target_platform",

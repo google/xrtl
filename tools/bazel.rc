@@ -54,7 +54,7 @@ common:msan --crosstool_top=//tools/crosstool/msan
 
 # https://clang.llvm.org/docs/ThreadSanitizer.html
 common:tsan --config=clang
-common:tsan --copt=-DTSAN_OPTIONS=\"color=always\"
+common:tsan --copt=-DTSAN_OPTIONS=\"color=always:print_suppressions=1:strip_path_prefix=/proc/self/cwd/\"
 common:tsan --strip=never
 common:tsan --copt=-DNDEBUG=1  # DCHECKs make tsan sad
 common:tsan --copt=-g
@@ -66,17 +66,18 @@ common:tsan --linkopt=-fsanitize=thread
 
 # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
 common:ubsan --config=clang
-common:ubsan --copt=-DUBSAN_OPTIONS=\"halt_on_error=1:print_stacktrace=1:color=always\"
+common:ubsan --copt=-DUBSAN_OPTIONS=\"halt_on_error=1:print_suppressions=1:print_stacktrace=1:color=always:strip_path_prefix=/proc/self/cwd/\"
 common:ubsan --strip=never
 common:ubsan --copt=-g
 common:ubsan --copt=-O0
-# NOTE: function is disabled due to EGL issues.
+# function check disabled due to swiftshader
 common:ubsan --copt=-fsanitize=bool,signed-integer-overflow,shift,vla-bound
 common:ubsan --copt=-fsanitize-coverage=trace-pc-guard
 common:ubsan --copt=-fno-sanitize-recover=undefined
 common:ubsan --copt=-fno-optimize-sibling-calls
 common:ubsan --copt=-fno-omit-frame-pointer
-common:ubsan --linkopt=-fsanitize=bool,function,signed-integer-overflow,shift,vla-bound
+# function check disabled due to swiftshader
+common:ubsan --linkopt=-fsanitize=bool,signed-integer-overflow,shift,vla-bound
 common:ubsan --linkopt=-fno-sanitize-recover=undefined
 
 #===============================================================================

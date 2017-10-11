@@ -36,8 +36,15 @@ void LogMessage::EmitLogMessage() {
   int32_t micros_remainder = static_cast<int32_t>(now_micros % 1000000);
   constexpr size_t kTimeBufferSize = 30;
   char time_buffer[kTimeBufferSize];
-  strftime(time_buffer, kTimeBufferSize, "%Y-%m-%d %H:%M:%S",
-           localtime(&now_seconds));
+  tm now_local;
+
+#if defined(XRTL_PLATFORM_WINDOWS)
+  localtime_s(&now_local, &now_seconds);
+#else
+  localtime_r(&now_seconds, &now_local);
+#endif  // XRTL_PLATFORM_WINDOWS
+
+  strftime(time_buffer, kTimeBufferSize, "%Y-%m-%d %H:%M:%S", &now_local);
 
   std::fprintf(FLAGS_logtostderr ? stderr : stdout, "%s.%06d: %c %s:%d] %s\n",
                time_buffer, micros_remainder, "IWEF"[severity_], file_name_,
