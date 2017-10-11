@@ -26,7 +26,8 @@ namespace debugging {
 #define SANITIZER_HOOK_ATTRIBUTE                                              \
   extern "C" __attribute__((no_sanitize_address))                             \
       __attribute__((no_sanitize_memory)) __attribute__((no_sanitize_thread)) \
-          __attribute__((visibility("default"))) __attribute__((used))
+          __attribute__((no_sanitize("undefined")))                           \
+              __attribute__((visibility("default"))) __attribute__((used))
 
 #if defined(ASAN_OPTIONS)
 SANITIZER_HOOK_ATTRIBUTE const char* __asan_default_options() {
@@ -46,10 +47,10 @@ SANITIZER_HOOK_ATTRIBUTE const char* __lsan_default_suppressions() {
       // Swiftshader leaks a bit.
       "leak:libEGL.so\n"
       "leak:libGLESv2.so\n"
-      //"leak:sw::*\n"
-      //"leak:Ice::*\n"
-      //"leak:eglQueryString\n"
-      //"leak:eglMakeCurrent\n"
+      // "leak:sw::*\n"
+      // "leak:Ice::*\n"
+      // "leak:eglQueryString\n"
+      // "leak:eglMakeCurrent\n"
 
       // End.
       "";
@@ -66,19 +67,22 @@ SANITIZER_HOOK_ATTRIBUTE const char* __msan_default_options() {
 SANITIZER_HOOK_ATTRIBUTE const char* __tsan_default_options() {
   return TSAN_OPTIONS;
 }
+SANITIZER_HOOK_ATTRIBUTE const char* __tsan_default_suppressions() {
+  // Each line must end with a \n.
+  // More information:
+  // https://github.com/google/sanitizers/wiki/ThreadSanitizerFlags
+  return
+      // Oh swiftshader... >_>
+      "race:libEGL.so\n"
+
+      // End.
+      "";
+}
 #endif  // TSAN_OPTIONS
 
 #if defined(UBSAN_OPTIONS)
 SANITIZER_HOOK_ATTRIBUTE const char* __ubsan_default_options() {
   return UBSAN_OPTIONS;
-}
-SANITIZER_HOOK_ATTRIBUTE const char* __ubsan_default_suppressions() {
-  // Each line must end with a \n.
-  // More information:
-  // https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-  return
-      // End.
-      "";
 }
 #endif  // UBSAN_OPTIONS
 
