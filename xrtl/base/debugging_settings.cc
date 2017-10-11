@@ -72,6 +72,14 @@ SANITIZER_HOOK_ATTRIBUTE const char* __tsan_default_options() {
 SANITIZER_HOOK_ATTRIBUTE const char* __ubsan_default_options() {
   return UBSAN_OPTIONS;
 }
+SANITIZER_HOOK_ATTRIBUTE const char* __ubsan_default_suppressions() {
+  // Each line must end with a \n.
+  // More information:
+  // https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+  return
+      // End.
+      "";
+}
 #endif  // UBSAN_OPTIONS
 
 }  // namespace debugging
