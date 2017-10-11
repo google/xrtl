@@ -69,6 +69,7 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateBuffer(
 void ES3MemoryHeap::ReleaseBuffer(Buffer* buffer) {
   std::lock_guard<std::mutex> lock_guard(mutex_);
   used_size_ -= buffer->allocation_size();
+  delete buffer;
 }
 
 MemoryHeap::AllocationResult ES3MemoryHeap::AllocateImage(
@@ -112,6 +113,7 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateImage(
 void ES3MemoryHeap::ReleaseImage(Image* image) {
   std::lock_guard<std::mutex> lock_guard(mutex_);
   used_size_ -= image->allocation_size();
+  delete image;
 }
 
 }  // namespace es3

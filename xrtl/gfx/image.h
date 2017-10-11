@@ -178,6 +178,8 @@ class Image : public Resource {
                                         PixelFormat format) = 0;
 
   // Reads a block of data from the resource at the given source layer range.
+  // This may synchronize the context queues and should be avoided. Prefer to
+  // use CopyImageToBuffer and then map the buffer instead.
   //
   // Returns false if the read could not be performed; either the bounds are
   // out of range or the memory type does not support reading in this way.
@@ -185,6 +187,8 @@ class Image : public Resource {
                         size_t data_length) = 0;
 
   // Writes a block of data into the image at the given target layer range.
+  // This may synchronize the context queues and should be avoided. Prefer to
+  // map and populate a buffer then use CopyBufferToImage.
   //
   // Returns false if the write could not be performed; either the bounds are
   // out of range or the memory type does not support writing in this way.

@@ -16,5 +16,6 @@ cp tools/ci/travis/.bazelrc .
     --output_base=/tmp/.cache/bazel_root_$CONFIG/ \
     -c dbg \
     --config=$CONFIG \
+    --define=XRTL_USE_SWIFTSHADER=1 \
     --keep_going \
     --all

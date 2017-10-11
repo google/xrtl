@@ -133,9 +133,45 @@ bool ES3Image::ReadData(LayerRange source_range, void* data,
   // TODO(benvanik): support automatically splitting across layers.
   DCHECK_EQ(1, source_range.layer_count);
 
-  // TODO(benvanik): image.
-  DCHECK(false);
-  return false;
+  GLenum target = target_;
+  if (type() == Type::kCube) {
+    // Special cubemap handling, where layer index changes the target.
+    DCHECK_LT(source_range.base_layer, 6);
+    target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + source_range.base_layer;
+  }
+
+  // TODO(benvanik): support arrays/3D textures.
+  DCHECK(type() == Type::k2D || type() == Type::kCube);
+  // TODO(benvanik): support compressed texture types.
+  DCHECK_NE(texture_params_.type, GL_NONE);
+
+  // TODO(benvanik): switch to PBOs.
+  // Temporary FBO readback nastiness.
+  GLuint framebuffer = 0;
+  glGenFramebuffers(1, &framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
+                         texture_id_, 0);
+  glReadPixels(0, 0, size().width, size().height, texture_params_.format,
+               texture_params_.type, data);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
+  glDeleteFramebuffers(1, &framebuffer);
+
+  // Flip the data we read vertically.
+  size_t row_stride = format().ComputeDataSize(size().width, 1);
+  int row_count = size().height;
+  uint8_t* byte_data = reinterpret_cast<uint8_t*>(data);
+  for (int y = 0; y < row_count / 2; ++y) {
+    size_t src_offset_1 = y * row_stride;
+    size_t src_offset_2 = (row_count - 1 - y) * row_stride;
+    for (size_t i = 0; i < row_stride; ++i) {
+      uint8_t t = byte_data[src_offset_1 + i];
+      byte_data[src_offset_1 + i] = byte_data[src_offset_2 + i];
+      byte_data[src_offset_2 + i] = t;
+    }
+  }
+
+  return true;
 }
 
 bool ES3Image::WriteData(LayerRange target_range, const void* data,
