@@ -9,68 +9,58 @@ licenses(["notice"])  # Apache 2.0
 py_binary(
     name = "generate_compile_command",
     srcs = ["generate_compile_command.py"],
-    deps = ["//third_party/bazel:extra_actions_proto_py"],
     visibility = ["//visibility:private"],
-)
-
-sh_binary(
-    name = "generate_compile_command_sh",
-    srcs = ["generate_compile_command.sh"],
-    data = [":generate_compile_command"],
+    deps = ["//third_party/bazel:extra_actions_proto_py"],
 )
 
 extra_action(
     name = "generate_compile_commands_action",
-    tools = [":generate_compile_command_sh"],
-    out_templates = ["$(ACTION_ID)_compile_command"],
     cmd = " ".join([
-        "$(location :generate_compile_command_sh)",
+        "PYTHONPATH=$$PYTHONPATH:$$PWD",
+        "python $(location :generate_compile_command)",
         "$(EXTRA_ACTION_FILE)",
         "$(output $(ACTION_ID)_compile_command)",
     ]),
+    out_templates = ["$(ACTION_ID)_compile_command"],
+    tools = [":generate_compile_command"],
     visibility = ["//visibility:private"],
 )
 
 action_listener(
     name = "generate_compile_commands_listener",
+    extra_actions = [":generate_compile_commands_action"],
     mnemonics = [
         # TODO(benvanik): objc?
         "CppCompile",
     ],
-    extra_actions = [":generate_compile_commands_action"],
     visibility = ["//visibility:public"],
 )
 
 py_binary(
     name = "generate_link_target",
     srcs = ["generate_link_target.py"],
-    deps = ["//third_party/bazel:extra_actions_proto_py"],
     visibility = ["//visibility:private"],
-)
-
-sh_binary(
-    name = "generate_link_target_sh",
-    srcs = ["generate_link_target.sh"],
-    data = [":generate_link_target"],
+    deps = ["//third_party/bazel:extra_actions_proto_py"],
 )
 
 extra_action(
     name = "generate_link_targets_action",
-    tools = [":generate_link_target_sh"],
-    out_templates = ["$(ACTION_ID)_link_target"],
     cmd = " ".join([
-        "$(location :generate_link_target_sh)",
+        "PYTHONPATH=$$PYTHONPATH:$$PWD",
+        "python $(location :generate_link_target)",
         "$(EXTRA_ACTION_FILE)",
         "$(output $(ACTION_ID)_link_target)",
     ]),
+    out_templates = ["$(ACTION_ID)_link_target"],
+    tools = [":generate_link_target"],
     visibility = ["//visibility:private"],
 )
 
 action_listener(
     name = "generate_link_targets_listener",
+    extra_actions = [":generate_link_targets_action"],
     mnemonics = [
         "CppLink",
     ],
-    extra_actions = [":generate_link_targets_action"],
     visibility = ["//visibility:public"],
 )
