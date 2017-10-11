@@ -45,25 +45,24 @@ jobs:
   fast_finish: true
   include:
     # Run linting and a linux build first, as it's most likely to fail.
-    - stage: lint and build
+    - stage: lint, build, and test
       os: linux
       env:
         - CONFIG=asan
       script:
         - ./tools/ci/travis/lint.sh
         - ./tools/ci/travis/build.sh
+        - ./tools/ci/travis/test.sh
 
-    # Test Linux for asan,tsan,ubsan.
+    # Test Linux for tsan and ubsan.
     - &test-linux
       stage: test
       os: linux
       script: ./tools/ci/travis/test.sh
-      env: CONFIG=asan
+      env: CONFIG=tsan
     # TODO(benvanik): figure out how to get msan setup on travis.
     #- <<: *test-linux
     #  env: CONFIG=msan
-    - <<: *test-linux
-      env: CONFIG=tsan
     - <<: *test-linux
       env: CONFIG=ubsan
 
