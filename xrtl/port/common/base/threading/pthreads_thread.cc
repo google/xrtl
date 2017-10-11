@@ -30,6 +30,7 @@
 #endif                     // XRTL_PLATFORM_APPLE
 
 #include "absl/base/call_once.h"
+#include "absl/container/fixed_array.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/stopwatch.h"
 #include "xrtl/base/threading/event.h"
@@ -507,9 +508,7 @@ Thread::WaitAnyResult PthreadsThread::WaitMultiple(
   // Copy wait handles locally. We'll use this as a check and null out entries
   // that have passed and have been signaled.
   // NOTE: the wait handle count is limited so we can stack allocate.
-  DCHECK_LE(wait_handles.size(), 64);
-  PthreadsWaitHandleImpl** handles = reinterpret_cast<PthreadsWaitHandleImpl**>(
-      alloca(sizeof(PthreadsWaitHandleImpl*) * wait_handles.size()));
+  absl::FixedArray<PthreadsWaitHandleImpl*> handles(wait_handles.size());
   for (size_t i = 0; i < wait_handles.size(); ++i) {
     handles[i] = reinterpret_cast<PthreadsWaitHandleImpl*>(
         wait_handles[i]->native_handle());
@@ -522,7 +521,7 @@ Thread::WaitAnyResult PthreadsThread::WaitMultiple(
     int signal_index = -1;
     bool any_signaled = false;
     bool any_unsignaled = false;
-    for (size_t i = 0; i < wait_handles.size(); ++i) {
+    for (size_t i = 0; i < handles.size(); ++i) {
       PthreadsWaitHandleImpl* handle = handles[i];
       if (!handle) {
         signal_index = i;

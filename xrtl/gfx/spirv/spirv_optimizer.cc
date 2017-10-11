@@ -25,7 +25,7 @@ namespace xrtl {
 namespace gfx {
 namespace spirv {
 
-SpirVOptimizer::SpirVOptimizer(Options options) : options_(std::move(options)) {
+SpirVOptimizer::SpirVOptimizer(Options options) : options_(options) {
   // TODO(benvanik): evaluate the environment options. We could do 1.1.
   optimizer_.reset(new spvtools::Optimizer(SPV_ENV_UNIVERSAL_1_0));
   optimizer_->SetMessageConsumer(

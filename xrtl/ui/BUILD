@@ -146,6 +146,7 @@ cc_library(
 
 cc_test(
     name = "system_theme_test",
+    size = "small",
     srcs = ["system_theme_test.cc"],
     deps = [
         ":system_theme",

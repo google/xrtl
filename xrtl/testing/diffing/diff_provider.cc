@@ -79,8 +79,8 @@ DiffResult DiffProvider::CompareText(absl::string_view test_key,
   }
 
   // Diff the text.
-  auto result = TextDiffer::DiffStrings(golden_text_buffer.value(), text_value,
-                                        std::move(options));
+  auto result =
+      TextDiffer::DiffStrings(golden_text_buffer.value(), text_value, options);
   return PublishTextResult(
       publish_mode, test_key, text_value, result,
       result.equivalent ? DiffResult::kEquivalent : DiffResult::kDifferent);
@@ -102,7 +102,7 @@ DiffResult DiffProvider::CompareData(absl::string_view test_key,
   // Diff the data.
   auto result = DataDiffer::DiffBuffers(golden_data_buffer.value().data(),
                                         golden_data_buffer.value().size(), data,
-                                        data_length, std::move(options));
+                                        data_length, options);
   return PublishDataResult(
       publish_mode, test_key, data, data_length, result,
       result.equivalent ? DiffResult::kEquivalent : DiffResult::kDifferent);
@@ -124,7 +124,7 @@ DiffResult DiffProvider::CompareImage(absl::string_view test_key,
 
   // Diff the images.
   auto result = ImageDiffer::DiffImageBuffers(golden_image_buffer.get(),
-                                              image_buffer, std::move(options));
+                                              image_buffer, options);
   return PublishImageResult(
       publish_mode, test_key, image_buffer, result,
       result.equivalent ? DiffResult::kEquivalent : DiffResult::kDifferent);
