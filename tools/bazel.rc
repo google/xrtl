@@ -70,7 +70,8 @@ common:ubsan --copt=-DUBSAN_OPTIONS=\"halt_on_error=1:print_stacktrace=1:color=a
 common:ubsan --strip=never
 common:ubsan --copt=-g
 common:ubsan --copt=-O0
-common:ubsan --copt=-fsanitize=bool,function,signed-integer-overflow,shift,vla-bound
+# NOTE: function is disabled due to EGL issues.
+common:ubsan --copt=-fsanitize=bool,signed-integer-overflow,shift,vla-bound
 common:ubsan --copt=-fsanitize-coverage=trace-pc-guard
 common:ubsan --copt=-fno-sanitize-recover=undefined
 common:ubsan --copt=-fno-optimize-sibling-calls
