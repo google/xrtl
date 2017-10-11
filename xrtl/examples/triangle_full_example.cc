@@ -37,7 +37,6 @@ using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
 using gfx::ResourceSet;
-using gfx::ResourceSetLayout;
 using gfx::Sampler;
 using gfx::ShaderModule;
 using gfx::SwapChain;

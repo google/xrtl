@@ -18,6 +18,8 @@
 #include <cstring>
 #include <string>
 
+#include "absl/base/attributes.h"
+
 // Logging macros live in their own file so that we can use external versions
 // as required.
 //
@@ -77,7 +79,7 @@ inline void LogString(const char* file_name, int line, int severity,
 // Emits a message to the log with printf-style formatting.
 // This uses a thread-local buffer and is thread-safe.
 void LogStringFormat(const char* file_name, int line, int severity,
-                     const char* fmt, ...);
+                     const char* fmt, ...) ABSL_PRINTF_ATTRIBUTE(4, 5);
 
 }  // namespace xrtl
 

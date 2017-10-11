@@ -37,7 +37,6 @@ using gfx::MemoryHeap;
 using gfx::RenderPass;
 using gfx::RenderPipeline;
 using gfx::RenderState;
-using gfx::ResourceSetLayout;
 using gfx::Sampler;
 using gfx::ShaderModule;
 
@@ -216,7 +215,7 @@ bool ImGuiOverlay::InitializeFont(ImGuiIO* io) {
   // TODO(benvanik): is invalidation possible?
   // TODO(benvanik): probably worth transitioning to optimal.
   if (!font_image->WriteData(font_image->entire_range(), pixel_data,
-                             static_cast<size_t>(width * height * 4))) {
+                             width * height * 4)) {
     LOG(ERROR) << "Failed to write data into font image";
     return false;
   }

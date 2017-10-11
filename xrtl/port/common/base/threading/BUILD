@@ -56,6 +56,7 @@ cc_library(
         "//xrtl/base/threading:threading_hdrs",
         "//xrtl/tools/target_platform",
         "@com_google_absl//absl/base",
+        "@com_google_absl//absl/container:fixed_array",
     ],
 )
 

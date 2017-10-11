@@ -16,6 +16,7 @@
 #include <thread>
 
 #include "absl/base/call_once.h"
+#include "absl/container/fixed_array.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/stopwatch.h"
 #include "xrtl/base/threading/thread.h"
@@ -393,14 +394,12 @@ Thread::WaitAnyResult Win32Thread::WaitMultiple(
     absl::Span<const ref_ptr<WaitHandle>> wait_handles,
     std::chrono::milliseconds timeout, bool require_all) {
   // NOTE: the wait handle count is limited so we can stack allocate.
-  DCHECK_LE(wait_handles.size(), 64);
-  HANDLE* handles =
-      reinterpret_cast<HANDLE*>(_malloca(sizeof(HANDLE) * wait_handles.size()));
+  absl::FixedArray<HANDLE> handles(wait_handles.size());
   for (size_t i = 0; i < wait_handles.size(); ++i) {
     handles[i] = reinterpret_cast<HANDLE>(wait_handles[i]->native_handle());
   }
   DWORD result = ::WaitForMultipleObjectsEx(
-      static_cast<DWORD>(wait_handles.size()), handles,
+      static_cast<DWORD>(handles.size()), handles.data(),
       require_all ? TRUE : FALSE, static_cast<DWORD>(timeout.count()), FALSE);
   _freea(handles);
   if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + wait_handles.size()) {

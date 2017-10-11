@@ -168,12 +168,15 @@ void ES3PlatformContext::ReleaseThreadContext() {
     return;
   }
 
-  // Clear the TLS slot.
-  thread_context->ReleaseReference();
-  thread_context_slot_.set_value(nullptr);
-
   // Clear the context so it's not bound.
   thread_context->ClearCurrent();
+
+  // Clear the TLS slot.
+  thread_context_slot_.set_value(nullptr);
+
+  // Release the thread context reference.
+  thread_context->ReleaseReference();
+  thread_context.reset();
 
   // NOTE: if the TLS was holding on to the last reference it'll now be
   //       destroyed.
