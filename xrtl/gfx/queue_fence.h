@@ -17,7 +17,7 @@
 
 #include <chrono>
 
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 
 namespace xrtl {
 namespace gfx {
@@ -35,13 +35,21 @@ namespace gfx {
 // - Metal: (emulated)
 // - OpenGL: glFenceSync (kind of)
 // - Vulkan: VkSemaphore
-class QueueFence : public RefObject<QueueFence> {
+class QueueFence : public ManagedObject {
  public:
-  virtual ~QueueFence() = default;
+  // Describes the state of a queue fence.
+  enum class FenceState {
+    // Fence has been signaled.
+    kSignaled,
+    // Fence has yet to be signaled.
+    kUnsignaled,
+    // Device was lost and the fence will never be signaled.
+    kDeviceLost,
+  };
 
   // Queries the current status of the queue fence without blocking.
   // Returns true if the fence has been signaled.
-  virtual bool IsSignaled() = 0;
+  virtual FenceState QueryState() = 0;
 
   // Defines the return value for QueueFence wait operations.
   enum class WaitResult {

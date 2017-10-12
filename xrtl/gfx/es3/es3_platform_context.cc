@@ -14,6 +14,8 @@
 
 #include "xrtl/gfx/es3/es3_platform_context.h"
 
+#include <atomic>
+
 #include "xrtl/base/flags.h"
 #include "xrtl/base/threading/thread.h"
 
@@ -27,17 +29,7 @@ namespace es3 {
 
 namespace {
 
-// Thread-locked context storage.
-// The context is retained by the local storage until the thread exits or
-// ReleaseThreadContext is called.
-Thread::LocalStorageSlot<ES3PlatformContext> thread_context_slot_{
-    [](ES3PlatformContext* thread_context) {
-      // Clear the context so it's not bound.
-      thread_context->ClearCurrent();
-
-      // Drop reference - this may delete the thread context.
-      thread_context->ReleaseReference();
-    }};
+std::atomic<int> allocated_context_count_{0};
 
 // Currently locked context on the thread. May be null if none is locked.
 Thread::LocalStorageSlot<ES3PlatformContext> locked_context_slot_{
@@ -128,70 +120,26 @@ extern "C" void OnDebugMessage(GLenum source, GLenum type, GLuint id,
 
 }  // namespace
 
-ES3PlatformContext::ES3PlatformContext() = default;
-
-ES3PlatformContext::~ES3PlatformContext() = default;
-
-ref_ptr<ES3PlatformContext> ES3PlatformContext::AcquireThreadContext(
-    ref_ptr<ES3PlatformContext> existing_context) {
-  // Check the current TLS to see if we have a thread-locked context.
-  ref_ptr<ES3PlatformContext> thread_context(thread_context_slot_.value());
-  if (thread_context) {
-    // Reuse existing thread context.
-    return thread_context;
-  }
-
-  // Attempt to create a new context for the thread.
-  thread_context = Create(std::move(existing_context));
-  if (!thread_context) {
-    LOG(ERROR) << "Unable to create a new thread-locked context";
-    return nullptr;
-  }
-
-  // Stash context for later use.
-  thread_context->AddReference();
-  thread_context_slot_.set_value(thread_context.get());
-
-  // We can't trust TLS to clear us at the right time, so do it ourselves if
-  // needed. It may be a no-op but it's safer than doing nothing.
-  Thread::current_thread()->RegisterExitCallback(
-      []() { ReleaseThreadContext(); });
-
-  return thread_context;
+ES3PlatformContext::ES3PlatformContext() {
+  ++allocated_context_count_;
+  VLOG(1) << "ES3PlatformContext allocated; total now: "
+          << allocated_context_count_;
 }
 
-void ES3PlatformContext::ReleaseThreadContext() {
-  // Ensure the context is still valid. It may have been destroyed.
-  ref_ptr<ES3PlatformContext> thread_context{thread_context_slot_.value()};
-  if (!thread_context) {
-    // No thread-locked context - ignore.
-    return;
-  }
-
-  // Clear the context so it's not bound.
-  thread_context->ClearCurrent();
-
-  // Clear the TLS slot.
-  thread_context_slot_.set_value(nullptr);
-
-  // Release the thread context reference.
-  thread_context->ReleaseReference();
-  thread_context.reset();
-
-  // NOTE: if the TLS was holding on to the last reference it'll now be
-  //       destroyed.
+ES3PlatformContext::~ES3PlatformContext() {
+  --allocated_context_count_;
+  VLOG(1) << "ES3PlatformContext deallocated; total remaining: "
+          << allocated_context_count_;
 }
 
-ES3PlatformContext::ThreadLock ES3PlatformContext::LockTransientContext(
-    ref_ptr<ES3PlatformContext> existing_context) {
-  // See if we already have a context locked. If so, we can just reuse that.
-  ref_ptr<ES3PlatformContext> locked_context{locked_context_slot_.value()};
-  if (locked_context) {
-    return ThreadLock(locked_context);
-  }
+void ES3PlatformContext::CheckHasContextLock() {
+  CHECK(locked_context_slot_.value())
+      << "Attempting to use GL on a thread with no locked context. Ensure that "
+         "you are not attempting to use GL resources from a non-queue thread.";
+}
 
-  // No currently locked context, use the thread-locked one.
-  return ThreadLock(AcquireThreadContext(std::move(existing_context)));
+bool ES3PlatformContext::HasContextLock() {
+  return locked_context_slot_.value() != nullptr;
 }
 
 bool ES3PlatformContext::Lock(bool clear_on_unlock,

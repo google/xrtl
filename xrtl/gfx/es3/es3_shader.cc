@@ -23,6 +23,7 @@
 
 #include "xrtl/base/debugging.h"
 #include "xrtl/base/tracing.h"
+#include "xrtl/gfx/es3/es3_platform_context.h"
 
 namespace xrtl {
 namespace gfx {
@@ -32,26 +33,35 @@ namespace {
 using spirv_cross::SPIRType;
 }  // namespace
 
-ES3Shader::ES3Shader(ref_ptr<ES3PlatformContext> platform_context,
-                     std::string entry_point)
-    : platform_context_(std::move(platform_context)),
-      entry_point_(std::move(entry_point)) {}
+ES3Shader::ES3Shader(std::string entry_point)
+    : entry_point_(std::move(entry_point)) {}
 
 ES3Shader::~ES3Shader() {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  ES3PlatformContext::CheckHasContextLock();
   if (shader_id_) {
     glDeleteShader(shader_id_);
   }
 }
 
-bool ES3Shader::CompileSource(GLenum shader_type,
-                              absl::Span<const absl::string_view> sources) {
-  WTF_SCOPE0("ES3Shader#CompileSource");
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+bool ES3Shader::Validate() {
+  WTF_SCOPE0("ES3Shader#Validate");
+  ES3PlatformContext::CheckHasContextLock();
+  switch (compilation_state_) {
+    case CompilationState::kPending:
+      return CompileSource({shader_source_});
+    case CompilationState::kCompiled:
+      return true;
+    case CompilationState::kFailed:
+      return false;
+  }
+}
 
-  shader_type_ = shader_type;
+bool ES3Shader::CompileSource(absl::Span<const absl::string_view> sources) {
+  WTF_SCOPE0("ES3Shader#CompileSource");
+  ES3PlatformContext::CheckHasContextLock();
+  DCHECK(compilation_state_ == CompilationState::kPending);
+
+  compilation_state_ = CompilationState::kFailed;
   shader_id_ = glCreateShader(shader_type_);
 
   {
@@ -91,10 +101,12 @@ bool ES3Shader::CompileSource(GLenum shader_type,
     VLOG(1) << "Shader compilation warnings: " << info_log_;
   }
 
-  return compile_status == GL_TRUE;
+  compilation_state_ = compile_status == GL_TRUE ? CompilationState::kCompiled
+                                                 : CompilationState::kFailed;
+  return compilation_state_ == CompilationState::kCompiled;
 }
 
-bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
+bool ES3Shader::TranslateSpirVBinary(const uint32_t* data, size_t data_length) {
   WTF_SCOPE0("ES3Shader#CompileSpirVBinary");
 
   // Prepare the translator with the input SPIR-V.
@@ -274,12 +286,17 @@ bool ES3Shader::CompileSpirVBinary(const uint32_t* data, size_t data_length) {
   VLOG(2) << "Translated SPIR-V -> GLSL shader: " << std::endl
           << translated_source;
 
-  // Attempt to compile GLSL to a native GL shader.
-  return CompileSource(shader_type, {translated_source});
+  // Stash the GLSL for later.
+  shader_type_ = shader_type;
+  shader_source_ = translated_source;
+
+  return true;
 }
 
 bool ES3Shader::ApplyBindings(GLuint program_id,
                               const SetBindingMaps& set_binding_maps) const {
+  ES3PlatformContext::CheckHasContextLock();
+  DCHECK(compilation_state_ == CompilationState::kCompiled);
   for (const UniformAssignment& assignment : uniform_assignments_) {
     GLuint gl_binding =
         set_binding_maps.set_bindings[assignment.set][assignment.binding];
@@ -302,6 +319,8 @@ bool ES3Shader::ApplyBindings(GLuint program_id,
 
 GLint ES3Shader::QueryPushConstantLocation(
     GLuint program_id, const PushConstantMember& member) const {
+  ES3PlatformContext::CheckHasContextLock();
+  DCHECK(compilation_state_ == CompilationState::kCompiled);
   std::string full_name = push_constant_block_name_ + "." + member.member_name;
   return glGetUniformLocation(program_id, full_name.c_str());
 }

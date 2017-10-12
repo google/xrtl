@@ -17,7 +17,7 @@
 
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/resource_set_layout.h"
 
 namespace xrtl {

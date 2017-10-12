@@ -16,20 +16,33 @@
 
 #include <utility>
 
+#include "xrtl/base/tracing.h"
+#include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/memory_heap.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
+ES3Buffer::ES3Buffer(ES3ObjectLifetimeQueue* queue,
                      ref_ptr<MemoryHeap> memory_heap, size_t allocation_size,
                      Usage usage_mask)
     : Buffer(allocation_size, usage_mask),
-      platform_context_(std::move(platform_context)),
+      queue_(queue),
       memory_heap_(std::move(memory_heap)) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  queue_->EnqueueObjectAllocation(this);
+}
+
+ES3Buffer::~ES3Buffer() = default;
+
+void ES3Buffer::Release() {
+  memory_heap_->ReleaseBuffer(this);
+  queue_->EnqueueObjectDeallocation(this);
+}
+
+bool ES3Buffer::AllocateOnQueue() {
+  WTF_SCOPE0("ES3Buffer#AllocateOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
 
   // TODO(benvanik): pool ID allocation.
   glGenBuffers(1, &buffer_id_);
@@ -38,15 +51,15 @@ ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
   // implementation may optimize based on the target it was first bound to.
   // For this reason we try to prioritize certain targets when the usage mask
   // specifies them.
-  if (any(usage_mask & Buffer::Usage::kIndirectBuffer)) {
+  if (any(usage_mask() & Buffer::Usage::kIndirectBuffer)) {
     target_ = GL_DRAW_INDIRECT_BUFFER;
-  } else if (any(usage_mask & Buffer::Usage::kVertexBuffer)) {
+  } else if (any(usage_mask() & Buffer::Usage::kVertexBuffer)) {
     target_ = GL_ARRAY_BUFFER;
-  } else if (any(usage_mask & Buffer::Usage::kIndexBuffer)) {
+  } else if (any(usage_mask() & Buffer::Usage::kIndexBuffer)) {
     target_ = GL_ELEMENT_ARRAY_BUFFER;
-  } else if (any(usage_mask & Buffer::Usage::kUniformBuffer)) {
+  } else if (any(usage_mask() & Buffer::Usage::kUniformBuffer)) {
     target_ = GL_UNIFORM_BUFFER;
-  } else if (any(usage_mask & Buffer::Usage::kStorageBuffer)) {
+  } else if (any(usage_mask() & Buffer::Usage::kStorageBuffer)) {
     target_ = GL_SHADER_STORAGE_BUFFER;
   } else {
     target_ = GL_COPY_READ_BUFFER;
@@ -57,21 +70,26 @@ ES3Buffer::ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
   GLenum usage = GL_DYNAMIC_DRAW;
 
   glBindBuffer(target_, buffer_id_);
-  glBufferData(target_, allocation_size, nullptr, usage);
+  glBufferData(target_, allocation_size(), nullptr, usage);
   glBindBuffer(target_, 0);
+
+  return true;
 }
 
-ES3Buffer::~ES3Buffer() {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
-  glDeleteBuffers(1, &buffer_id_);
+void ES3Buffer::DeallocateOnQueue() {
+  WTF_SCOPE0("ES3Buffer#DeallocateOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
+  if (buffer_id_) {
+    glDeleteBuffers(1, &buffer_id_);
+    buffer_id_ = 0;
+  }
 }
 
 ref_ptr<MemoryHeap> ES3Buffer::memory_heap() const { return memory_heap_; }
 
-void ES3Buffer::Release() { memory_heap_->ReleaseBuffer(this); }
-
 bool ES3Buffer::ReadData(size_t source_offset, void* data, size_t data_length) {
+  WTF_SCOPE0("ES3Buffer#ReadData");
+  ES3PlatformContext::CheckHasContextLock();
   DCHECK_LE(source_offset + data_length, allocation_size());
   // TODO(benvanik): buffer.
   DCHECK(false);
@@ -80,89 +98,103 @@ bool ES3Buffer::ReadData(size_t source_offset, void* data, size_t data_length) {
 
 bool ES3Buffer::WriteData(size_t target_offset, const void* data,
                           size_t data_length) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
-  DCHECK_LE(target_offset + data_length, allocation_size());
-  glBindBuffer(target_, buffer_id_);
-  glBufferSubData(target_, target_offset, data_length, data);
-  glBindBuffer(target_, 0);
-  return true;
+  WTF_SCOPE0("ES3Buffer#WriteData");
+  return queue_->EnqueueObjectCallbackAndWait(
+      this, [this, target_offset, data, data_length]() {
+        WTF_SCOPE0("ES3Buffer#WriteData:queue");
+        ES3PlatformContext::CheckHasContextLock();
+        DCHECK_LE(target_offset + data_length, allocation_size());
+        glBindBuffer(target_, buffer_id_);
+        glBufferSubData(target_, target_offset, data_length, data);
+        glBindBuffer(target_, 0);
+        return true;
+      });
 }
 
 bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
                           size_t* byte_length, void** out_data) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  WTF_SCOPE0("ES3Buffer#MapMemory");
+  return queue_->EnqueueObjectCallbackAndWait(this, [this, memory_access,
+                                                     byte_offset, byte_length,
+                                                     out_data]() {
+    WTF_SCOPE0("ES3Buffer#MapMemory:queue");
+    ES3PlatformContext::CheckHasContextLock();
 
-  *out_data = nullptr;
+    *out_data = nullptr;
 
-  // Must be mappable.
-  bool is_mappable =
-      any(memory_heap_->memory_type_mask() & MemoryType::kHostVisible);
-  DCHECK(is_mappable);
-  if (!is_mappable) {
-    LOG(ERROR) << "Attempting to map a non-host-visible memory buffer";
-    return false;
-  }
-
-  // TODO(benvanik): validate and align offset/length.
-
-  GLbitfield access = 0;
-  switch (memory_access) {
-    case MemoryAccess::kRead:
-      access = GL_MAP_READ_BIT;
-      break;
-    case MemoryAccess::kWrite:
-      access = GL_MAP_WRITE_BIT;
-      break;
-    case MemoryAccess::kWriteDiscard:
-      access = GL_MAP_WRITE_BIT;
-      if (*byte_offset == 0 && *byte_length == allocation_size()) {
-        // Mapping the entire buffer so we can drop it all. This is most likely
-        // identical to invalidating the range but since it's in the spec and I
-        // don't trust drivers we'll be explicit.
-        access |= GL_MAP_INVALIDATE_BUFFER_BIT;
-      } else {
-        access |= GL_MAP_INVALIDATE_RANGE_BIT;
-      }
-      break;
-  }
-
-  if (access & GL_MAP_WRITE_BIT) {
-    // Non-host-coherent memory requires explicit flushes.
-    if (!any(memory_heap_->memory_type_mask() & MemoryType::kHostCoherent)) {
-      access |= GL_MAP_UNSYNCHRONIZED_BIT;
-      access |= GL_MAP_FLUSH_EXPLICIT_BIT;
+    // Must be mappable.
+    bool is_mappable =
+        any(memory_heap_->memory_type_mask() & MemoryType::kHostVisible);
+    DCHECK(is_mappable);
+    if (!is_mappable) {
+      LOG(ERROR) << "Attempting to map a non-host-visible memory buffer";
+      return false;
     }
-  }
 
-  // TODO(benvanik): see if we can set GL_MAP_UNSYNCHRONIZED_BIT.
+    // TODO(benvanik): validate and align offset/length.
 
-  glBindBuffer(target_, buffer_id_);
-  void* data = glMapBufferRange(target_, *byte_offset, *byte_length, access);
-  glBindBuffer(target_, 0);
-  if (!data) {
-    LOG(ERROR) << "Failed to map buffer";
-    return false;
-  }
-  *out_data = data;
+    GLbitfield access = 0;
+    switch (memory_access) {
+      case MemoryAccess::kRead:
+        access = GL_MAP_READ_BIT;
+        break;
+      case MemoryAccess::kWrite:
+        access = GL_MAP_WRITE_BIT;
+        break;
+      case MemoryAccess::kWriteDiscard:
+        access = GL_MAP_WRITE_BIT;
+        if (*byte_offset == 0 && *byte_length == allocation_size()) {
+          // Mapping the entire buffer so we can drop it all. This is most
+          // likely identical to invalidating the range but since it's in the
+          // spec and I don't trust drivers we'll be explicit.
+          access |= GL_MAP_INVALIDATE_BUFFER_BIT;
+        } else {
+          access |= GL_MAP_INVALIDATE_RANGE_BIT;
+        }
+        break;
+    }
 
-  return true;
+    if (access & GL_MAP_WRITE_BIT) {
+      // Non-host-coherent memory requires explicit flushes.
+      if (!any(memory_heap_->memory_type_mask() & MemoryType::kHostCoherent)) {
+        access |= GL_MAP_UNSYNCHRONIZED_BIT;
+        access |= GL_MAP_FLUSH_EXPLICIT_BIT;
+      }
+    }
+
+    // TODO(benvanik): see if we can set GL_MAP_UNSYNCHRONIZED_BIT.
+
+    glBindBuffer(target_, buffer_id_);
+    void* data = glMapBufferRange(target_, *byte_offset, *byte_length, access);
+    glBindBuffer(target_, 0);
+    if (!data) {
+      LOG(ERROR) << "Failed to map buffer";
+      return false;
+    }
+    *out_data = data;
+
+    return true;
+  });
 }
 
 void ES3Buffer::UnmapMemory(size_t byte_offset, size_t byte_length,
                             void* data) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  WTF_SCOPE0("ES3Buffer#UnmapMemory");
+  queue_->EnqueueObjectCallbackAndWait(this, [this]() {
+    WTF_SCOPE0("ES3Buffer#UnmapMemory:queue");
+    ES3PlatformContext::CheckHasContextLock();
 
-  glBindBuffer(target_, buffer_id_);
-  GLboolean unmapped = glUnmapBuffer(target_);
-  glBindBuffer(target_, 0);
+    glBindBuffer(target_, buffer_id_);
+    GLboolean unmapped = glUnmapBuffer(target_);
+    glBindBuffer(target_, 0);
 
-  DCHECK_EQ(unmapped, GL_TRUE);
-  if (unmapped == GL_FALSE) {
-    LOG(FATAL) << "Buffer corruption while mapped";
-  }
+    DCHECK_EQ(unmapped, GL_TRUE);
+    if (unmapped == GL_FALSE) {
+      LOG(FATAL) << "Buffer corruption while mapped";
+    }
+
+    return true;
+  });
 }
 
 void ES3Buffer::InvalidateMappedMemory(size_t byte_offset, size_t byte_length) {
@@ -170,17 +202,23 @@ void ES3Buffer::InvalidateMappedMemory(size_t byte_offset, size_t byte_length) {
 }
 
 void ES3Buffer::FlushMappedMemory(size_t byte_offset, size_t byte_length) {
-  // Flushes are ignored with kHostCoherent memory.
-  if (any(memory_heap_->memory_type_mask() & MemoryType::kHostCoherent)) {
-    return;
-  }
+  WTF_SCOPE0("ES3Buffer#FlushMappedMemory");
+  queue_->EnqueueObjectCallbackAndWait(
+      this, [this, byte_offset, byte_length]() {
+        WTF_SCOPE0("ES3Buffer#FlushMappedMemory:queue");
+        ES3PlatformContext::CheckHasContextLock();
 
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+        // Flushes are ignored with kHostCoherent memory.
+        if (any(memory_heap_->memory_type_mask() & MemoryType::kHostCoherent)) {
+          return true;
+        }
 
-  glBindBuffer(target_, buffer_id_);
-  glFlushMappedBufferRange(target_, byte_offset, byte_length);
-  glBindBuffer(target_, 0);
+        glBindBuffer(target_, buffer_id_);
+        glFlushMappedBufferRange(target_, byte_offset, byte_length);
+        glBindBuffer(target_, 0);
+
+        return true;
+      });
 }
 
 }  // namespace es3

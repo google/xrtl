@@ -20,7 +20,7 @@
 
 #include "absl/strings/string_view.h"
 #include "xrtl/gfx/es3/es3_common.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
+#include "xrtl/gfx/es3/es3_queue_object.h"
 #include "xrtl/gfx/es3/es3_shader.h"
 #include "xrtl/gfx/shader_module.h"
 
@@ -28,9 +28,9 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3ShaderModule : public ShaderModule {
+class ES3ShaderModule : public ShaderModule, public ES3QueueObject {
  public:
-  explicit ES3ShaderModule(ref_ptr<ES3PlatformContext> platform_context);
+  explicit ES3ShaderModule(ES3ObjectLifetimeQueue* queue);
   ~ES3ShaderModule() override;
 
   // Registers a shader with the shader module.
@@ -42,7 +42,11 @@ class ES3ShaderModule : public ShaderModule {
   ref_ptr<ES3Shader> Lookup(absl::string_view entry_point) const;
 
  private:
-  ref_ptr<ES3PlatformContext> platform_context_;
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
+  ES3ObjectLifetimeQueue* queue_;
   std::vector<ref_ptr<ES3Shader>> shaders_;
 };
 

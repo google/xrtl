@@ -21,13 +21,16 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/es3/es3_common.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
+// OpenGL shader object wrapper.
+// This is safe to allocate on any thread but use must occur only on threads
+// with active GL contexts.
 class ES3Shader : public RefObject<ES3Shader> {
  public:
   // Defines a uniform assignment within the shader.
@@ -56,12 +59,15 @@ class ES3Shader : public RefObject<ES3Shader> {
     int array_size;
   };
 
-  ES3Shader(ref_ptr<ES3PlatformContext> platform_context,
-            std::string entry_point);
-  ~ES3Shader();
+  explicit ES3Shader(std::string entry_point);
+  ~ES3Shader() XRTL_REQUIRES_GL_CONTEXT;
 
+  // Entry point function name.
   absl::string_view entry_point() const { return entry_point_; }
+  // Shader stage this shader runs within.
   GLenum shader_type() const { return shader_type_; }
+
+  // Returns a valid shader ID after compilation has succeeded.
   GLuint shader_id() const { return shader_id_; }
 
   // Returns a list of all uniform assignments.
@@ -78,34 +84,46 @@ class ES3Shader : public RefObject<ES3Shader> {
   // during compilation.
   const std::string& info_log() const { return info_log_; }
 
-  // Attempts to compile the given GLSL source code into a shader.
-  // Returns false if the compilation fails.
-  bool CompileSource(GLenum shader_type,
-                     absl::Span<const absl::string_view> sources);
+  // Attempts to translate a SPIR-V binary into GLSL.
+  // Actual GL shader creation is deferred until first use or explicitly with
+  // Validate.
+  // Returns true if the binary was successfully translated.
+  bool TranslateSpirVBinary(const uint32_t* data, size_t data_length);
 
-  // Attempts to translate a SPIR-V binary into GLSL and compile that.
-  // Returns false if the binary cannot be translated or if compilation fails.
-  bool CompileSpirVBinary(const uint32_t* data, size_t data_length);
+  // Compiles and validates the pending GLSL source code.
+  bool Validate() XRTL_REQUIRES_GL_CONTEXT;
 
   struct SetBindingMaps {
     std::vector<GLuint> set_bindings[kMaxResourceSetCount];
   };
   // Initializes all bindings for the currently bound program.
   // This must be called after a program using this shader is linked.
-  bool ApplyBindings(GLuint program_id,
-                     const SetBindingMaps& set_binding_maps) const;
+  bool ApplyBindings(GLuint program_id, const SetBindingMaps& set_binding_maps)
+      const XRTL_REQUIRES_GL_CONTEXT;
 
   // Queries the uniform location of a push constant member in the given
   // program.
   GLint QueryPushConstantLocation(GLuint program_id,
-                                  const PushConstantMember& member) const;
+                                  const PushConstantMember& member) const
+      XRTL_REQUIRES_GL_CONTEXT;
 
  private:
-  ref_ptr<ES3PlatformContext> platform_context_;
+  // Attempts to compile the given GLSL source code into a shader.
+  // Returns true if the compilation was successful and the shader is valid.
+  bool CompileSource(absl::Span<const absl::string_view> sources)
+      XRTL_REQUIRES_GL_CONTEXT;
+
   std::string entry_point_;
   GLenum shader_type_ = GL_VERTEX_SHADER;
+  std::string shader_source_;
   GLuint shader_id_ = 0;
 
+  enum class CompilationState {
+    kPending,
+    kCompiled,
+    kFailed,
+  };
+  CompilationState compilation_state_ = CompilationState::kPending;
   std::string info_log_;
 
   std::vector<UniformAssignment> uniform_assignments_;

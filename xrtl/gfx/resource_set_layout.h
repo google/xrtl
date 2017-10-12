@@ -17,7 +17,7 @@
 
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/render_pass.h"
 
 namespace xrtl {
@@ -72,11 +72,9 @@ struct BindingSlot {
 // - D3D12: descriptor tables
 // - Metal: argument buffers
 // - Vulkan: descriptor set layouts
-class ResourceSetLayout : public RefObject<ResourceSetLayout> {
+class ResourceSetLayout : public ManagedObject {
  public:
   static constexpr int kInlinedBindingSlotCount = 8;
-
-  virtual ~ResourceSetLayout() = default;
 
   absl::Span<const BindingSlot> binding_slots() const { return binding_slots_; }
 

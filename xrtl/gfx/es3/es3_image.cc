@@ -16,7 +16,9 @@
 
 #include <utility>
 
+#include "xrtl/base/tracing.h"
 #include "xrtl/gfx/es3/es3_image_view.h"
+#include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/memory_heap.h"
 
 namespace xrtl {
@@ -47,16 +49,27 @@ size_t ES3Image::ComputeAllocationSize(
   return allocation_size;
 }
 
-ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
+ES3Image::ES3Image(ES3ObjectLifetimeQueue* queue,
                    ref_ptr<MemoryHeap> memory_heap,
                    ES3TextureParams texture_params, size_t allocation_size,
                    CreateParams create_params)
     : Image(allocation_size, create_params),
-      platform_context_(std::move(platform_context)),
+      queue_(queue),
       memory_heap_(std::move(memory_heap)),
       texture_params_(texture_params) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  queue_->EnqueueObjectAllocation(this);
+}
+
+ES3Image::~ES3Image() = default;
+
+void ES3Image::Release() {
+  memory_heap_->ReleaseImage(this);
+  queue_->EnqueueObjectDeallocation(this);
+}
+
+bool ES3Image::AllocateOnQueue() {
+  WTF_SCOPE0("ES3Image#AllocateOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
 
   // TODO(benvanik): pool ID allocation.
   glGenTextures(1, &texture_id_);
@@ -67,28 +80,27 @@ ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
       GL_TEXTURE_3D,        // Image::Type::k3D
       GL_TEXTURE_CUBE_MAP,  // Image::Type::kCube
   };
-  DCHECK_LT(static_cast<int>(create_params.type), ABSL_ARRAYSIZE(kTypeTarget));
-  target_ = kTypeTarget[static_cast<int>(create_params.type)];
+  DCHECK_LT(static_cast<int>(type()), ABSL_ARRAYSIZE(kTypeTarget));
+  target_ = kTypeTarget[static_cast<int>(type())];
   glBindTexture(target_, texture_id_);
 
   // Allocate storage for the texture data.
-  switch (create_params.type) {
+  switch (type()) {
     case Image::Type::k2D:
     case Image::Type::kCube:
-      glTexStorage2D(target_, create_params.mip_level_count,
-                     texture_params_.internal_format, create_params.size.width,
-                     create_params.size.height);
+      glTexStorage2D(target_, mip_level_count(),
+                     texture_params_.internal_format, size().width,
+                     size().height);
       break;
     case Image::Type::k2DArray:
-      glTexStorage3D(target_, create_params.mip_level_count,
-                     texture_params_.internal_format, create_params.size.width,
-                     create_params.size.height,
-                     create_params.array_layer_count);
+      glTexStorage3D(target_, mip_level_count(),
+                     texture_params_.internal_format, size().width,
+                     size().height, array_layer_count());
       break;
     case Image::Type::k3D:
-      glTexStorage3D(target_, create_params.mip_level_count,
-                     texture_params_.internal_format, create_params.size.width,
-                     create_params.size.height, create_params.size.depth);
+      glTexStorage3D(target_, mip_level_count(),
+                     texture_params_.internal_format, size().width,
+                     size().height, size().depth);
       break;
   }
 
@@ -99,17 +111,20 @@ ES3Image::ES3Image(ref_ptr<ES3PlatformContext> platform_context,
   glTexParameteri(target_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   glBindTexture(target_, 0);
+
+  return true;
 }
 
-ES3Image::~ES3Image() {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
-  glDeleteTextures(1, &texture_id_);
+void ES3Image::DeallocateOnQueue() {
+  WTF_SCOPE0("ES3Image#DeallocateOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
+  if (texture_id_) {
+    glDeleteTextures(1, &texture_id_);
+    texture_id_ = 0;
+  }
 }
 
 ref_ptr<MemoryHeap> ES3Image::memory_heap() const { return memory_heap_; }
-
-void ES3Image::Release() { memory_heap_->ReleaseImage(this); }
 
 ref_ptr<ImageView> ES3Image::CreateView() {
   return CreateView(create_params_.type, create_params_.format, entire_range());
@@ -127,82 +142,89 @@ ref_ptr<ImageView> ES3Image::CreateView(Image::Type type, PixelFormat format) {
 
 bool ES3Image::ReadData(LayerRange source_range, void* data,
                         size_t data_length) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  WTF_SCOPE0("ES3Image#ReadData");
+  return queue_->EnqueueObjectCallbackAndWait(this, [this, source_range,
+                                                     data]() {
+    WTF_SCOPE0("ES3Image#ReadData:queue");
+    ES3PlatformContext::CheckHasContextLock();
 
-  // TODO(benvanik): support automatically splitting across layers.
-  DCHECK_EQ(1, source_range.layer_count);
+    // TODO(benvanik): support automatically splitting across layers.
+    DCHECK_EQ(1, source_range.layer_count);
 
-  GLenum target = target_;
-  if (type() == Type::kCube) {
-    // Special cubemap handling, where layer index changes the target.
-    DCHECK_LT(source_range.base_layer, 6);
-    target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + source_range.base_layer;
-  }
-
-  // TODO(benvanik): support arrays/3D textures.
-  DCHECK(type() == Type::k2D || type() == Type::kCube);
-  // TODO(benvanik): support compressed texture types.
-  DCHECK_NE(texture_params_.type, GL_NONE);
-
-  // TODO(benvanik): switch to PBOs.
-  // Temporary FBO readback nastiness.
-  GLuint framebuffer = 0;
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
-                         texture_id_, 0);
-  glReadPixels(0, 0, size().width, size().height, texture_params_.format,
-               texture_params_.type, data);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
-  glDeleteFramebuffers(1, &framebuffer);
-
-  // Flip the data we read vertically.
-  size_t row_stride = format().ComputeDataSize(size().width, 1);
-  int row_count = size().height;
-  uint8_t* byte_data = reinterpret_cast<uint8_t*>(data);
-  for (int y = 0; y < row_count / 2; ++y) {
-    size_t src_offset_1 = y * row_stride;
-    size_t src_offset_2 = (row_count - 1 - y) * row_stride;
-    for (size_t i = 0; i < row_stride; ++i) {
-      uint8_t t = byte_data[src_offset_1 + i];
-      byte_data[src_offset_1 + i] = byte_data[src_offset_2 + i];
-      byte_data[src_offset_2 + i] = t;
+    GLenum target = target_;
+    if (type() == Type::kCube) {
+      // Special cubemap handling, where layer index changes the target.
+      DCHECK_LT(source_range.base_layer, 6);
+      target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + source_range.base_layer;
     }
-  }
 
-  return true;
+    // TODO(benvanik): support arrays/3D textures.
+    DCHECK(type() == Type::k2D || type() == Type::kCube);
+    // TODO(benvanik): support compressed texture types.
+    DCHECK_NE(texture_params_.type, GL_NONE);
+
+    // TODO(benvanik): switch to PBOs.
+    // Temporary FBO readback nastiness.
+    GLuint framebuffer = 0;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
+                           texture_id_, 0);
+    glReadPixels(0, 0, size().width, size().height, texture_params_.format,
+                 texture_params_.type, data);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
+    glDeleteFramebuffers(1, &framebuffer);
+
+    // Flip the data we read vertically.
+    size_t row_stride = format().ComputeDataSize(size().width, 1);
+    int row_count = size().height;
+    uint8_t* byte_data = reinterpret_cast<uint8_t*>(data);
+    for (int y = 0; y < row_count / 2; ++y) {
+      size_t src_offset_1 = y * row_stride;
+      size_t src_offset_2 = (row_count - 1 - y) * row_stride;
+      for (size_t i = 0; i < row_stride; ++i) {
+        uint8_t t = byte_data[src_offset_1 + i];
+        byte_data[src_offset_1 + i] = byte_data[src_offset_2 + i];
+        byte_data[src_offset_2 + i] = t;
+      }
+    }
+
+    return true;
+  });
 }
 
 bool ES3Image::WriteData(LayerRange target_range, const void* data,
                          size_t data_length) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  WTF_SCOPE0("ES3Image#WriteData");
+  return queue_->EnqueueObjectCallbackAndWait(
+      this, [this, target_range, data]() {
+        WTF_SCOPE0("ES3Image#WriteData:queue");
+        ES3PlatformContext::CheckHasContextLock();
+        // TODO(benvanik): support automatically splitting across layers.
+        //                 We'll need to shift around in data for each layer.
+        DCHECK_EQ(1, target_range.layer_count);
 
-  // TODO(benvanik): support automatically splitting across layers.
-  //                 We'll need to shift around in data for each layer.
-  DCHECK_EQ(1, target_range.layer_count);
+        GLenum target = target_;
+        int level = target_range.mip_level;
+        if (type() == Type::kCube) {
+          // Special cubemap handling, where layer index changes the target.
+          DCHECK_LT(target_range.base_layer, 6);
+          target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + target_range.base_layer;
+        }
 
-  GLenum target = target_;
-  int level = target_range.mip_level;
-  if (type() == Type::kCube) {
-    // Special cubemap handling, where layer index changes the target.
-    DCHECK_LT(target_range.base_layer, 6);
-    target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + target_range.base_layer;
-  }
+        // TODO(benvanik): support arrays/3D textures.
+        DCHECK(type() == Type::k2D || type() == Type::kCube);
+        // TODO(benvanik): support compressed texture types.
+        DCHECK_NE(texture_params_.type, GL_NONE);
 
-  // TODO(benvanik): support arrays/3D textures.
-  DCHECK(type() == Type::k2D || type() == Type::kCube);
-  // TODO(benvanik): support compressed texture types.
-  DCHECK_NE(texture_params_.type, GL_NONE);
+        // Upload image.
+        glBindTexture(target, texture_id_);
+        glTexSubImage2D(target, level, 0, 0, size().width, size().height,
+                        texture_params_.format, texture_params_.type, data);
+        glBindTexture(target, 0);
 
-  // Upload image.
-  glBindTexture(target, texture_id_);
-  glTexSubImage2D(target, level, 0, 0, size().width, size().height,
-                  texture_params_.format, texture_params_.type, data);
-  glBindTexture(target, 0);
-
-  return true;
+        return true;
+      });
 }
 
 }  // namespace es3

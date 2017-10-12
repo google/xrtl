@@ -19,20 +19,20 @@
 
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_pixel_format.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
+#include "xrtl/gfx/es3/es3_queue_object.h"
 #include "xrtl/gfx/image.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3Image : public Image {
+class ES3Image : public Image, public ES3QueueObject {
  public:
   static size_t ComputeAllocationSize(const Image::CreateParams& create_params);
 
-  ES3Image(ref_ptr<ES3PlatformContext> platform_context,
-           ref_ptr<MemoryHeap> memory_heap, ES3TextureParams texture_params,
-           size_t allocation_size, CreateParams create_params);
+  ES3Image(ES3ObjectLifetimeQueue* queue, ref_ptr<MemoryHeap> memory_heap,
+           ES3TextureParams texture_params, size_t allocation_size,
+           CreateParams create_params);
   ~ES3Image() override;
 
   ref_ptr<MemoryHeap> memory_heap() const override;
@@ -51,10 +51,12 @@ class ES3Image : public Image {
   bool WriteData(LayerRange target_range, const void* data,
                  size_t data_length) override;
 
-  void Release() override;
-
  private:
-  ref_ptr<ES3PlatformContext> platform_context_;
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
+  ES3ObjectLifetimeQueue* queue_;
   ref_ptr<MemoryHeap> memory_heap_;
   ES3TextureParams texture_params_;
 

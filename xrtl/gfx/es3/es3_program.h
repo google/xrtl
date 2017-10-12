@@ -21,20 +21,24 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/gfx/es3/es3_common.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_shader.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
+// OpenGL program object wrapper.
+// This is safe to allocate on any thread but linking and use must occur only
+// on threads with active GL contexts.
 class ES3Program : public RefObject<ES3Program> {
  public:
-  ES3Program(ref_ptr<ES3PlatformContext> platform_context,
-             absl::Span<const ref_ptr<ES3Shader>> shaders);
-  ~ES3Program();
+  explicit ES3Program(absl::Span<const ref_ptr<ES3Shader>> shaders);
+  ~ES3Program() XRTL_REQUIRES_GL_CONTEXT;
 
+  // Returns a valid program ID after linking has succeeded.
   GLuint program_id() const { return program_id_; }
+
+  // All shaders linked into the program in an undefined order.
   absl::Span<const ref_ptr<ES3Shader>> shaders() const { return shaders_; }
 
   // Program linking info log containing warnings and errors that accumulated
@@ -58,10 +62,9 @@ class ES3Program : public RefObject<ES3Program> {
   // Attempts to link the shaders into a program.
   // Returns false if the link failed. info_log can be used to get the
   // detailed error logs.
-  bool Link();
+  bool Link() XRTL_REQUIRES_GL_CONTEXT;
 
  private:
-  ref_ptr<ES3PlatformContext> platform_context_;
   absl::InlinedVector<ref_ptr<ES3Shader>, 4> shaders_;
   GLuint program_id_ = 0;
 

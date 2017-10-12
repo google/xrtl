@@ -28,8 +28,9 @@ namespace es3 {
 // TODO(benvanik): remove the need for this when we have multiple impls.
 ref_ptr<ES3SwapChain> ES3SwapChain::Create(
     ref_ptr<ES3PlatformContext> shared_platform_context,
-    ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
-    ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
+    ES3Queue* primary_queue, ES3Queue* present_queue,
+    ref_ptr<MemoryHeap> memory_heap, ref_ptr<ui::Control> control,
+    PresentMode present_mode, int image_count,
     absl::Span<const PixelFormat> pixel_formats) {
   WTF_SCOPE0("ES3SwapChain#Create");
 
@@ -45,35 +46,36 @@ ref_ptr<ES3SwapChain> ES3SwapChain::Create(
   }
 
   auto swap_chain = make_ref<ES3PlatformSwapChain>(
-      present_queue, memory_heap, control, platform_context, present_mode,
-      image_count, pixel_formats);
-  if (!swap_chain->Initialize()) {
-    return nullptr;
-  }
+      primary_queue, present_queue, memory_heap, control, platform_context,
+      present_mode, image_count, pixel_formats);
   return swap_chain;
 }
 
 ES3PlatformSwapChain::ES3PlatformSwapChain(
-    ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
-    ref_ptr<ui::Control> control, ref_ptr<ES3PlatformContext> platform_context,
-    PresentMode present_mode, int image_count,
-    absl::Span<const PixelFormat> pixel_formats)
+    ES3Queue* primary_queue, ES3Queue* present_queue,
+    ref_ptr<MemoryHeap> memory_heap, ref_ptr<ui::Control> control,
+    ref_ptr<ES3PlatformContext> platform_context, PresentMode present_mode,
+    int image_count, absl::Span<const PixelFormat> pixel_formats)
     : ES3SwapChain(present_mode, image_count, pixel_formats),
+      primary_queue_(primary_queue),
       present_queue_(present_queue),
       memory_heap_(std::move(memory_heap)),
       control_(std::move(control)),
-      platform_context_(std::move(platform_context)) {}
-
-ES3PlatformSwapChain::~ES3PlatformSwapChain() {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
-  glDeleteFramebuffers(static_cast<GLsizei>(framebuffers_.size()),
-                       framebuffers_.data());
+      platform_context_(std::move(platform_context)) {
+  static_cast<ES3ObjectLifetimeQueue*>(primary_queue_)
+      ->EnqueueObjectAllocation(this, platform_context_);
 }
 
-bool ES3PlatformSwapChain::Initialize() {
-  WTF_SCOPE0("ES3PlatformSwapChain#Initialize");
-  ES3PlatformContext::ExclusiveLock context_lock(platform_context_);
+ES3PlatformSwapChain::~ES3PlatformSwapChain() = default;
+
+void ES3PlatformSwapChain::Release() {
+  static_cast<ES3ObjectLifetimeQueue*>(primary_queue_)
+      ->EnqueueObjectDeallocation(this, platform_context_);
+}
+
+bool ES3PlatformSwapChain::AllocateOnQueue() {
+  WTF_SCOPE0("ES3PlatformSwapChain#AllocateOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
 
   // Query the initial surface size.
   size_ = platform_context_->QuerySize();
@@ -92,7 +94,7 @@ bool ES3PlatformSwapChain::Initialize() {
   pending_acquire_fences_.resize(image_count());
   available_images_semaphore_ =
       Semaphore::Create(image_count() * 2, image_count() * 2);
-  auto resize_result = ResizeWithContext(size_);
+  auto resize_result = ResizeOnQueue(size_);
   switch (resize_result) {
     case ResizeResult::kSuccess:
       break;
@@ -123,15 +125,35 @@ bool ES3PlatformSwapChain::Initialize() {
   return true;
 }
 
-SwapChain::ResizeResult ES3PlatformSwapChain::Resize(Size2D new_size) {
-  WTF_SCOPE0("ES3PlatformSwapChain#Resize");
-  ES3PlatformContext::ExclusiveLock context_lock(platform_context_);
-  return ResizeWithContext(new_size);
+void ES3PlatformSwapChain::DeallocateOnQueue() {
+  WTF_SCOPE0("ES3PlatformSwapChain#DeallocateOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
+  if (!framebuffers_.empty()) {
+    glDeleteFramebuffers(static_cast<GLsizei>(framebuffers_.size()),
+                         framebuffers_.data());
+    framebuffers_.clear();
+  }
+  image_views_.clear();
 }
 
-SwapChain::ResizeResult ES3PlatformSwapChain::ResizeWithContext(
-    Size2D new_size) {
-  WTF_SCOPE0("ES3PlatformSwapChain#ResizeWithContext");
+SwapChain::ResizeResult ES3PlatformSwapChain::Resize(Size2D new_size) {
+  WTF_SCOPE0("ES3PlatformSwapChain#Resize");
+  ResizeResult result = ResizeResult::kDeviceLost;
+  if (!static_cast<ES3ObjectLifetimeQueue*>(present_queue_)
+           ->EnqueueObjectCallbackAndWait(this,
+                                          [this, new_size, &result]() {
+                                            result = ResizeOnQueue(new_size);
+                                            return true;
+                                          },
+                                          platform_context_)) {
+    return ResizeResult::kDeviceLost;
+  }
+  return result;
+}
+
+SwapChain::ResizeResult ES3PlatformSwapChain::ResizeOnQueue(Size2D new_size) {
+  WTF_SCOPE0("ES3PlatformSwapChain#ResizeOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
 
   // TODO(benvanik): move this to the queue? won't have to worry about events.
   std::lock_guard<std::mutex> lock_guard(mutex_);
@@ -230,9 +252,7 @@ SwapChain::AcquireResult ES3PlatformSwapChain::AcquireNextImage(
         // Allow the caller to use it immediately.
         image_index = i;
         pending_image_presents_[i] = true;
-        auto context_lock =
-            ES3PlatformContext::LockTransientContext(platform_context_);
-        signal_queue_fence.As<ES3QueueFence>()->Signal();
+        signal_queue_fence.As<ES3QueueFence>()->SignalClient();
         break;
       }
     }
@@ -278,8 +298,6 @@ SwapChain::PresentResult ES3PlatformSwapChain::PresentImage(
 
     if (is_discard_pending_ && pending_image_presents_[image_index]) {
       // A discard is pending so ignore the present request.
-      auto context_lock =
-          ES3PlatformContext::LockTransientContext(platform_context_);
       MarkPresentComplete(image_index);
       return PresentResult::kDiscardPending;
     }

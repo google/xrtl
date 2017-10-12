@@ -40,10 +40,10 @@ cc_library(
     deps = [
         ":command_encoder",
         ":framebuffer",
+        ":managed_object",
         ":render_pass",
         "//xrtl/base:logging",
         "//xrtl/base:macros",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -70,7 +70,7 @@ cc_library(
     name = "command_fence",
     hdrs = ["command_fence.h"],
     deps = [
-        "//xrtl/base:ref_ptr",
+        ":managed_object",
     ],
 )
 
@@ -178,9 +178,9 @@ cc_library(
     hdrs = ["framebuffer.h"],
     deps = [
         ":image_view",
+        ":managed_object",
         ":render_pass",
         "//xrtl/base:geometry",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
@@ -201,7 +201,15 @@ cc_library(
     hdrs = ["image_view.h"],
     deps = [
         ":image",
+        ":managed_object",
         ":pixel_format",
+    ],
+)
+
+cc_library(
+    name = "managed_object",
+    hdrs = ["managed_object.h"],
+    deps = [
         "//xrtl/base:ref_ptr",
     ],
 )
@@ -213,9 +221,9 @@ cc_library(
     deps = [
         ":buffer",
         ":image",
+        ":managed_object",
         ":resource",
         "//xrtl/base:macros",
-        "//xrtl/base:ref_ptr",
     ],
 )
 
@@ -223,10 +231,10 @@ cc_library(
     name = "pipeline",
     hdrs = ["pipeline.h"],
     deps = [
+        ":managed_object",
         ":pipeline_layout",
         ":render_state",
         ":shader_module",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -235,8 +243,8 @@ cc_library(
     name = "pipeline_layout",
     hdrs = ["pipeline_layout.h"],
     deps = [
+        ":managed_object",
         ":resource_set_layout",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
@@ -266,7 +274,7 @@ cc_library(
     name = "queue_fence",
     hdrs = ["queue_fence.h"],
     deps = [
-        "//xrtl/base:ref_ptr",
+        ":managed_object",
     ],
 )
 
@@ -275,10 +283,10 @@ cc_library(
     hdrs = ["render_pass.h"],
     deps = [
         ":image",
+        ":managed_object",
         ":pixel_format",
         ":render_state",
         "//xrtl/base:macros",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
@@ -298,7 +306,7 @@ cc_library(
     name = "resource",
     hdrs = ["resource.h"],
     deps = [
-        "//xrtl/base:ref_ptr",
+        ":managed_object",
     ],
 )
 
@@ -309,9 +317,9 @@ cc_library(
         ":buffer",
         ":image",
         ":image_view",
+        ":managed_object",
         ":resource_set_layout",
         ":sampler",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
@@ -321,8 +329,8 @@ cc_library(
     name = "resource_set_layout",
     hdrs = ["resource_set_layout.h"],
     deps = [
+        ":managed_object",
         ":render_pass",
-        "//xrtl/base:ref_ptr",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/types:span",
     ],
@@ -332,7 +340,7 @@ cc_library(
     name = "sampler",
     hdrs = ["sampler.h"],
     deps = [
-        "//xrtl/base:ref_ptr",
+        ":managed_object",
     ],
 )
 
@@ -340,7 +348,7 @@ cc_library(
     name = "shader_module",
     hdrs = ["shader_module.h"],
     deps = [
-        "//xrtl/base:ref_ptr",
+        ":managed_object",
     ],
 )
 
@@ -353,10 +361,10 @@ cc_library(
         ":framebuffer",
         ":image",
         ":image_view",
+        ":managed_object",
         ":pixel_format",
         ":queue_fence",
         "//xrtl/base:geometry",
-        "//xrtl/base:ref_ptr",
     ],
 )
 

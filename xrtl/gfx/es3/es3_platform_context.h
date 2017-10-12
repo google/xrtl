@@ -185,31 +185,11 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
     return Create(nullptr, nullptr, {});
   }
 
-  // Acquires a thread-locked context that is in a share-group with the given
-  // context. Future calls to AcquireThreadContext from the same thread will
-  // return the same context. It's safe to use this context with a ThreadLock
-  // and keep it current on the calling thread. Avoid using thread-locked
-  // contexts with ExclusiveLock as it can cause undefined behavior.
-  //
-  // The context will be retained for the life of the calling thread or until
-  // ReleaseThreadContext is called.
-  //
-  // Returns the thread-locked context, if one could be created. If the given
-  // context happens to already be the thread-locked context for the current
-  // thread that will be returned.
-  static ref_ptr<ES3PlatformContext> AcquireThreadContext(
-      ref_ptr<ES3PlatformContext> existing_context);
-
-  // Releases a thread-locked context for the current thread, if any exists.
-  // Calling AcquireThreadContext will recreate a new context for the thread.
-  static void ReleaseThreadContext();
-
-  // Acquires a context to use for short operations.
-  // If a context is already made current on the calling thread this will return
-  // that context. Otherwise, this will return a thread-locked context as if
-  // AcquireThreadContext had been used.
-  static ThreadLock LockTransientContext(
-      ref_ptr<ES3PlatformContext> existing_context);
+  // CHECKs that any GL context is locked on the calling thread and available
+  // for use.
+  static void CheckHasContextLock();
+  // Returns true if any GL context is locked on the calling thread.
+  static bool HasContextLock();
 
   virtual ~ES3PlatformContext();
 

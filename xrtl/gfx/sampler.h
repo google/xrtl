@@ -15,12 +15,12 @@
 #ifndef XRTL_GFX_SAMPLER_H_
 #define XRTL_GFX_SAMPLER_H_
 
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 
 namespace xrtl {
 namespace gfx {
 
-class Sampler : public RefObject<Sampler> {
+class Sampler : public ManagedObject {
  public:
   // Specifies filters used for image lookups.
   enum class Filter {
@@ -84,8 +84,6 @@ class Sampler : public RefObject<Sampler> {
     // TODO(benvanik): verify this can be supported everywhere.
     // bool unnormalized_coordinates = false;
   };
-
-  virtual ~Sampler() = default;
 
   // Sampler parameters.
   const Params& params() const { return params_; }

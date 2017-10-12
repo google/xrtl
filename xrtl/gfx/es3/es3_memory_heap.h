@@ -18,17 +18,17 @@
 #include <mutex>
 
 #include "xrtl/gfx/es3/es3_common.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
+#include "xrtl/gfx/es3/es3_queue_object.h"
 #include "xrtl/gfx/memory_heap.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3MemoryHeap : public MemoryHeap {
+class ES3MemoryHeap : public MemoryHeap, public ES3QueueObject {
  public:
-  ES3MemoryHeap(ref_ptr<ES3PlatformContext> platform_context,
-                MemoryType memory_type_mask, size_t heap_size);
+  ES3MemoryHeap(ES3ObjectLifetimeQueue* queue, MemoryType memory_type_mask,
+                size_t heap_size);
   ~ES3MemoryHeap() override;
 
   size_t allocation_alignment() const override { return allocation_alignment_; }
@@ -42,10 +42,14 @@ class ES3MemoryHeap : public MemoryHeap {
                                  ref_ptr<Image>* out_image) override;
 
  private:
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
   void ReleaseBuffer(Buffer* buffer) override;
   void ReleaseImage(Image* image) override;
 
-  ref_ptr<ES3PlatformContext> platform_context_;
+  ES3ObjectLifetimeQueue* queue_;
 
   size_t allocation_alignment_ = 0;
 

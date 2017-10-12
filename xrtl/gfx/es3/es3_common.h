@@ -50,6 +50,13 @@
 #define DCHECK_CONTEXT_IS_CURRENT(context)
 #endif  // DEBUG_GL
 
+// An attribute that can be placed on methods to indicate that a GL context must
+// be current before the method is called.
+// This is for now used only for readability.
+// TODO(benvanik): abuse absl threading annotations and Mutex to get static
+//                 verification of this?
+#define XRTL_REQUIRES_GL_CONTEXT
+
 namespace xrtl {
 namespace gfx {
 namespace es3 {

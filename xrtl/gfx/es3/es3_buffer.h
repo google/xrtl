@@ -19,17 +19,16 @@
 
 #include "xrtl/gfx/buffer.h"
 #include "xrtl/gfx/es3/es3_common.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
+#include "xrtl/gfx/es3/es3_queue_object.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3Buffer : public Buffer {
+class ES3Buffer : public Buffer, public ES3QueueObject {
  public:
-  ES3Buffer(ref_ptr<ES3PlatformContext> platform_context,
-            ref_ptr<MemoryHeap> memory_heap, size_t allocation_size,
-            Usage usage_mask);
+  ES3Buffer(ES3ObjectLifetimeQueue* queue, ref_ptr<MemoryHeap> memory_heap,
+            size_t allocation_size, Usage usage_mask);
   ~ES3Buffer() override;
 
   ref_ptr<MemoryHeap> memory_heap() const override;
@@ -46,14 +45,16 @@ class ES3Buffer : public Buffer {
 
   void FlushMappedMemory(size_t byte_offset, size_t byte_length) override;
 
-  void Release() override;
-
  private:
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
   bool MapMemory(MemoryAccess memory_access, size_t* byte_offset,
                  size_t* byte_length, void** out_data) override;
   void UnmapMemory(size_t byte_offset, size_t byte_length, void* data) override;
 
-  ref_ptr<ES3PlatformContext> platform_context_;
+  ES3ObjectLifetimeQueue* queue_;
   ref_ptr<MemoryHeap> memory_heap_;
 
   GLenum target_ = GL_COPY_READ_BUFFER;
