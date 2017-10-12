@@ -16,9 +16,9 @@
 #define XRTL_GFX_MEMORY_HEAP_H_
 
 #include "xrtl/base/macros.h"
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/buffer.h"
 #include "xrtl/gfx/image.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/resource.h"
 
 namespace xrtl {
@@ -56,10 +56,8 @@ namespace gfx {
 // - D3D12: ID3D12Heap
 // - Metal: MTLHeap
 // - Vulkan: VkMemoryHeap
-class MemoryHeap : public RefObject<MemoryHeap> {
+class MemoryHeap : public ManagedObject {
  public:
-  virtual ~MemoryHeap() = default;
-
   // TODO(benvanik): expose stats (total chunk size, chunks allocated, etc).
   // TODO(benvanik): expose properties to query granularities for mapping/etc.
 

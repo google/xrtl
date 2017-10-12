@@ -18,9 +18,9 @@
 #include <vector>
 
 #include "xrtl/base/macros.h"
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/command_encoder.h"
 #include "xrtl/gfx/framebuffer.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/render_pass.h"
 
 namespace xrtl {
@@ -69,9 +69,9 @@ XRTL_BITMASK(OperationQueueMask);
 //   // Submit the command buffer for execution.
 //   context->Submit(std::move(command_buffer), signal_fence);
 //
-class CommandBuffer : public RefObject<CommandBuffer> {
+class CommandBuffer : public ManagedObject {
  public:
-  virtual ~CommandBuffer();
+  ~CommandBuffer() override;
 
   // A bitmask indicating on which queue types this command buffer will execute
   // based on the commands that were encoded into it.

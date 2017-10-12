@@ -15,7 +15,7 @@
 #ifndef XRTL_GFX_COMMAND_FENCE_H_
 #define XRTL_GFX_COMMAND_FENCE_H_
 
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 
 namespace xrtl {
 namespace gfx {
@@ -27,10 +27,8 @@ namespace gfx {
 // These are device-side only and are only used to order the way commands
 // are processed within command buffers. They cannot be used for synchronization
 // with the CPU (use Context::WaitUntilQueuesIdle for that).
-class CommandFence : public RefObject<CommandFence> {
+class CommandFence : public ManagedObject {
  public:
-  virtual ~CommandFence() = default;
-
  protected:
   CommandFence() = default;
 };

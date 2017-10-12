@@ -15,22 +15,20 @@
 #ifndef XRTL_GFX_SHADER_MODULE_H_
 #define XRTL_GFX_SHADER_MODULE_H_
 
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 
 namespace xrtl {
 namespace gfx {
 
 // A module of shader code.
 // Each module may contain multiple entry points that can be used by pipelines.
-class ShaderModule : public RefObject<ShaderModule> {
+class ShaderModule : public ManagedObject {
  public:
   // Describes the format of shader module data.
   enum class DataFormat {
     // Standard SPIR-V.
     kSpirV,
   };
-
-  virtual ~ShaderModule() = default;
 
  protected:
   ShaderModule() = default;

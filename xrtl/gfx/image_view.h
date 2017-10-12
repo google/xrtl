@@ -17,8 +17,8 @@
 
 #include <utility>
 
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/image.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/pixel_format.h"
 
 namespace xrtl {
@@ -26,10 +26,8 @@ namespace gfx {
 
 // A view into an existing Image resource, possibly with a different type or
 // format and some subregion of the layers available.
-class ImageView : public RefObject<ImageView> {
+class ImageView : public ManagedObject {
  public:
-  virtual ~ImageView() = default;
-
   // Image this view is into.
   ref_ptr<Image> image() const { return image_; }
   // Image type the view is representing.

@@ -17,47 +17,44 @@
 #include <utility>
 
 #include "xrtl/base/tracing.h"
+#include "xrtl/gfx/es3/es3_platform_context.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-ES3Program::ES3Program(ref_ptr<ES3PlatformContext> platform_context,
-                       absl::Span<const ref_ptr<ES3Shader>> shaders)
-    : platform_context_(std::move(platform_context)),
-      shaders_(shaders.begin(), shaders.end()) {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
-
-  program_id_ = glCreateProgram();
-
-  for (const auto& shader : shaders_) {
-    glAttachShader(program_id_, shader->shader_id());
-  }
-}
+ES3Program::ES3Program(absl::Span<const ref_ptr<ES3Shader>> shaders)
+    : shaders_(shaders.begin(), shaders.end()) {}
 
 ES3Program::~ES3Program() {
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  ES3PlatformContext::CheckHasContextLock();
   if (program_id_) {
     glDeleteProgram(program_id_);
+    program_id_ = 0;
   }
 }
 
 bool ES3Program::Link() {
   WTF_SCOPE0("ES3Program#Link");
-  auto context_lock =
-      ES3PlatformContext::LockTransientContext(platform_context_);
+  ES3PlatformContext::CheckHasContextLock();
+
+  DCHECK_EQ(program_id_, 0) << "Attemping to re-link a program";
+
+  program_id_ = glCreateProgram();
+
+  for (const auto& shader : shaders_) {
+    // Compile the shader (may be a no-op if already compiled).
+    if (!shader->Validate()) {
+      LOG(ERROR) << "Shader validation failed";
+      return false;
+    }
+
+    glAttachShader(program_id_, shader->shader_id());
+  }
 
   glLinkProgram(program_id_);
 
   // TODO(benvanik): validate?
-
-  // TODO(benvanik): glUseProgram to force first usage and *really* link?
-  //                 Some implementations won't link until first use (even if
-  //                 you call glLinkProgram and query the status). Maybe that's
-  //                 been fixed, though, so waiting to see if we need to be
-  //                 paranoid.
 
   GLint link_status = 0;
   glGetProgramiv(program_id_, GL_LINK_STATUS, &link_status);

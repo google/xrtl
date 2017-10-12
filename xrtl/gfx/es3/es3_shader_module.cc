@@ -20,10 +20,18 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-ES3ShaderModule::ES3ShaderModule(ref_ptr<ES3PlatformContext> platform_context)
-    : platform_context_(std::move(platform_context)) {}
+ES3ShaderModule::ES3ShaderModule(ES3ObjectLifetimeQueue* queue)
+    : queue_(queue) {
+  queue_->EnqueueObjectAllocation(this);
+}
 
-ES3ShaderModule::~ES3ShaderModule() { shaders_.clear(); }
+ES3ShaderModule::~ES3ShaderModule() = default;
+
+void ES3ShaderModule::Release() { queue_->EnqueueObjectDeallocation(this); }
+
+bool ES3ShaderModule::AllocateOnQueue() { return true; }
+
+void ES3ShaderModule::DeallocateOnQueue() { shaders_.clear(); }
 
 void ES3ShaderModule::Register(ref_ptr<ES3Shader> shader) {
   shaders_.push_back(shader);

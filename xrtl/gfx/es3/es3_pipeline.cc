@@ -18,30 +18,48 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-ES3ComputePipeline::ES3ComputePipeline(
-    ref_ptr<ES3PlatformContext> platform_context,
-    ref_ptr<PipelineLayout> pipeline_layout,
-    ref_ptr<ShaderModule> shader_module, absl::string_view entry_point,
-    ref_ptr<ES3Program> program)
+ES3ComputePipeline::ES3ComputePipeline(ES3ObjectLifetimeQueue* queue,
+                                       ref_ptr<PipelineLayout> pipeline_layout,
+                                       ref_ptr<ShaderModule> shader_module,
+                                       absl::string_view entry_point,
+                                       ref_ptr<ES3Program> program)
     : ComputePipeline(std::move(pipeline_layout), std::move(shader_module),
                       entry_point),
-      platform_context_(std::move(platform_context)),
-      program_(std::move(program)) {}
+      queue_(queue),
+      program_(std::move(program)) {
+  queue_->EnqueueObjectAllocation(this);
+}
 
 ES3ComputePipeline::~ES3ComputePipeline() = default;
 
-ES3RenderPipeline::ES3RenderPipeline(
-    ref_ptr<ES3PlatformContext> platform_context,
-    ref_ptr<PipelineLayout> pipeline_layout, ref_ptr<RenderPass> render_pass,
-    int render_subpass, RenderState render_state,
-    RenderPipeline::ShaderStages shader_stages, ref_ptr<ES3Program> program)
+void ES3ComputePipeline::Release() { queue_->EnqueueObjectDeallocation(this); }
+
+bool ES3ComputePipeline::AllocateOnQueue() { return program_->Link(); }
+
+void ES3ComputePipeline::DeallocateOnQueue() { program_.reset(); }
+
+ES3RenderPipeline::ES3RenderPipeline(ES3ObjectLifetimeQueue* queue,
+                                     ref_ptr<PipelineLayout> pipeline_layout,
+                                     ref_ptr<RenderPass> render_pass,
+                                     int render_subpass,
+                                     RenderState render_state,
+                                     RenderPipeline::ShaderStages shader_stages,
+                                     ref_ptr<ES3Program> program)
     : RenderPipeline(std::move(pipeline_layout), std::move(render_pass),
                      render_subpass, std::move(render_state),
                      std::move(shader_stages)),
-      platform_context_(std::move(platform_context)),
-      program_(std::move(program)) {}
+      queue_(queue),
+      program_(std::move(program)) {
+  queue_->EnqueueObjectAllocation(this);
+}
 
 ES3RenderPipeline::~ES3RenderPipeline() = default;
+
+void ES3RenderPipeline::Release() { queue_->EnqueueObjectDeallocation(this); }
+
+bool ES3RenderPipeline::AllocateOnQueue() { return program_->Link(); }
+
+void ES3RenderPipeline::DeallocateOnQueue() { program_.reset(); }
 
 }  // namespace es3
 }  // namespace gfx

@@ -19,7 +19,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "xrtl/base/ref_ptr.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/pipeline_layout.h"
 #include "xrtl/gfx/render_state.h"
 #include "xrtl/gfx/shader_module.h"
@@ -28,10 +28,8 @@ namespace xrtl {
 namespace gfx {
 
 // Base shader pipeline.
-class Pipeline : public RefObject<Pipeline> {
+class Pipeline : public ManagedObject {
  public:
-  virtual ~Pipeline() = default;
-
   // Layout of the pipeline denoting what other pipelines it is compatible with.
   ref_ptr<PipelineLayout> pipeline_layout() const { return pipeline_layout_; }
 
@@ -45,8 +43,6 @@ class Pipeline : public RefObject<Pipeline> {
 // A pipeline used for compute operations.
 class ComputePipeline : public Pipeline {
  public:
-  ~ComputePipeline() override = default;
-
   // Source shader module.
   ref_ptr<ShaderModule> shader_module() const { return shader_module_; }
   // Entry point name within the shader module.
@@ -86,8 +82,6 @@ class RenderPipeline : public Pipeline {
     ref_ptr<ShaderModule> fragment_shader_module;
     std::string fragment_entry_point;
   };
-
-  ~RenderPipeline() override = default;
 
   // Render pass the pipeline is used in.
   ref_ptr<RenderPass> render_pass() const { return render_pass_; }

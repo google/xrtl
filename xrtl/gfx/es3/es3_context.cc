@@ -48,8 +48,8 @@ ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
   // Setup the work queues.
   primary_queue_ = absl::make_unique<ES3Queue>(
       ES3Queue::Type::kCommandSubmission, platform_context_);
-  presentation_queue_ = absl::make_unique<ES3Queue>(
-      ES3Queue::Type::kPresentation, platform_context_);
+  presentation_queue_ =
+      absl::make_unique<ES3Queue>(ES3Queue::Type::kPresentation, nullptr);
 }
 
 ES3Context::~ES3Context() {
@@ -70,7 +70,7 @@ std::vector<uint8_t> ES3Context::SerializePipelineCache() {
 }
 
 ref_ptr<QueueFence> ES3Context::CreateQueueFence() {
-  return make_ref<ES3QueueFence>(platform_context_);
+  return make_ref<ES3QueueFence>(primary_queue_.get());
 }
 
 ref_ptr<CommandFence> ES3Context::CreateCommandFence() {
@@ -80,13 +80,15 @@ ref_ptr<CommandFence> ES3Context::CreateCommandFence() {
 ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
     ShaderModule::DataFormat data_format, const void* data,
     size_t data_length) {
-  auto shader = make_ref<ES3Shader>(platform_context_, "main");
-  if (!shader->CompileSpirVBinary(reinterpret_cast<const uint32_t*>(data),
-                                  data_length / 4)) {
-    LOG(ERROR) << "Failed to translate/compile SPIR-V binary";
+  // If this gets slow we could move this to a dedicated translation/compilation
+  // thread.
+  auto shader = make_ref<ES3Shader>("main");
+  if (!shader->TranslateSpirVBinary(reinterpret_cast<const uint32_t*>(data),
+                                    data_length / 4)) {
+    LOG(ERROR) << "Failed to translate SPIR-V binary";
     return nullptr;
   }
-  auto shader_module = make_ref<ES3ShaderModule>(platform_context_);
+  auto shader_module = make_ref<ES3ShaderModule>(primary_queue_.get());
   shader_module->Register(shader);
   return shader_module;
 }
@@ -111,13 +113,13 @@ ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
   }
   ref_ptr<ES3Shader> shaders[1] = {shader};
 
-  auto program = make_ref<ES3Program>(platform_context_, shaders);
+  auto program = make_ref<ES3Program>(shaders);
   if (!program->Link()) {
     LOG(ERROR) << "Unable to link compute program";
     return nullptr;
   }
 
-  return make_ref<ES3ComputePipeline>(platform_context_, pipeline_layout,
+  return make_ref<ES3ComputePipeline>(primary_queue_.get(), pipeline_layout,
                                       shader_module, entry_point, program);
 }
 
@@ -187,14 +189,11 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
     }
   }
 
-  auto program = make_ref<ES3Program>(
-      platform_context_, absl::Span<const ref_ptr<ES3Shader>>(shaders));
-  if (!program->Link()) {
-    LOG(ERROR) << "Unable to link render program";
-    return nullptr;
-  }
-
-  return make_ref<ES3RenderPipeline>(platform_context_, pipeline_layout,
+  // Note that though we are creating the program here we aren't linking it
+  // until first use.
+  auto program =
+      make_ref<ES3Program>(absl::Span<const ref_ptr<ES3Shader>>(shaders));
+  return make_ref<ES3RenderPipeline>(primary_queue_.get(), pipeline_layout,
                                      render_pass, render_subpass, render_state,
                                      shader_stages, program);
 }
@@ -219,19 +218,20 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
       CreateMemoryHeap(MemoryType::kDeviceLocal, 64 * 1024 * 1024);
   DCHECK(memory_heap);
 
-  return ES3SwapChain::Create(platform_context_, presentation_queue_.get(),
-                              std::move(memory_heap), std::move(control),
-                              present_mode, image_count, pixel_formats);
+  return ES3SwapChain::Create(platform_context_, primary_queue_.get(),
+                              presentation_queue_.get(), std::move(memory_heap),
+                              std::move(control), present_mode, image_count,
+                              pixel_formats);
 }
 
 ref_ptr<MemoryHeap> ES3Context::CreateMemoryHeap(MemoryType memory_type_mask,
                                                  size_t heap_size) {
-  return make_ref<ES3MemoryHeap>(platform_context_, memory_type_mask,
+  return make_ref<ES3MemoryHeap>(primary_queue_.get(), memory_type_mask,
                                  heap_size);
 }
 
 ref_ptr<Sampler> ES3Context::CreateSampler(Sampler::Params params) {
-  return make_ref<ES3Sampler>(platform_context_, params);
+  return make_ref<ES3Sampler>(primary_queue_.get(), params);
 }
 
 ref_ptr<RenderPass> ES3Context::CreateRenderPass(

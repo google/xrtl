@@ -19,10 +19,10 @@
 #include <utility>
 
 #include "xrtl/base/geometry.h"
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/command_buffer.h"
 #include "xrtl/gfx/image.h"
 #include "xrtl/gfx/image_view.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/pixel_format.h"
 #include "xrtl/gfx/queue_fence.h"
 
@@ -60,10 +60,8 @@ namespace gfx {
 //  // Asynchronously present the image.
 //  swap_chain->PresentImage(std::move(rendered_fence),
 //                           std::move(image_view));
-class SwapChain : public RefObject<SwapChain> {
+class SwapChain : public ManagedObject {
  public:
-  virtual ~SwapChain() = default;
-
   // Defines the presentation queueing mode used by the swap chain.
   //
   // See section 20 here for more information:

@@ -20,18 +20,16 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/geometry.h"
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/image_view.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/render_pass.h"
 
 namespace xrtl {
 namespace gfx {
 
 // A render target framebuffer, composed of one or more attachments.
-class Framebuffer : public RefObject<Framebuffer> {
+class Framebuffer : public ManagedObject {
  public:
-  virtual ~Framebuffer() = default;
-
   // Render pass this framebuffer is used with.
   ref_ptr<RenderPass> render_pass() const { return render_pass_; }
   // Dimensions of the framebuffer in pixels.

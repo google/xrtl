@@ -65,10 +65,11 @@ COMMON_COPTS = [
     "//conditions:default": [
         "-x",
         "c++",
-        "-Wno-sign-compare",
         "-Wno-inconsistent-missing-override",
-        "-Wno-unneeded-internal-declaration",
+        "-Wno-sign-compare",
         "-Wno-undefined-var-template",
+        "-Wno-unneeded-internal-declaration",
+        "-Wno-unused-lambda-capture",
         "-ffunction-sections",
         "-fdata-sections",
         "-fomit-frame-pointer",

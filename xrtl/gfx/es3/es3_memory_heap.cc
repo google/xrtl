@@ -21,23 +21,30 @@
 #include "xrtl/gfx/es3/es3_buffer.h"
 #include "xrtl/gfx/es3/es3_image.h"
 #include "xrtl/gfx/es3/es3_pixel_format.h"
+#include "xrtl/gfx/es3/es3_platform_context.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-ES3MemoryHeap::ES3MemoryHeap(ref_ptr<ES3PlatformContext> platform_context,
+ES3MemoryHeap::ES3MemoryHeap(ES3ObjectLifetimeQueue* queue,
                              MemoryType memory_type_mask, size_t heap_size)
-    : MemoryHeap(memory_type_mask, heap_size),
-      platform_context_(std::move(platform_context)) {
+    : MemoryHeap(memory_type_mask, heap_size), queue_(queue) {
   // TODO(benvanik): query? or always leave like this? (common in vk).
   allocation_alignment_ = 128;
+  queue_->EnqueueObjectAllocation(this);
 }
 
 ES3MemoryHeap::~ES3MemoryHeap() {
   std::lock_guard<std::mutex> lock_guard(mutex_);
   DCHECK_EQ(used_size_, 0);
 }
+
+void ES3MemoryHeap::Release() { queue_->EnqueueObjectDeallocation(this); }
+
+bool ES3MemoryHeap::AllocateOnQueue() { return true; }
+
+void ES3MemoryHeap::DeallocateOnQueue() {}
 
 size_t ES3MemoryHeap::used_size() {
   std::lock_guard<std::mutex> lock_guard(mutex_);
@@ -59,9 +66,8 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateBuffer(
   }
 
   // Create the buffer and allocate underlying storage.
-  *out_buffer =
-      make_ref<ES3Buffer>(platform_context_, ref_ptr<MemoryHeap>(this),
-                          allocation_size, usage_mask);
+  *out_buffer = make_ref<ES3Buffer>(queue_, ref_ptr<MemoryHeap>(this),
+                                    allocation_size, usage_mask);
 
   return AllocationResult::kSuccess;
 }
@@ -69,7 +75,6 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateBuffer(
 void ES3MemoryHeap::ReleaseBuffer(Buffer* buffer) {
   std::lock_guard<std::mutex> lock_guard(mutex_);
   used_size_ -= buffer->allocation_size();
-  delete buffer;
 }
 
 MemoryHeap::AllocationResult ES3MemoryHeap::AllocateImage(
@@ -104,8 +109,8 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateImage(
 
   // Create the image and allocate underlying texture.
   *out_image =
-      make_ref<ES3Image>(platform_context_, ref_ptr<MemoryHeap>(this),
-                         texture_params, allocation_size, create_params);
+      make_ref<ES3Image>(queue_, ref_ptr<MemoryHeap>(this), texture_params,
+                         allocation_size, create_params);
 
   return AllocationResult::kSuccess;
 }
@@ -113,7 +118,6 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateImage(
 void ES3MemoryHeap::ReleaseImage(Image* image) {
   std::lock_guard<std::mutex> lock_guard(mutex_);
   used_size_ -= image->allocation_size();
-  delete image;
 }
 
 }  // namespace es3

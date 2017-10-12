@@ -218,7 +218,7 @@ void main() {
     auto framebuffer_ready_fence = context_->CreateQueueFence();
     ref_ptr<ImageView> framebuffer_image_view;
     auto acquire_result = swap_chain_->AcquireNextImage(
-        std::chrono::milliseconds(100), framebuffer_ready_fence,
+        std::chrono::milliseconds(1000), framebuffer_ready_fence,
         &framebuffer_image_view);
     CHECK(acquire_result == SwapChain::AcquireResult::kSuccess ||
           acquire_result == SwapChain::AcquireResult::kResizeRequired);

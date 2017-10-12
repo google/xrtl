@@ -21,10 +21,10 @@
 
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/buffer.h"
 #include "xrtl/gfx/image.h"
 #include "xrtl/gfx/image_view.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/resource_set_layout.h"
 #include "xrtl/gfx/sampler.h"
 
@@ -98,10 +98,8 @@ struct BindingValue {
 // - D3D12: descriptor tables
 // - Metal: argument buffers
 // - Vulkan: descriptor sets
-class ResourceSet : public RefObject<ResourceSet> {
+class ResourceSet : public ManagedObject {
  public:
-  virtual ~ResourceSet() = default;
-
   // Layout the resource set uses.
   ref_ptr<ResourceSetLayout> layout() const { return layout_; }
 

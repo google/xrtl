@@ -18,8 +18,8 @@
 #include "absl/container/inlined_vector.h"
 #include "absl/types/span.h"
 #include "xrtl/base/macros.h"
-#include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/image.h"
+#include "xrtl/gfx/managed_object.h"
 #include "xrtl/gfx/pixel_format.h"
 #include "xrtl/gfx/render_state.h"
 
@@ -189,7 +189,7 @@ enum class AccessFlag : uint32_t {
 };
 XRTL_BITMASK(AccessFlag);
 
-class RenderPass : public RefObject<RenderPass> {
+class RenderPass : public ManagedObject {
  public:
   // A sentinel that can be used in place of subpass indices to denote an
   // external data source. This may be used as a source to denote input
@@ -344,8 +344,6 @@ class RenderPass : public RefObject<RenderPass> {
     AccessFlag target_access_mask;
     PipelineDependencyFlag dependency_flags;
   };
-
-  virtual ~RenderPass() = default;
 
   // A list of attachment descriptions.
   // Framebuffers must contain attachments corresponding to the indices of the

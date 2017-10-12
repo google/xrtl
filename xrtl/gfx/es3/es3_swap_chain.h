@@ -24,6 +24,7 @@
 #include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_queue.h"
 #include "xrtl/gfx/es3/es3_queue_fence.h"
+#include "xrtl/gfx/es3/es3_queue_object.h"
 #include "xrtl/gfx/memory_heap.h"
 #include "xrtl/gfx/swap_chain.h"
 #include "xrtl/ui/control.h"
@@ -32,17 +33,16 @@ namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3SwapChain : public SwapChain {
+class ES3SwapChain : public SwapChain, public ES3QueueObject {
  public:
   static ref_ptr<ES3SwapChain> Create(
       ref_ptr<ES3PlatformContext> shared_platform_context,
-      ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
-      ref_ptr<ui::Control> control, PresentMode present_mode, int image_count,
+      ES3Queue* primary_queue, ES3Queue* present_queue,
+      ref_ptr<MemoryHeap> memory_heap, ref_ptr<ui::Control> control,
+      PresentMode present_mode, int image_count,
       absl::Span<const PixelFormat> pixel_formats);
 
   ~ES3SwapChain() override = default;
-
-  virtual bool Initialize() = 0;
 
  protected:
   ES3SwapChain(PresentMode present_mode, int image_count,
@@ -55,14 +55,13 @@ class ES3SwapChain : public SwapChain {
 
 class ES3PlatformSwapChain : public ES3SwapChain {
  public:
-  ES3PlatformSwapChain(ES3Queue* present_queue, ref_ptr<MemoryHeap> memory_heap,
+  ES3PlatformSwapChain(ES3Queue* primary_queue, ES3Queue* present_queue,
+                       ref_ptr<MemoryHeap> memory_heap,
                        ref_ptr<ui::Control> control,
                        ref_ptr<ES3PlatformContext> platform_context,
                        PresentMode present_mode, int image_count,
                        absl::Span<const PixelFormat> pixel_formats);
   ~ES3PlatformSwapChain() override;
-
-  bool Initialize() override;
 
   ResizeResult Resize(Size2D new_size) override;
 
@@ -77,20 +76,26 @@ class ES3PlatformSwapChain : public ES3SwapChain {
   void DiscardPendingPresents() override;
 
  private:
-  // Performs a Resize assuming the context is currently locked.
-  ResizeResult ResizeWithContext(Size2D new_size);
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
+  // Performs a Resize on the queue thread with a locked context.
+  ResizeResult ResizeOnQueue(Size2D new_size) XRTL_REQUIRES_GL_CONTEXT;
 
   // Performs a queued present; called from the context queue.
   void PerformPresent(Size2D surface_size, int image_index,
                       ref_ptr<ImageView> image_view,
-                      std::chrono::milliseconds present_time_utc_millis);
+                      std::chrono::milliseconds present_time_utc_millis)
+      XRTL_REQUIRES_GL_CONTEXT;
 
   // Marks the given image as presented, possibly allowing more acquires to
   // proceed.
   // Assumes a lock on mutex_ is held.
   void MarkPresentComplete(int image_index);
 
-  ES3Queue* present_queue_;
+  ES3Queue* primary_queue_ = nullptr;
+  ES3Queue* present_queue_ = nullptr;
   ref_ptr<MemoryHeap> memory_heap_;
   ref_ptr<ui::Control> control_;
   ref_ptr<ES3PlatformContext> platform_context_;

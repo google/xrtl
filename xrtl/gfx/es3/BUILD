@@ -12,6 +12,8 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_platform_context",
+        ":es3_queue_object",
+        "//xrtl/base:tracing",
         "//xrtl/gfx:buffer",
         "//xrtl/gfx:memory_heap",
     ],
@@ -129,6 +131,7 @@ cc_library(
     hdrs = ["es3_framebuffer.h"],
     deps = [
         ":es3_common",
+        ":es3_queue_object",
         "//xrtl/gfx:framebuffer",
     ],
 )
@@ -142,6 +145,8 @@ cc_library(
         ":es3_image_view",
         ":es3_pixel_format",
         ":es3_platform_context",
+        ":es3_queue_object",
+        "//xrtl/base:tracing",
         "//xrtl/gfx:image",
         "//xrtl/gfx:memory_heap",
     ],
@@ -166,6 +171,7 @@ cc_library(
         ":es3_image",
         ":es3_pixel_format",
         ":es3_platform_context",
+        ":es3_queue_object",
         "//xrtl/base:math",
         "//xrtl/base:tracing",
         "//xrtl/gfx:memory_heap",
@@ -178,8 +184,8 @@ cc_library(
     hdrs = ["es3_pipeline.h"],
     deps = [
         ":es3_common",
-        ":es3_platform_context",
         ":es3_program",
+        ":es3_queue_object",
         "//xrtl/gfx:pipeline",
     ],
 )
@@ -276,9 +282,14 @@ cc_library(
         ":es3_common",
         ":es3_platform_context",
         ":es3_queue_fence",
+        ":es3_queue_object",
+        "//xrtl/base:intrusive_list",
+        "//xrtl/base:intrusive_pool",
         "//xrtl/base:tracing",
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
+        "//xrtl/gfx:command_buffer",
+        "//xrtl/gfx:queue_fence",
         "//xrtl/gfx/util:memory_command_buffer",
         "//xrtl/gfx/util:memory_command_decoder",
         "@com_google_absl//absl/container:inlined_vector",
@@ -293,10 +304,21 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_platform_context",
+        ":es3_queue_object",
         "//xrtl/base:system_clock",
+        "//xrtl/base:tracing",
         "//xrtl/base/threading:event",
         "//xrtl/base/threading:thread",
         "//xrtl/gfx:queue_fence",
+    ],
+)
+
+cc_library(
+    name = "es3_queue_object",
+    hdrs = ["es3_queue_object.h"],
+    deps = [
+        ":es3_platform_context",
+        "//xrtl/base:ref_ptr",
     ],
 )
 
@@ -334,6 +356,7 @@ cc_library(
     deps = [
         ":es3_common",
         ":es3_platform_context",
+        ":es3_queue_object",
         "//xrtl/gfx:sampler",
     ],
 )
@@ -346,6 +369,7 @@ cc_library(
         ":es3_common",
         ":es3_platform_context",
         "//xrtl/base:debugging",
+        "//xrtl/base:ref_ptr",
         "//xrtl/base:tracing",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
@@ -359,7 +383,7 @@ cc_library(
     hdrs = ["es3_shader_module.h"],
     deps = [
         ":es3_common",
-        ":es3_platform_context",
+        ":es3_queue_object",
         ":es3_shader",
         "//xrtl/gfx:shader_module",
     ],

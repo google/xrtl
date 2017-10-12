@@ -19,17 +19,19 @@
 #include <utility>
 
 #include "xrtl/gfx/es3/es3_common.h"
-#include "xrtl/gfx/es3/es3_platform_context.h"
 #include "xrtl/gfx/es3/es3_program.h"
+#include "xrtl/gfx/es3/es3_queue_object.h"
 #include "xrtl/gfx/pipeline.h"
 
 namespace xrtl {
 namespace gfx {
 namespace es3 {
 
-class ES3ComputePipeline : public ComputePipeline {
+class ES3Queue;
+
+class ES3ComputePipeline : public ComputePipeline, public ES3QueueObject {
  public:
-  ES3ComputePipeline(ref_ptr<ES3PlatformContext> platform_context,
+  ES3ComputePipeline(ES3ObjectLifetimeQueue* queue,
                      ref_ptr<PipelineLayout> pipeline_layout,
                      ref_ptr<ShaderModule> shader_module,
                      absl::string_view entry_point,
@@ -39,13 +41,17 @@ class ES3ComputePipeline : public ComputePipeline {
   ref_ptr<ES3Program> program() const { return program_; }
 
  private:
-  ref_ptr<ES3PlatformContext> platform_context_;
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
+  ES3ObjectLifetimeQueue* queue_;
   ref_ptr<ES3Program> program_;
 };
 
-class ES3RenderPipeline : public RenderPipeline {
+class ES3RenderPipeline : public RenderPipeline, public ES3QueueObject {
  public:
-  ES3RenderPipeline(ref_ptr<ES3PlatformContext> platform_context,
+  ES3RenderPipeline(ES3ObjectLifetimeQueue* queue,
                     ref_ptr<PipelineLayout> pipeline_layout,
                     ref_ptr<RenderPass> render_pass, int render_subpass,
                     RenderState render_state,
@@ -56,7 +62,11 @@ class ES3RenderPipeline : public RenderPipeline {
   ref_ptr<ES3Program> program() const { return program_; }
 
  private:
-  ref_ptr<ES3PlatformContext> platform_context_;
+  void Release() override;
+  bool AllocateOnQueue() override;
+  void DeallocateOnQueue() override;
+
+  ES3ObjectLifetimeQueue* queue_;
   ref_ptr<ES3Program> program_;
 };
 
