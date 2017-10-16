@@ -53,6 +53,9 @@ bool ES3Shader::Validate() {
       return true;
     case CompilationState::kFailed:
       return false;
+    default:
+      DCHECK(false);
+      return false;
   }
 }
 

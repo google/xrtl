@@ -14,8 +14,10 @@
 
 #include "xrtl/testing/file_util.h"
 
+#include <fcntl.h>
+#include <io.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -31,9 +33,12 @@
 
 #if defined(XRTL_PLATFORM_WINDOWS)
 #include <direct.h>
-#define PLATFORM_MKDIR ::_mkdir
+#define PLATFORM_MKDIR(p, unused) ::_mkdir(p)
 #define PLATFORM_STAT _stat
+#define S_IRUSR _S_IREAD
+#define S_IWUSR _S_IWRITE
 #else
+#include <unistd.h>
 #define PLATFORM_MKDIR ::mkdir
 #define PLATFORM_STAT stat
 #endif  // XRTL_PLATFORM_WINDOWS
@@ -187,7 +192,7 @@ TempFile FileUtil::MakeTempFile(absl::string_view base_name) {
   int fd = -1;
 #if defined(XRTL_PLATFORM_WINDOWS)
   if (::_mktemp(&template_path[0]) != nullptr) {
-    fd = ::open(template_name, O_CREAT | O_EXCL | O_RDWR | O_BINARY,
+    fd = ::open(template_path.c_str(), O_CREAT | O_EXCL | O_RDWR | O_BINARY,
                 S_IRUSR | S_IWUSR);
   }
 #else

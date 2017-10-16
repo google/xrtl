@@ -108,7 +108,7 @@ ref_ptr<ES3PlatformContext> ES3PlatformContext::Create(
   if (!platform_context->Initialize(reinterpret_cast<HDC>(native_display),
                                     reinterpret_cast<HWND>(native_window),
                                     std::move(share_group))) {
-    LOG(ERROR) << "Unable to initialize the EGL platform context";
+    LOG(ERROR) << "Unable to initialize the WGL platform context";
     return nullptr;
   }
 

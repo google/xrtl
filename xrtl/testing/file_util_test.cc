@@ -14,9 +14,14 @@
 
 #include "xrtl/testing/file_util.h"
 
-#include <unistd.h>
+#include <cstdio>
 
 #include "xrtl/testing/gtest.h"
+#include "xrtl/tools/target_platform/target_platform.h"
+
+#if !defined(XRTL_PLATFORM_WINDOWS)
+#include <unistd.h>
+#endif  // !XRTL_PLATFORM_WINDOWS
 
 namespace xrtl {
 namespace testing {
