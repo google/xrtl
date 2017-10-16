@@ -17,7 +17,7 @@ extra_action(
     name = "generate_compile_commands_action",
     cmd = " ".join([
         "PYTHONPATH=$$PYTHONPATH:$$PWD",
-        "python $(location :generate_compile_command)",
+        "$(location :generate_compile_command)",
         "$(EXTRA_ACTION_FILE)",
         "$(output $(ACTION_ID)_compile_command)",
     ]),
@@ -47,7 +47,7 @@ extra_action(
     name = "generate_link_targets_action",
     cmd = " ".join([
         "PYTHONPATH=$$PYTHONPATH:$$PWD",
-        "python $(location :generate_link_target)",
+        "$(location :generate_link_target)",
         "$(EXTRA_ACTION_FILE)",
         "$(output $(ACTION_ID)_link_target)",
     ]),

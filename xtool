@@ -363,7 +363,38 @@ def invoke_bazel(command, args, output_base = None):
     run_args.append('--output_base=%s' % (output_base))
   run_args.append(command)
   run_args.extend(args)
-  return subprocess.call(run_args, shell=False)
+
+  # When running under Visual Studio we need to launch bazel such that python
+  # allows exit while bazel is still running. This produces slightly worse
+  # output than just a normal call, so we prefer that unless we are in VS.
+  if '--tool_tag=vs' in args:
+    exit_code = 0
+    process = subprocess.Popen(run_args,
+                               shell=False,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT,
+                               bufsize=1)
+    linebuf = ''
+    while process.returncode is None:
+      for line in process.stdout.readline():
+        if not line.endswith('\n'):
+          linebuf += line
+          continue
+        complete_line = linebuf + line
+        linebuf = ''
+        sys.stdout.write(complete_line)
+        sys.stdout.flush()
+      process.poll()
+    (output, _) = process.communicate()
+    output = linebuf + output
+    for line in output.split('\n'):
+      sys.stdout.write(line)
+    sys.stdout.flush()
+    exit_code = process.returncode
+  else:
+    exit_code = subprocess.call(run_args, shell=False)
+
+  return exit_code
 
 
 def bazel_info(key, config = default_config, output_base = None):
@@ -1744,7 +1775,13 @@ class GenerateSlnCommand(Command):
       # Generate target.vcxproj.user, which contains debugging information.
       # We only do this if the file doesn't already exist so that we don't
       # overwrite information. User can bazel clean if they want new ones.
-      user_file_contents = template_user.substitute()
+      env_var_lines = [
+          # TODO(benvanik): pull from bazel info
+          'TEST_WORKSPACE=xrtl',
+          ]
+      user_file_contents = template_user.substitute({
+          'ENV_VAR_LINES': '\n'.join(env_var_lines),
+          })
       user_file_path = vcxproj_path + '.user'
       if not os.path.exists(user_file_path):
         with open(user_file_path, 'w') as file:
