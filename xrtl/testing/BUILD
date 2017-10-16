@@ -39,6 +39,32 @@ cc_library(
     }),
 )
 
+cc_library(
+    name = "file_util",
+    testonly = 1,
+    srcs = ["file_util.cc"],
+    hdrs = ["file_util.h"],
+    deps = [
+        "//xrtl/base:logging",
+        "//xrtl/base:tracing",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "file_util_test",
+    size = "small",
+    srcs = ["file_util_test.cc"],
+    data = [
+        "//xrtl/testing/testdata:file_util_data",
+    ],
+    deps = [
+        ":file_util",
+        "//xrtl/testing:gtest_main",
+    ],
+)
+
 # googletest header shim.
 # This can be linked in to cc_library rules that require access to the gunit
 # headers (such as test utility libraries/etc).
@@ -88,32 +114,6 @@ cc_library(
             "//xrtl/port/common/testing:posix_test_main",
         ],
     }),
-)
-
-cc_library(
-    name = "file_util",
-    testonly = 1,
-    srcs = ["file_util.cc"],
-    hdrs = ["file_util.h"],
-    deps = [
-        "//xrtl/base:logging",
-        "//xrtl/base:tracing",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:optional",
-    ],
-)
-
-cc_test(
-    name = "file_util_test",
-    size = "small",
-    srcs = ["file_util_test.cc"],
-    data = [
-        "//xrtl/testing/testdata:file_util_data",
-    ],
-    deps = [
-        ":file_util",
-        "//xrtl/testing:gtest_main",
-    ],
 )
 
 cc_library(

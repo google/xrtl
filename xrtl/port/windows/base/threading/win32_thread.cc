@@ -401,7 +401,6 @@ Thread::WaitAnyResult Win32Thread::WaitMultiple(
   DWORD result = ::WaitForMultipleObjectsEx(
       static_cast<DWORD>(handles.size()), handles.data(),
       require_all ? TRUE : FALSE, static_cast<DWORD>(timeout.count()), FALSE);
-  _freea(handles);
   if (result >= WAIT_OBJECT_0 && result < WAIT_OBJECT_0 + wait_handles.size()) {
     return {WaitResult::kSuccess, result - WAIT_OBJECT_0};
   } else if (result >= WAIT_ABANDONED_0 &&
