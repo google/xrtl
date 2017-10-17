@@ -18,6 +18,7 @@
 #include <mutex>
 #include <utility>
 
+#include "absl/strings/string_view.h"
 #include "xrtl/base/geometry.h"
 #include "xrtl/base/ref_ptr.h"
 #include "xrtl/gfx/es3/es3_common.h"
@@ -213,6 +214,13 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
   // Flushes the context and waits for the GPU to complete all of the commands.
   virtual void Finish() = 0;
 
+  // GL implementation vendor name (from GL_VENDOR).
+  absl::string_view gl_vendor() const { return gl_vendor_; }
+  // GL implementation enderer name (from GL_RENDERER).
+  absl::string_view gl_renderer() const { return gl_renderer_; }
+  // GL implementation version string (from GL_VERSION).
+  absl::string_view gl_version() const { return gl_version_; }
+
   // Checks whether the given extension is supported.
   // Must include the GL_ prefix.
   bool IsExtensionSupported(const char* extension_name);
@@ -284,6 +292,8 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
 
   ES3PlatformContext();
 
+  // Initializes GL property caches.
+  bool InitializeLimits();
   // Initializes GL debugging support.
   void InitializeDebugging();
   // Initializes the list of supported extensions to enable the various
@@ -298,6 +308,11 @@ class ES3PlatformContext : public RefObject<ES3PlatformContext> {
   // Unlocks the context, as previously locked via Lock.
   // This must be called from the same thread that performed the Lock.
   void Unlock(std::unique_lock<std::recursive_mutex> lock);
+
+  // Cached fields used to avoid needing to lock the context across threads.
+  std::string gl_vendor_;
+  std::string gl_renderer_;
+  std::string gl_version_;
 
   // Used to hold the context lock.
   std::recursive_mutex usage_mutex_;

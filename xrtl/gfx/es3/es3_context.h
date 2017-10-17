@@ -157,7 +157,8 @@ class ES3Context : public Context {
 
   // Primary command queue that owns the dedicated submission thread.
   std::unique_ptr<ES3Queue> primary_queue_;
-  // Presentation queue used for swap chain presents.
+  // Presentation queue used for swap chain presents. This may be nullptr if the
+  // GL implementation doesn't support multithreading.
   std::unique_ptr<ES3Queue> presentation_queue_;
 };
 

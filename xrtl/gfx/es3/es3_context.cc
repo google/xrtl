@@ -14,6 +14,7 @@
 
 #include "xrtl/gfx/es3/es3_context.h"
 
+#include "xrtl/base/flags.h"
 #include "xrtl/base/tracing.h"
 #include "xrtl/gfx/es3/es3_buffer.h"
 #include "xrtl/gfx/es3/es3_command_buffer.h"
@@ -36,6 +37,9 @@
 #include "xrtl/gfx/es3/es3_swap_chain.h"
 #include "xrtl/gfx/util/memory_command_buffer.h"
 
+DEFINE_bool(gl_multithreading, true,
+            "Enable multithreaded GL use if supported.");
+
 namespace xrtl {
 namespace gfx {
 namespace es3 {
@@ -47,11 +51,26 @@ ES3Context::ES3Context(ref_ptr<ContextFactory> context_factory,
     : Context(devices, features),
       context_factory_(std::move(context_factory)),
       platform_context_(std::move(platform_context)) {
+  // Some GL implementations are not properly multithreaded and there we use
+  // only a single queue. This will naturally lower parallelism and possibly
+  // not work at all in the case of multiple swap chains (as vsync may trigger
+  // for each). It won't crash, though, which is good I guess.
+  // TODO(benvanik): more exhaustive whitelist/blacklist.
+  bool can_multithread = FLAGS_gl_multithreading;
+  if (platform_context_->gl_renderer() == "Google SwiftShader") {
+    // Swiftshader has no thread safety on any GL call :(
+    LOG(WARNING)
+        << "GL implementation is SwiftShader; disabling multithreaded ES3";
+    can_multithread = false;
+  }
+
   // Setup the work queues.
   primary_queue_ = absl::make_unique<ES3Queue>(
       ES3Queue::Type::kCommandSubmission, platform_context_);
-  presentation_queue_ =
-      absl::make_unique<ES3Queue>(ES3Queue::Type::kPresentation, nullptr);
+  if (can_multithread) {
+    presentation_queue_ =
+        absl::make_unique<ES3Queue>(ES3Queue::Type::kPresentation, nullptr);
+  }
 }
 
 ES3Context::~ES3Context() {
@@ -225,8 +244,10 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
       CreateMemoryHeap(MemoryType::kDeviceLocal, 64 * 1024 * 1024);
   DCHECK(memory_heap);
 
+  ES3Queue* target_presentation_queue =
+      presentation_queue_ ? presentation_queue_.get() : primary_queue_.get();
   return ES3SwapChain::Create(platform_context_, primary_queue_.get(),
-                              presentation_queue_.get(), std::move(memory_heap),
+                              target_presentation_queue, std::move(memory_heap),
                               std::move(control), present_mode, image_count,
                               pixel_formats);
 }
@@ -285,7 +306,7 @@ Context::WaitResult ES3Context::WaitUntilQueuesIdle(
            OperationQueueMask::kTransfer))) {
     any_failed = !primary_queue_->WaitUntilIdle() || any_failed;
   }
-  if (any(queue_mask & OperationQueueMask::kPresent)) {
+  if (any(queue_mask & OperationQueueMask::kPresent) && presentation_queue_) {
     any_failed = !presentation_queue_->WaitUntilIdle() || any_failed;
   }
   return any_failed ? WaitResult::kDeviceLost : WaitResult::kSuccess;

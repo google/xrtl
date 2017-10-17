@@ -92,6 +92,7 @@ cc_library(
         ":es3_shader",
         ":es3_shader_module",
         ":es3_swap_chain",
+        "//xrtl/base:flags",
         "//xrtl/base:tracing",
         "//xrtl/base/threading:thread",
         "//xrtl/gfx:context",
@@ -239,7 +240,9 @@ cc_library(
         "//xrtl/base:flags",
         "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
+        "//xrtl/base:tracing",
         "//xrtl/base/threading:thread",
+        "@com_google_absl//absl/strings",
     ] + select({
         # Always use EGL when targeting swiftshader, and otherwise use the
         # port's default implementation.
@@ -260,6 +263,7 @@ cc_library(
         ":es3_common",
         "//xrtl/base:geometry",
         "//xrtl/base:ref_ptr",
+        "@com_google_absl//absl/strings",
     ],
 )
 
