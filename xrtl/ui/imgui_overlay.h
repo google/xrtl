@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <memory>
+#include <mutex>
 
 #include "third_party/dear_imgui/imgui.h"
 #include "xrtl/gfx/context.h"
@@ -126,6 +127,9 @@ class ImGuiOverlay : public Control::InputListener {
 
   // ImGui context, owned by us.
   ImGuiContext* imgui_context_ = nullptr;
+  // A lock that must be held whenever the imgui_context_ is bound on the
+  // calling thread.
+  std::mutex imgui_mutex_;
 
   // Previous timestamp of the last frame start.
   std::chrono::microseconds last_frame_now_micros_{0};
