@@ -115,6 +115,35 @@ cc_library(
 )
 
 cc_library(
+    name = "env",
+    srcs = ["env.cc"],
+    hdrs = ["env.h"],
+    deps = [
+        ":macros",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ] + select({
+        "//xrtl/tools/target_platform:windows": [
+            "//xrtl/port/windows/base:win32_env",
+        ],
+        "//conditions:default": [
+            "//xrtl/port/common/base:posix_env",
+        ],
+    }),
+)
+
+cc_library(
+    name = "env_hdrs",
+    hdrs = ["env.h"],
+    visibility = ["//xrtl/port:ports_only"],
+    deps = [
+        ":macros",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_library(
     name = "flags",
     hdrs = ["flags.h"],
     deps = [

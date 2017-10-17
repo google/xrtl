@@ -82,6 +82,15 @@ cc_library(
 )
 
 cc_library(
+    name = "posix_env",
+    srcs = ["posix_env.cc"],
+    deps = [
+        "//xrtl/base:env_hdrs",
+        "//xrtl/base:logging",
+    ],
+)
+
+cc_library(
     name = "posix_logging_sink",
     srcs = ["posix_logging_sink.cc"],
     deps = [

@@ -16,6 +16,7 @@
 
 #include <cstdio>
 
+#include "xrtl/base/env.h"
 #include "xrtl/testing/gtest.h"
 #include "xrtl/tools/target_platform/target_platform.h"
 
@@ -61,7 +62,7 @@ TEST(FileUtilTest, MakeOutputFilePath) {
 
   // Attempt to open the file for writing. This will fail if the directories
   // don't exist or we don't have write access to the file.
-  FILE* some_output_file = std::fopen(some_output_path.c_str(), "w");
+  FILE* some_output_file = std::fopen(some_output_path.c_str(), "wb");
   EXPECT_NE(nullptr, some_output_file);
   std::fclose(some_output_file);
 }
@@ -91,7 +92,12 @@ TEST(FileUtilTest, MakeTempFile) {
     temp_file_fd = temp_file.fd();
   }
   EXPECT_EQ(nullptr, std::fopen(temp_file_path.c_str(), "rb"));
+#if defined(XRTL_PLATFORM_WINDOWS)
+  // Windows dies in debug mode.
+  EXPECT_DEATH_IF_SUPPORTED(DCHECK_EQ(-1, ::dup(temp_file_fd)), "");
+#else
   EXPECT_EQ(-1, ::dup(temp_file_fd));
+#endif  // XRTL_PLATFORM_WINDOWS
 }
 
 // Tests path joining under scenarios with relative and absolute paths.
@@ -107,14 +113,14 @@ TEST(FileUtilTest, JoinPathParts) {
 
 // Tests making full directory trees.
 TEST(FileUtilTest, MakeDirectories) {
-  const char* test_outdir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
-  std::string output_path = test_outdir ? test_outdir : "";
+  std::string output_path =
+      Env::GetValueOrDefault("TEST_UNDECLARED_OUTPUTS_DIR", Env::temp_path());
 
   // Attempt to create a file in the directory we will create below. Since it
   // shouldn't exist yet the open should fail.
   std::string output_file_path =
       FileUtil::JoinPathParts(output_path, "dir0/dir1/dir2/file");
-  FILE* output_file = std::fopen(output_file_path.c_str(), "w");
+  FILE* output_file = std::fopen(output_file_path.c_str(), "wb");
   EXPECT_EQ(nullptr, output_file);
 
   // Make a simple directory.
@@ -128,7 +134,7 @@ TEST(FileUtilTest, MakeDirectories) {
       FileUtil::JoinPathParts(output_path, "dir0/dir1/dir2")));
 
   // Now try to open a file in the output path. It should succeed.
-  output_file = std::fopen(output_file_path.c_str(), "w");
+  output_file = std::fopen(output_file_path.c_str(), "wb");
   EXPECT_NE(nullptr, output_file);
   std::fclose(output_file);
 }
@@ -143,7 +149,7 @@ TEST(FileUtilTest, LoadFile) {
   // Load a file with actual contents.
   auto text_file_opt = FileUtil::LoadFile("xrtl/testing/testdata/text_file");
   EXPECT_TRUE(text_file_opt);
-  const char kTextFileContents[] = "hello world!\n";
+  const char kTextFileContents[] = "hello world!";
   EXPECT_EQ(std::strlen(kTextFileContents), text_file_opt.value().size());
   EXPECT_EQ(0, std::memcmp(text_file_opt.value().data(), kTextFileContents,
                            std::strlen(kTextFileContents)));
@@ -164,7 +170,7 @@ TEST(FileUtilTest, LoadTextFile) {
   auto text_file_opt =
       FileUtil::LoadTextFile("xrtl/testing/testdata/text_file");
   EXPECT_TRUE(text_file_opt);
-  EXPECT_STREQ("hello world!\n", text_file_opt.value().c_str());
+  EXPECT_STREQ("hello world!", text_file_opt.value().c_str());
 
   // Try to load a file that is not present in the manifest.
   EXPECT_FALSE(FileUtil::LoadTextFile("invalid/file/path"));

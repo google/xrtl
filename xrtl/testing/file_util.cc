@@ -15,7 +15,6 @@
 #include "xrtl/testing/file_util.h"
 
 #include <fcntl.h>
-#include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -27,12 +26,14 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/str_split.h"
+#include "xrtl/base/env.h"
 #include "xrtl/base/logging.h"
 #include "xrtl/base/tracing.h"
 #include "xrtl/tools/target_platform/target_platform.h"
 
 #if defined(XRTL_PLATFORM_WINDOWS)
 #include <direct.h>
+#include <io.h>
 #define PLATFORM_MKDIR(p, unused) ::_mkdir(p)
 #define PLATFORM_STAT _stat
 #define S_IRUSR _S_IREAD
@@ -48,6 +49,20 @@ namespace testing {
 
 namespace {
 
+// Returns the name of the workspace, either from TEST_WORKSPACE or derived
+// from the binary.
+std::string GetWorkspaceName(absl::string_view executable_path) {
+  auto env_value = Env::GetValue("TEST_WORKSPACE");
+  if (env_value) {
+    // Provided by test runner.
+    return env_value.value();
+  }
+  // TODO(benvanik): look for a WORKSPACE file and try to use that. We'd need to
+  //                 parse it to find the workspace(name = "foo") definition.
+  LOG(WARNING) << "No TEST_WORKSPACE; assuming xrtl";
+  return "xrtl";
+}
+
 // Returns true if the given path is /absolute.
 bool IsPathAbsolute(absl::string_view path) {
   if (path.size() > 0 && path[0] == '/') {
@@ -60,14 +75,26 @@ bool IsPathAbsolute(absl::string_view path) {
   return false;
 }
 
+std::string FixPath(absl::string_view path) {
+#if defined(XRTL_PLATFORM_WINDOWS)
+  if (path.size() > 0 && path[0] == '/') {
+    return std::string(path.substr(1));
+  } else {
+    return std::string(path);
+  }
+#else
+  return std::string(path);
+#endif  // XRTL_PLATFORM_WINDOWS
+}
+
 }  // namespace
 
 TempFile::TempFile(std::string path, int fd)
-    : path_(std::move(path)), fd_(fd) {}
+    : path_(std::move(path)), fd_(fd), close_fd_(::dup(fd)) {}
 
 TempFile::~TempFile() {
-  if (fd_ != -1) {
-    ::close(fd_);
+  if (close_fd_ != -1) {
+    ::close(close_fd_);
   }
   ::unlink(path_.c_str());
 }
@@ -85,9 +112,11 @@ void FileUtil::LoadFileManifest(const std::string& executable_path) {
   // TODO(benvanik): atexit deleter; ASAN seems ok with this.
   file_manifest_ = new FileManifest();
 
+  // Query workspace name from either TEST_WORKSPACE or dir scanning.
+  file_manifest_->workspace_name = GetWorkspaceName(executable_path);
+
   // TEST_SRCDIR will point to runfiles when running under bazel test.
-  const char* test_srcdir = std::getenv("TEST_SRCDIR");
-  std::string runfiles_path = test_srcdir ? test_srcdir : "";
+  std::string runfiles_path = Env::GetValueOrDefault("TEST_SRCDIR", "");
   if (runfiles_path.empty()) {
     // Running outside of bazel test. Use module path to infer runfiles.
     size_t last_slash =
@@ -95,9 +124,14 @@ void FileUtil::LoadFileManifest(const std::string& executable_path) {
     if (last_slash != std::string::npos) {
       std::string executable_parent = executable_path.substr(0, last_slash);
       std::string executable_name = executable_path.substr(last_slash + 1);
-      runfiles_path = executable_parent + "/" + executable_name + ".runfiles";
+      runfiles_path =
+          JoinPathParts(executable_parent, executable_name + ".runfiles");
+      runfiles_path =
+          JoinPathParts(runfiles_path, file_manifest_->workspace_name);
     }
   }
+  file_manifest_->runfiles_path = runfiles_path;
+
   std::string manifest_path = JoinPathParts(runfiles_path, "MANIFEST");
 
   // Parse relative path -> absolute path pairs line by line.
@@ -137,7 +171,7 @@ absl::optional<std::string> FileUtil::ResolvePath(
     // Prefix relative paths with the workspace name since that's how they
     // appear in the MANIFEST file.
     std::string target_path =
-        JoinPathParts(std::getenv("TEST_WORKSPACE"), relative_path);
+        JoinPathParts(file_manifest_->workspace_name, relative_path);
     for (auto file_path_pair : file_manifest_->path_mappings) {
       if (file_path_pair.first == target_path) {
         return file_path_pair.second;
@@ -161,12 +195,8 @@ std::string FileUtil::MakeOutputFilePath(absl::string_view base_name) {
   // TEST_UNDECLARED_OUTPUTS_DIR will point to a writeable path when running
   // under bazel where outputs should be placed. These will get saved during
   // test runs on CIs so they can be viewed later.
-  const char* test_outdir = std::getenv("TEST_UNDECLARED_OUTPUTS_DIR");
-  std::string output_path = test_outdir ? test_outdir : "";
-
-  // TODO(benvanik): fallback to C++ temp path.
-  CHECK(!output_path.empty()) << "TEST_UNDECLARED_OUTPUTS_DIR not specified";
-
+  std::string output_path =
+      Env::GetValueOrDefault("TEST_UNDECLARED_OUTPUTS_DIR", Env::temp_path());
   std::string output_file_path = JoinPathParts(output_path, base_name);
 
   // Ensure output path exists.
@@ -181,12 +211,8 @@ std::string FileUtil::MakeOutputFilePath(absl::string_view base_name) {
 
 TempFile FileUtil::MakeTempFile(absl::string_view base_name) {
   // TEST_TMPDIR will point to a writeable temp path when running under bazel.
-  const char* test_tmpdir = std::getenv("TEST_TMPDIR");
-  std::string tmp_path = test_tmpdir ? test_tmpdir : "";
-
-  // TODO(benvanik): fallback to C++ temp path.
-  CHECK(!tmp_path.empty()) << "TEST_TMPDIR not specified";
-
+  std::string tmp_path =
+      Env::GetValueOrDefault("TEST_TMPDIR", Env::temp_path());
   std::string template_path = JoinPathParts(tmp_path, base_name) + "XXXXXX";
 
   int fd = -1;
@@ -231,7 +257,8 @@ bool FileUtil::MakeDirectories(absl::string_view path) {
   for (size_t i = 0; i < path_parts.size(); ++i) {
     if (path_parts[i].empty()) continue;
     absl::StrAppend(&current_path, "/", path_parts[i]);
-    int mkdir_result = PLATFORM_MKDIR(current_path.c_str(), S_IRWXU);
+    std::string abs_path = FixPath(current_path);
+    int mkdir_result = PLATFORM_MKDIR(abs_path.c_str(), S_IRWXU);
     if (mkdir_result == -1 && errno != EEXIST) {
       LOG(ERROR) << "Failed to create test directory at " << current_path << " "
                  << mkdir_result << " (for full path " << path << ")";

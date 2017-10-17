@@ -16,6 +16,16 @@ cc_library(
 )
 
 cc_library(
+    name = "win32_env",
+    srcs = ["win32_env.cc"],
+    deps = [
+        ":windows_headers",
+        "//xrtl/base:env_hdrs",
+        "//xrtl/base:logging",
+    ],
+)
+
+cc_library(
     name = "win32_system_clock",
     srcs = ["win32_system_clock.cc"],
     hdrs = ["win32_system_clock.h"],
