@@ -17,6 +17,7 @@
 
 #include <functional>
 
+#include "xrtl/gfx/context.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_pixel_format.h"
 #include "xrtl/gfx/es3/es3_queue_object.h"
@@ -45,11 +46,10 @@ class ES3Image : public Image, public ES3QueueObject {
                                 Image::LayerRange layer_range) override;
   ref_ptr<ImageView> CreateView(Image::Type type, PixelFormat format) override;
 
-  bool ReadData(LayerRange source_range, void* data,
-                size_t data_length) override;
-
-  bool WriteData(LayerRange target_range, const void* data,
-                 size_t data_length) override;
+  void ReadDataRegionsOnQueue(absl::Span<const ReadImageRegion> data_regions)
+      XRTL_REQUIRES_GL_CONTEXT;
+  void WriteDataRegionsOnQueue(absl::Span<const WriteImageRegion> data_regions)
+      XRTL_REQUIRES_GL_CONTEXT;
 
  private:
   void Release() override;

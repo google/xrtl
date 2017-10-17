@@ -162,7 +162,8 @@ class TriangleFullExample : private Control::Listener {
 
     // Write data directly into the buffer.
     // A real app would want to use a staging buffer.
-    if (!triangle_buffer_->WriteData(0, kVertexData, sizeof(kVertexData))) {
+    if (!context_->WriteBufferData(triangle_buffer_,
+                                   {{0, kVertexData, sizeof(kVertexData)}})) {
       LOG(ERROR) << "Failed to write data into geometry buffer";
       return false;
     }
@@ -203,8 +204,9 @@ class TriangleFullExample : private Control::Listener {
 
     // Write data directly into the image.
     // A real app would want to use a staging buffer.
-    if (!grid_image_->WriteData(grid_image_->entire_range(), image_data.data(),
-                                image_data.size() * 4)) {
+    if (!context_->WriteImageData(
+            grid_image_, {{grid_image_->entire_range(), image_data.data(),
+                           image_data.size() * 4}})) {
       LOG(ERROR) << "Failed to write data into texture image";
       return false;
     }

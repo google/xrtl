@@ -57,7 +57,9 @@ ES3Queue::~ES3Queue() {
 
 void ES3Queue::EnqueueCommandBuffers(
     absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    std::function<void()> pre_callback,
     absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+    std::function<void()> post_callback,
     absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
   // Presentation queues cannot handle command buffers.
@@ -69,8 +71,10 @@ void ES3Queue::EnqueueCommandBuffers(
   }
   queue_entry->wait_queue_fences = {wait_queue_fences.begin(),
                                     wait_queue_fences.end()};
+  queue_entry->pre_callback = std::move(pre_callback);
   queue_entry->command_buffers = {command_buffers.begin(),
                                   command_buffers.end()};
+  queue_entry->post_callback = std::move(post_callback);
   queue_entry->signal_queue_fences = {signal_queue_fences.begin(),
                                       signal_queue_fences.end()};
   queue_entry->signal_handle = std::move(signal_handle);
@@ -82,7 +86,7 @@ void ES3Queue::EnqueueCommandBuffers(
   queue_work_pending_event_->Set();
 }
 
-void ES3Queue::EnqueueCallback(
+void ES3Queue::EnqueueContextCallback(
     ref_ptr<ES3PlatformContext> exclusive_context,
     absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
     std::function<void()> callback,
@@ -96,7 +100,7 @@ void ES3Queue::EnqueueCallback(
   queue_entry->exclusive_context = std::move(exclusive_context);
   queue_entry->wait_queue_fences = {wait_queue_fences.begin(),
                                     wait_queue_fences.end()};
-  queue_entry->callback = std::move(callback);
+  queue_entry->pre_callback = std::move(callback);
   queue_entry->signal_queue_fences = {signal_queue_fences.begin(),
                                       signal_queue_fences.end()};
   queue_entry->signal_handle = std::move(signal_handle);
@@ -119,7 +123,7 @@ void ES3Queue::EnqueueObjectCallback(
   }
   queue_entry->exclusive_context = std::move(exclusive_context);
   auto callback_baton = MoveToLambda(callback);
-  queue_entry->callback = [obj, release_callback, callback_baton]() {
+  queue_entry->pre_callback = [obj, release_callback, callback_baton]() {
     callback_baton.value();
     release_callback(obj);
   };
@@ -145,7 +149,7 @@ bool ES3Queue::SyncObjectCallback(
   queue_entry->exclusive_context = std::move(exclusive_context);
   auto callback_baton = MoveToLambda(callback);
   bool result = false;
-  queue_entry->callback = [callback_baton, &result]() {
+  queue_entry->pre_callback = [callback_baton, &result]() {
     result = callback_baton.value();
   };
   queue_entry->signal_handle = signal_handle;
@@ -266,6 +270,11 @@ void ES3Queue::RunQueue() {
           std::chrono::nanoseconds::max());
     }
 
+    // Execute pre-callback prior to running command buffers.
+    if (queue_entry->pre_callback) {
+      queue_entry->pre_callback();
+    }
+
     // Execute command buffers.
     if (!queue_entry->command_buffers.empty()) {
       if (!implementation_command_buffer) {
@@ -275,9 +284,9 @@ void ES3Queue::RunQueue() {
                             implementation_command_buffer.get());
     }
 
-    // Execute callback.
-    if (queue_entry->callback) {
-      queue_entry->callback();
+    // Execute post-callback after running command buffers.
+    if (queue_entry->post_callback) {
+      queue_entry->post_callback();
     }
 
     // Signal queue fences.

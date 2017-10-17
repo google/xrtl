@@ -54,9 +54,9 @@ class GraphicsTestTest : public GraphicsTest {
 
     // Write data directly into the image.
     // A real app would want to use a staging buffer.
-    if (!grid_image->WriteData(grid_image->entire_range(),
-                               grid_image_buffer->data(),
-                               grid_image_buffer->data_size())) {
+    if (!test_context()->WriteImageData(
+            grid_image, {{grid_image->entire_range(), grid_image_buffer->data(),
+                          grid_image_buffer->data_size()}})) {
       LOG(ERROR) << "Failed to write data into texture image";
       return nullptr;
     }

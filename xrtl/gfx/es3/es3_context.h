@@ -110,6 +110,40 @@ class ES3Context : public Context {
 
   WaitResult WaitUntilQueuesIdle(OperationQueueMask queue_mask) override;
 
+  bool ReadBufferData(ref_ptr<Buffer> source_buffer,
+                      absl::Span<const ReadBufferRegion> data_regions) override;
+  bool ReadBufferData(absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+                      ref_ptr<Buffer> source_buffer,
+                      absl::Span<const ReadBufferRegion> data_regions,
+                      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+                      ref_ptr<Event> signal_handle) override;
+
+  bool WriteBufferData(
+      ref_ptr<Buffer> target_buffer,
+      absl::Span<const WriteBufferRegion> data_regions) override;
+  bool WriteBufferData(
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      ref_ptr<Buffer> target_buffer,
+      absl::Span<const WriteBufferRegion> data_regions,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle) override;
+
+  bool ReadImageData(ref_ptr<Image> source_image,
+                     absl::Span<const ReadImageRegion> data_regions) override;
+  bool ReadImageData(absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+                     ref_ptr<Image> source_image,
+                     absl::Span<const ReadImageRegion> data_regions,
+                     absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+                     ref_ptr<Event> signal_handle) override;
+
+  bool WriteImageData(ref_ptr<Image> target_image,
+                      absl::Span<const WriteImageRegion> data_regions) override;
+  bool WriteImageData(absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+                      ref_ptr<Image> target_image,
+                      absl::Span<const WriteImageRegion> data_regions,
+                      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+                      ref_ptr<Event> signal_handle) override;
+
  private:
   static void QueueThreadMain(void* param);
   void RunQueue();

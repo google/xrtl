@@ -22,35 +22,6 @@ namespace gfx {
 
 class Buffer;
 
-// A bitmask specifying properties for a memory type.
-enum class MemoryType {
-  // Memory allocated with this type is the most efficient for device access.
-  kDeviceLocal = 1 << 0,
-
-  // Memory allocated with this type can be mapped for host access using
-  // Resource::MapMemory.
-  kHostVisible = 1 << 1,
-
-  // The host cache management commands MappedMemory::Flush and
-  // MappedMemory::Invalidate are not needed to flush host writes
-  // to the device or make device writes visible to the host, respectively.
-  kHostCoherent = 1 << 2,
-
-  // Memory allocated with this type is cached on the host. Host memory accesses
-  // to uncached memory are slower than to cached memory, however uncached
-  // memory is always host coherent.
-  kHostCached = 1 << 3,
-
-  // Memory is lazily allocated by the hardware and only exists transiently.
-  // This is the optimal mode for memory used only between subpasses in the same
-  // render pass, as it can often be kept entirely on-tile and discard when the
-  // render pass ends.
-  // The memory type only allows device access to the memory. Memory types must
-  // not have both this and kHostVisible set.
-  kLazilyAllocated = 1 << 4,
-};
-XRTL_BITMASK(MemoryType);
-
 // Defines how memory will be accessed in a mapped memory region.
 enum class MemoryAccess {
   // Memory will be read. Do not attempt to write to the buffer.
@@ -174,20 +145,6 @@ class Buffer : public Resource {
 
   // Bitmask describing how the buffer is to be used.
   Usage usage_mask() const { return usage_mask_; }
-
-  // Reads a block of data from the resource at the given offset.
-  //
-  // Returns false if the read could not be performed; either the bounds are
-  // out of range or the memory type does not support reading in this way.
-  virtual bool ReadData(size_t source_offset, void* data,
-                        size_t data_length) = 0;
-
-  // Writes a block of data into the resource at the given offset.
-  //
-  // Returns false if the write could not be performed; either the bounds are
-  // out of range or the memory type does not support writing in this way.
-  virtual bool WriteData(size_t target_offset, const void* data,
-                         size_t data_length) = 0;
 
   // Maps the resource memory for direct access from the host.
   // This requires that the resource was allocated with

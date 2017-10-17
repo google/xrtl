@@ -18,6 +18,7 @@
 #include <functional>
 
 #include "xrtl/gfx/buffer.h"
+#include "xrtl/gfx/context.h"
 #include "xrtl/gfx/es3/es3_common.h"
 #include "xrtl/gfx/es3/es3_queue_object.h"
 
@@ -36,10 +37,10 @@ class ES3Buffer : public Buffer, public ES3QueueObject {
   GLenum target() const { return target_; }
   GLuint buffer_id() const { return buffer_id_; }
 
-  bool ReadData(size_t source_offset, void* data, size_t data_length) override;
-
-  bool WriteData(size_t target_offset, const void* data,
-                 size_t data_length) override;
+  void ReadDataRegionsOnQueue(absl::Span<const ReadBufferRegion> data_regions)
+      XRTL_REQUIRES_GL_CONTEXT;
+  void WriteDataRegionsOnQueue(absl::Span<const WriteBufferRegion> data_regions)
+      XRTL_REQUIRES_GL_CONTEXT;
 
   void InvalidateMappedMemory(size_t byte_offset, size_t byte_length) override;
 

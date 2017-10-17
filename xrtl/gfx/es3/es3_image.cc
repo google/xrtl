@@ -140,13 +140,13 @@ ref_ptr<ImageView> ES3Image::CreateView(Image::Type type, PixelFormat format) {
   return CreateView(type, format, entire_range());
 }
 
-bool ES3Image::ReadData(LayerRange source_range, void* data,
-                        size_t data_length) {
-  WTF_SCOPE0("ES3Image#ReadData");
-  return queue_->EnqueueObjectCallbackAndWait(this, [this, source_range,
-                                                     data]() {
-    WTF_SCOPE0("ES3Image#ReadData:queue");
-    ES3PlatformContext::CheckHasContextLock();
+void ES3Image::ReadDataRegionsOnQueue(
+    absl::Span<const ReadImageRegion> data_regions) {
+  WTF_SCOPE0("ES3Image#ReadDataRegionsOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
+
+  for (const ReadImageRegion& data_region : data_regions) {
+    const auto& source_range = data_region.source_layer_range;
 
     // TODO(benvanik): support automatically splitting across layers.
     DCHECK_EQ(1, source_range.layer_count);
@@ -171,14 +171,14 @@ bool ES3Image::ReadData(LayerRange source_range, void* data,
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
                            texture_id_, 0);
     glReadPixels(0, 0, size().width, size().height, texture_params_.format,
-                 texture_params_.type, data);
+                 texture_params_.type, data_region.target_data);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, 0, 0);
     glDeleteFramebuffers(1, &framebuffer);
 
     // Flip the data we read vertically.
     size_t row_stride = format().ComputeDataSize(size().width, 1);
     int row_count = size().height;
-    uint8_t* byte_data = reinterpret_cast<uint8_t*>(data);
+    uint8_t* byte_data = reinterpret_cast<uint8_t*>(data_region.target_data);
     for (int y = 0; y < row_count / 2; ++y) {
       size_t src_offset_1 = y * row_stride;
       size_t src_offset_2 = (row_count - 1 - y) * row_stride;
@@ -188,43 +188,40 @@ bool ES3Image::ReadData(LayerRange source_range, void* data,
         byte_data[src_offset_2 + i] = t;
       }
     }
-
-    return true;
-  });
+  }
 }
 
-bool ES3Image::WriteData(LayerRange target_range, const void* data,
-                         size_t data_length) {
-  WTF_SCOPE0("ES3Image#WriteData");
-  return queue_->EnqueueObjectCallbackAndWait(
-      this, [this, target_range, data]() {
-        WTF_SCOPE0("ES3Image#WriteData:queue");
-        ES3PlatformContext::CheckHasContextLock();
-        // TODO(benvanik): support automatically splitting across layers.
-        //                 We'll need to shift around in data for each layer.
-        DCHECK_EQ(1, target_range.layer_count);
+void ES3Image::WriteDataRegionsOnQueue(
+    absl::Span<const WriteImageRegion> data_regions) {
+  WTF_SCOPE0("ES3Image#WriteData:queue");
+  ES3PlatformContext::CheckHasContextLock();
 
-        GLenum target = target_;
-        int level = target_range.mip_level;
-        if (type() == Type::kCube) {
-          // Special cubemap handling, where layer index changes the target.
-          DCHECK_LT(target_range.base_layer, 6);
-          target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + target_range.base_layer;
-        }
+  for (const WriteImageRegion& data_region : data_regions) {
+    const auto& target_range = data_region.target_layer_range;
+    // TODO(benvanik): support automatically splitting across layers.
+    //                 We'll need to shift around in data for each layer.
+    DCHECK_EQ(1, target_range.layer_count);
 
-        // TODO(benvanik): support arrays/3D textures.
-        DCHECK(type() == Type::k2D || type() == Type::kCube);
-        // TODO(benvanik): support compressed texture types.
-        DCHECK_NE(texture_params_.type, GL_NONE);
+    GLenum target = target_;
+    int level = target_range.mip_level;
+    if (type() == Type::kCube) {
+      // Special cubemap handling, where layer index changes the target.
+      DCHECK_LT(target_range.base_layer, 6);
+      target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + target_range.base_layer;
+    }
 
-        // Upload image.
-        glBindTexture(target, texture_id_);
-        glTexSubImage2D(target, level, 0, 0, size().width, size().height,
-                        texture_params_.format, texture_params_.type, data);
-        glBindTexture(target, 0);
+    // TODO(benvanik): support arrays/3D textures.
+    DCHECK(type() == Type::k2D || type() == Type::kCube);
+    // TODO(benvanik): support compressed texture types.
+    DCHECK_NE(texture_params_.type, GL_NONE);
 
-        return true;
-      });
+    // Upload image.
+    glBindTexture(target, texture_id_);
+    glTexSubImage2D(target, level, 0, 0, size().width, size().height,
+                    texture_params_.format, texture_params_.type,
+                    data_region.source_data);
+    glBindTexture(target, 0);
+  }
 }
 
 }  // namespace es3

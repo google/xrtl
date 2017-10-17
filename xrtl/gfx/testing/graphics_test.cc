@@ -188,9 +188,10 @@ bool GraphicsTest::CompareImage(
       xrtl::testing::ImageBuffer::Create(data_width, data_height, channels);
 
   // Read back the image contents into a byte buffer.
-  if (!image_view->image()->ReadData(image_view->layer_range(),
-                                     image_buffer->data(),
-                                     image_buffer->data_size())) {
+  if (!test_context()->ReadImageData(
+          image_view->image(),
+          {{image_view->layer_range(), image_buffer->data(),
+            image_buffer->data_size()}})) {
     LOG(ERROR) << "Failed to read back image contents";
     return false;
   }

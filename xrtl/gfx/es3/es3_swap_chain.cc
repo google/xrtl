@@ -310,14 +310,14 @@ SwapChain::PresentResult ES3PlatformSwapChain::PresentImage(
   // Submit present request to the context queue.
   auto self = ref_ptr<ES3PlatformSwapChain>(this);
   auto self_token = MoveToLambda(self);
-  present_queue_->EnqueueCallback(platform_context_, {wait_queue_fence},
-                                  [self_token, surface_size, image_index,
-                                   image_view, present_time_utc_millis]() {
-                                    self_token.value->PerformPresent(
-                                        surface_size, image_index, image_view,
-                                        present_time_utc_millis);
-                                  },
-                                  {}, nullptr);
+  present_queue_->EnqueueContextCallback(
+      platform_context_, {wait_queue_fence},
+      [self_token, surface_size, image_index, image_view,
+       present_time_utc_millis]() {
+        self_token.value->PerformPresent(surface_size, image_index, image_view,
+                                         present_time_utc_millis);
+      },
+      {}, nullptr);
 
   return resize_required ? PresentResult::kResizeRequired
                          : PresentResult::kSuccess;
