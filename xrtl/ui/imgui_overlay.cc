@@ -43,19 +43,24 @@ using gfx::ShaderModule;
 class ImGuiLock {
  public:
   ImGuiLock() = default;
-  explicit ImGuiLock(ImGuiContext* imgui_context)
-      : imgui_context_(imgui_context) {
-    DCHECK(imgui_context_ != nullptr);
+  explicit ImGuiLock(ImGuiContext* imgui_context, std::mutex* imgui_mutex)
+      : imgui_context_(imgui_context), imgui_mutex_(imgui_mutex) {
+    DCHECK_NE(imgui_context_, nullptr);
+    imgui_mutex->lock();
     previous_context_ = ImGui::GetCurrentContext();
     ImGui::SetCurrentContext(imgui_context_);
   }
-  ~ImGuiLock() { ImGui::SetCurrentContext(previous_context_); }
+  ~ImGuiLock() {
+    ImGui::SetCurrentContext(previous_context_);
+    imgui_mutex_->unlock();
+  }
 
   ImGuiIO* io() const { return &ImGui::GetIO(); }
 
  private:
   ImGuiContext* previous_context_ = nullptr;
   ImGuiContext* imgui_context_ = nullptr;
+  std::mutex* imgui_mutex_ = nullptr;
 };
 
 struct PushConstants {
@@ -114,7 +119,7 @@ bool ImGuiOverlay::Initialize(ref_ptr<gfx::Context> context) {
     return false;
   }
 
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   imgui.io()->UserData = this;
 
   // Setup imgui for use.
@@ -363,7 +368,8 @@ bool ImGuiOverlay::InitializePipeline() {
 void ImGuiOverlay::BeginFrame(ref_ptr<gfx::Framebuffer> framebuffer) {
   // Set our context active. It'll remain active on this thread until the frame
   // end.
-  DCHECK(ImGui::GetCurrentContext() == nullptr);
+  imgui_mutex_.lock();
+  DCHECK_EQ(ImGui::GetCurrentContext(), nullptr);
   ImGui::SetCurrentContext(imgui_context_);
 
   // Configure the imgui context for this frame.
@@ -391,7 +397,7 @@ void ImGuiOverlay::RenderDrawListsThunk(ImDrawData* data) {
   // NOTE: this is only ever called from within ImGui::Render so we know a
   //       context is valid.
   ImGuiIO* io = &ImGui::GetIO();
-  DCHECK(io->UserData != nullptr);
+  DCHECK_NE(io->UserData, nullptr);
   auto overlay = reinterpret_cast<ImGuiOverlay*>(io->UserData);
   overlay->RenderDrawLists(data);
 }
@@ -537,6 +543,7 @@ ref_ptr<gfx::QueueFence> ImGuiOverlay::EndFrame(
   // Clear the current context until the next frame.
   framebuffer_.reset();
   ImGui::SetCurrentContext(nullptr);
+  imgui_mutex_.unlock();
 
   // Submit the command buffer.
   ref_ptr<gfx::QueueFence> signal_fence = context_->CreateQueueFence();
@@ -596,30 +603,30 @@ void PopulateEventData(const MouseEvent& ev, ImGuiIO* io) {
 }  // namespace
 
 void ImGuiOverlay::OnKeyDown(ref_ptr<Control> target, const KeyboardEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   PopulateEventData(ev, true, imgui.io());
 }
 
 void ImGuiOverlay::OnKeyUp(ref_ptr<Control> target, const KeyboardEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   PopulateEventData(ev, false, imgui.io());
 }
 
 void ImGuiOverlay::OnKeyPress(ref_ptr<Control> target,
                               const KeyboardEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   if (ev.key_code() > 0 && ev.key_code() < 0x10000) {
     imgui.io()->AddInputCharacter(ev.key_code());
   }
 }
 
 void ImGuiOverlay::OnMouseDown(ref_ptr<Control> target, const MouseEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   PopulateEventData(ev, imgui.io());
 }
 
 void ImGuiOverlay::OnMouseUp(ref_ptr<Control> target, const MouseEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   PopulateEventData(ev, imgui.io());
 }
 
@@ -628,12 +635,12 @@ void ImGuiOverlay::OnMouseOut(ref_ptr<Control> target, const MouseEvent& ev) {
 }
 
 void ImGuiOverlay::OnMouseMove(ref_ptr<Control> target, const MouseEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   PopulateEventData(ev, imgui.io());
 }
 
 void ImGuiOverlay::OnMouseWheel(ref_ptr<Control> target, const MouseEvent& ev) {
-  ImGuiLock imgui(imgui_context_);
+  ImGuiLock imgui(imgui_context_, &imgui_mutex_);
   PopulateEventData(ev, imgui.io());
 }
 
