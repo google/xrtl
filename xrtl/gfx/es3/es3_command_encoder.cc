@@ -494,10 +494,32 @@ void ES3RenderPassCommandEncoder::WaitFences(
 void ES3RenderPassCommandEncoder::ClearColorAttachment(
     int color_attachment_index, ClearColor clear_color,
     absl::Span<const ClearRect> clear_rects) {
+  ComponentFormat component_format =
+      framebuffer_->attachments()[color_attachment_index]
+          ->format()
+          .component_format();
   for (const auto& clear_rect : clear_rects) {
     glScissor(clear_rect.rect.origin.x, clear_rect.rect.origin.y,
               clear_rect.rect.size.width, clear_rect.rect.size.height);
-    glClearBufferuiv(GL_COLOR, color_attachment_index, clear_color.uint_value);
+    switch (component_format) {
+      default:
+      case ComponentFormat::kSFloat:
+      case ComponentFormat::kUFloat:
+      case ComponentFormat::kSNorm:
+      case ComponentFormat::kUNorm:
+      case ComponentFormat::kSrgb:
+        glClearBufferfv(GL_COLOR, color_attachment_index,
+                        clear_color.float_value);
+        break;
+      case ComponentFormat::kSInt:
+        glClearBufferiv(GL_COLOR, color_attachment_index,
+                        clear_color.sint_value);
+        break;
+      case ComponentFormat::kUInt:
+        glClearBufferuiv(GL_COLOR, color_attachment_index,
+                         clear_color.uint_value);
+        break;
+    }
   }
   glScissor(scissor_rect_.origin.x, scissor_rect_.origin.y,
             scissor_rect_.size.width, scissor_rect_.size.height);

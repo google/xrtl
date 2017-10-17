@@ -337,6 +337,9 @@ class Context : public RefObject<Context> {
   // This performs no synchronization with the underlying memory and callers
   // must ensure that there are no commands in-flight that modify the data.
   //
+  // The source buffer must have been allocated with a usage mode including
+  // Buffer::Usage::kTransferSource.
+  //
   // This may block on the context queues and should be avoided. Prefer to use
   // the asynchronous ReadBufferData or a command buffer with CopyBuffer into a
   // staging buffer instead.
@@ -355,6 +358,9 @@ class Context : public RefObject<Context> {
   // read has completed and data has been fully populated.
   //
   // The data pointer provided must remain valid until the read completes.
+  //
+  // The source buffer must have been allocated with a usage mode including
+  // Buffer::Usage::kTransferSource.
   //
   // This is roughly equivalent to submitting a command buffer with a
   // CopyBuffer into a mapped staging buffer and memcpy'ing the data out,
@@ -392,6 +398,9 @@ class Context : public RefObject<Context> {
   // This performs no synchronization with the underlying memory and callers
   // must ensure that there are no commands in-flight that modify the data.
   //
+  // The target buffer must have been allocated with a usage mode including
+  // Buffer::Usage::kTransferTarget.
+  //
   // This may block on the context queues and should be avoided. Prefer to use
   // the asynchronous WriteBufferData or a command buffer with CopyBuffer from a
   // staging buffer instead.
@@ -412,6 +421,9 @@ class Context : public RefObject<Context> {
   // write has completed and buffer has been fully populated.
   //
   // The data pointer provided must remain valid until the write completes.
+  //
+  // The target buffer must have been allocated with a usage mode including
+  // Buffer::Usage::kTransferTarget.
   //
   // This is roughly equivalent to submitting a command buffer with a
   // CopyBuffer from a mapped staging buffer, only it may be slightly more
@@ -449,6 +461,9 @@ class Context : public RefObject<Context> {
   // This performs no synchronization with the underlying memory and callers
   // must ensure that there are no commands in-flight that modify the data.
   //
+  // The source image must have been allocated with a usage mode including
+  // Image::Usage::kTransferSource.
+  //
   // This may block on the context queues and should be avoided. Prefer to use
   // the asynchronous ReadImageData or a command buffer with CopyImageToBuffer
   // into a staging buffer instead.
@@ -469,6 +484,9 @@ class Context : public RefObject<Context> {
   // read has completed and data has been fully populated.
   //
   // The data pointer provided must remain valid until the read completes.
+  //
+  // The source image must have been allocated with a usage mode including
+  // Image::Usage::kTransferSource.
   //
   // This is roughly equivalent to submitting a command buffer with a
   // CopyImageToBuffer into a mapped staging buffer and memcpy'ing the data out,
@@ -506,6 +524,9 @@ class Context : public RefObject<Context> {
   // This performs no synchronization with the underlying memory and callers
   // must ensure that there are no commands in-flight that modify the data.
   //
+  // The target image must have been allocated with a usage mode including
+  // Image::Usage::kTransferTarget.
+  //
   // This may block on the context queues and should be avoided. Prefer to use
   // the asynchronous WriteImageData or a command buffer with CopyBufferToImage
   // from a staging buffer instead.
@@ -526,6 +547,9 @@ class Context : public RefObject<Context> {
   // write has completed and buffer has been fully populated.
   //
   // The data pointer provided must remain valid until the write completes.
+  //
+  // The target image must have been allocated with a usage mode including
+  // Image::Usage::kTransferTarget.
   //
   // This is roughly equivalent to submitting a command buffer with a
   // CopyBufferToImage from a mapped staging buffer, only it may be slightly

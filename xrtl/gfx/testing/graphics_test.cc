@@ -23,6 +23,7 @@ namespace testing {
 
 namespace {
 
+using xrtl::testing::diffing::DataDiffer;
 using xrtl::testing::diffing::DiffProvider;
 using xrtl::testing::diffing::DiffResult;
 
@@ -97,8 +98,9 @@ bool GraphicsTest::SubmitAndWait(ref_ptr<CommandBuffer> command_buffer) {
 
   // Submit the command buffer for execution.
   // We'll just wait for full idle so no need for synchronization primitives.
+  auto signal_queue_fence = test_context()->CreateQueueFence();
   Context::SubmitResult submit_result =
-      test_context()->Submit({command_buffer}, {});
+      test_context()->Submit({command_buffer}, {signal_queue_fence});
   switch (submit_result) {
     case Context::SubmitResult::kSuccess:
       break;
@@ -125,46 +127,76 @@ bool GraphicsTest::SubmitAndWait(ref_ptr<CommandBuffer> command_buffer) {
 
 bool GraphicsTest::CompareBuffer(
     const std::vector<uint8_t>& expected_data, ref_ptr<Buffer> buffer,
+    size_t buffer_offset, size_t buffer_length,
     xrtl::testing::diffing::DiffPublishMode publish_mode,
     xrtl::testing::diffing::DataDiffer::Options options) {
   WTF_SCOPE0("GraphicsTest#CompareBuffer");
-  CHECK(false) << "Not yet implemented";
-  return false;
+
+  // Prepare our heap buffer for population.
+  std::vector<uint8_t> actual_data;
+  actual_data.resize(buffer_length);
+
+  // Read back the buffer contents into a byte buffer.
+  if (!test_context()->ReadBufferData(
+          buffer, {{buffer_offset, actual_data.data(), actual_data.size()}})) {
+    LOG(ERROR) << "Failed to read back buffer context";
+    return false;
+  }
+
+  // Diff buffers.
+  DataDiffer::Result diff_result =
+      DataDiffer::DiffBuffers(expected_data, actual_data, std::move(options));
+  return diff_result.equivalent;
 }
 
 bool GraphicsTest::SubmitAndCompareBuffer(
     const std::vector<uint8_t>& expected_data,
     ref_ptr<CommandBuffer> command_buffer, ref_ptr<Buffer> buffer,
+    size_t buffer_offset, size_t buffer_length,
     xrtl::testing::diffing::DiffPublishMode publish_mode,
     xrtl::testing::diffing::DataDiffer::Options options) {
   WTF_SCOPE0("GraphicsTest#SubmitAndCompareBuffer");
   if (!SubmitAndWait(std::move(command_buffer))) {
     return false;
   }
-  return CompareBuffer(expected_data, std::move(buffer), publish_mode,
-                       std::move(options));
+  return CompareBuffer(expected_data, std::move(buffer), buffer_offset,
+                       buffer_length, publish_mode, std::move(options));
 }
 
 bool GraphicsTest::CompareBuffer(
-    absl::string_view test_key, ref_ptr<Buffer> buffer,
-    xrtl::testing::diffing::DiffPublishMode publish_mode,
+    absl::string_view test_key, ref_ptr<Buffer> buffer, size_t buffer_offset,
+    size_t buffer_length, xrtl::testing::diffing::DiffPublishMode publish_mode,
     xrtl::testing::diffing::DataDiffer::Options options) {
   WTF_SCOPE0("GraphicsTest#CompareBuffer");
-  CHECK(false) << "Not yet implemented";
-  return false;
+
+  // Prepare our heap buffer for population.
+  std::vector<uint8_t> actual_data;
+  actual_data.resize(buffer_length);
+
+  // Read back the buffer contents into a byte buffer.
+  if (!test_context()->ReadBufferData(
+          buffer, {{buffer_offset, actual_data.data(), actual_data.size()}})) {
+    LOG(ERROR) << "Failed to read back buffer context";
+    return false;
+  }
+
+  // Defer comparison to the diff provider.
+  DiffResult diff_result = test_case_state_->diff_provider->CompareData(
+      test_key, actual_data, publish_mode, std::move(options));
+  return diff_result == DiffResult::kEquivalent;
 }
 
 bool GraphicsTest::SubmitAndCompareBuffer(
     absl::string_view test_key, ref_ptr<CommandBuffer> command_buffer,
-    ref_ptr<Buffer> buffer,
+    ref_ptr<Buffer> buffer, size_t buffer_offset, size_t buffer_length,
     xrtl::testing::diffing::DiffPublishMode publish_mode,
     xrtl::testing::diffing::DataDiffer::Options options) {
   WTF_SCOPE0("GraphicsTest#SubmitAndCompareBuffer");
   if (!SubmitAndWait(std::move(command_buffer))) {
     return false;
   }
-  return CompareBuffer(test_key, std::move(buffer), publish_mode,
-                       std::move(options));
+  return CompareBuffer(test_key, std::move(buffer), buffer_offset,
+                       buffer_length, publish_mode, std::move(options));
 }
 
 bool GraphicsTest::CompareImage(
@@ -177,8 +209,8 @@ bool GraphicsTest::CompareImage(
   CHECK(image_view->type() == Image::Type::k2D)
       << "Only k2D images are supported right now";
   // TODO(benvanik): support for other formats/conversion.
-  CHECK(image_view->format() == PixelFormats::kR8G8B8A8UNorm)
-      << "Only kR8G8B8A8UNorm images are supported right now";
+  CHECK(image_view->format() == PixelFormats::kB8G8R8A8UNorm)
+      << "Only kB8G8R8A8UNorm images are supported right now";
 
   // Prepare our heap buffer for population.
   int data_width = image_view->size().width;

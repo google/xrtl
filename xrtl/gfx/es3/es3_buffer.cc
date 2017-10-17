@@ -14,6 +14,7 @@
 
 #include "xrtl/gfx/es3/es3_buffer.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "xrtl/base/tracing.h"
@@ -92,12 +93,53 @@ void ES3Buffer::ReadDataRegionsOnQueue(
     absl::Span<const ReadBufferRegion> data_regions) {
   WTF_SCOPE0("ES3Buffer#ReadDataRegionsOnQueue");
   ES3PlatformContext::CheckHasContextLock();
+
+  // Must be mappable.
+  bool is_mappable =
+      any(memory_heap_->memory_type_mask() & MemoryType::kHostVisible);
+  DCHECK(is_mappable);
+  if (!is_mappable) {
+    LOG(ERROR) << "Attempting to map a non-host-visible memory buffer";
+    DCHECK(false);
+    return;
+  }
+
+  // Find the full range desired for reading so that we don't need to map the
+  // entire buffer. If the ranges are very disjoint this will suck, but it's
+  // likely cheaper than doing N map/unmaps.
+  size_t min_offset = allocation_size() - 1;
+  size_t max_offset = 0;
+  for (const ReadBufferRegion& data_region : data_regions) {
+    min_offset = std::min(min_offset, data_region.source_offset);
+    max_offset = std::max(max_offset, data_region.source_offset +
+                                          data_region.target_data_length - 1);
+  }
+
+  // TODO(benvanik): validate and align offset/length.
+
+  // Map the buffer.
+  // TODO(benvanik): find a better way to do this, like APPLE_client_storage.
+  glBindBuffer(target_, buffer_id_);
+  const uint8_t* buffer_data_ptr =
+      reinterpret_cast<const uint8_t*>(glMapBufferRange(
+          target_, min_offset, max_offset - min_offset + 1, GL_MAP_READ_BIT));
+  if (!buffer_data_ptr) {
+    LOG(ERROR) << "Failed to map buffer";
+    DCHECK(false);
+    return;
+  }
+
   for (const ReadBufferRegion& data_region : data_regions) {
     DCHECK_LE(data_region.source_offset + data_region.target_data_length,
               allocation_size());
-    // TODO(benvanik): buffer readback.
-    DCHECK(false);
+    std::memcpy(data_region.target_data,
+                buffer_data_ptr + data_region.source_offset - min_offset,
+                data_region.target_data_length);
   }
+
+  GLboolean unmapped = glUnmapBuffer(target_);
+  glBindBuffer(target_, 0);
+  DCHECK_EQ(unmapped, GL_TRUE);
 }
 
 void ES3Buffer::WriteDataRegionsOnQueue(
