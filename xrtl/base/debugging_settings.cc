@@ -44,14 +44,6 @@ SANITIZER_HOOK_ATTRIBUTE const char* __lsan_default_suppressions() {
   // More information:
   // http://dev.chromium.org/developers/testing/leaksanitizer
   return
-      // Swiftshader leaks a bit.
-      "leak:libEGL.so\n"
-      "leak:libGLESv2.so\n"
-      // "leak:sw::*\n"
-      // "leak:Ice::*\n"
-      // "leak:eglQueryString\n"
-      // "leak:eglMakeCurrent\n"
-
       // End.
       "";
 }
