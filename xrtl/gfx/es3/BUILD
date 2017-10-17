@@ -15,6 +15,7 @@ cc_library(
         ":es3_queue_object",
         "//xrtl/base:tracing",
         "//xrtl/gfx:buffer",
+        "//xrtl/gfx:context",
         "//xrtl/gfx:memory_heap",
     ],
 )
@@ -70,10 +71,12 @@ cc_library(
     srcs = ["es3_context.cc"],
     hdrs = ["es3_context.h"],
     deps = [
+        ":es3_buffer",
         ":es3_command_buffer",
         ":es3_command_fence",
         ":es3_common",
         ":es3_framebuffer",
+        ":es3_image",
         ":es3_image_view",
         ":es3_memory_heap",
         ":es3_pipeline",
@@ -147,6 +150,7 @@ cc_library(
         ":es3_platform_context",
         ":es3_queue_object",
         "//xrtl/base:tracing",
+        "//xrtl/gfx:context",
         "//xrtl/gfx:image",
         "//xrtl/gfx:memory_heap",
     ],

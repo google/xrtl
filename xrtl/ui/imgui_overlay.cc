@@ -214,8 +214,9 @@ bool ImGuiOverlay::InitializeFont(ImGuiIO* io) {
   // Upload initial font altas data.
   // TODO(benvanik): is invalidation possible?
   // TODO(benvanik): probably worth transitioning to optimal.
-  if (!font_image->WriteData(font_image->entire_range(), pixel_data,
-                             width * height * 4)) {
+  if (!context_->WriteImageData(font_image,
+                                {{font_image->entire_range(), pixel_data,
+                                  static_cast<size_t>(width * height * 4)}})) {
     LOG(ERROR) << "Failed to write data into font image";
     return false;
   }

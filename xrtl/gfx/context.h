@@ -44,6 +44,78 @@
 namespace xrtl {
 namespace gfx {
 
+// Defines a ReadBufferData buffer region.
+struct ReadBufferRegion {
+  ReadBufferRegion() = default;
+  ReadBufferRegion(size_t source_offset, void* target_data,
+                   size_t target_data_length)
+      : source_offset(source_offset),
+        target_data(target_data),
+        target_data_length(target_data_length) {}
+
+  // Byte offset into the source buffer to read the data from.
+  size_t source_offset = 0;
+
+  // Target data buffer to populate with the buffer contents.
+  // The buffer must remain valid for the duration of the read operation.
+  void* target_data = nullptr;
+  size_t target_data_length = 0;
+};
+
+// Defines a WriteBufferData buffer region.
+struct WriteBufferRegion {
+  WriteBufferRegion() = default;
+  WriteBufferRegion(size_t target_offset, const void* source_data,
+                    size_t source_data_length)
+      : target_offset(target_offset),
+        source_data(source_data),
+        source_data_length(source_data_length) {}
+
+  // Byte offset into the target buffer to write the data to.
+  size_t target_offset = 0;
+
+  // Source data buffer to read buffer contents from.
+  // The buffer must remain valid for the duration of the write operation.
+  const void* source_data = nullptr;
+  size_t source_data_length = 0;
+};
+
+// Defines a ReadImageData buffer region.
+struct ReadImageRegion {
+  ReadImageRegion() = default;
+  ReadImageRegion(Image::LayerRange source_layer_range, void* target_data,
+                  size_t target_data_length)
+      : source_layer_range(source_layer_range),
+        target_data(target_data),
+        target_data_length(target_data_length) {}
+
+  // Layer range in the source image to read the data from.
+  Image::LayerRange source_layer_range;
+
+  // Target data buffer to populate with the image contents.
+  // The buffer must remain valid for the duration of the read operation.
+  void* target_data = nullptr;
+  size_t target_data_length = 0;
+};
+
+// Defines a WriteImageData buffer region.
+struct WriteImageRegion {
+  WriteImageRegion() = default;
+  WriteImageRegion(Image::LayerRange target_layer_range,
+                   const void* source_data, size_t source_data_length)
+      : target_layer_range(target_layer_range),
+        source_data(source_data),
+        source_data_length(source_data_length) {}
+
+  // Layer range in the target image to write the data to.
+  Image::LayerRange target_layer_range;
+
+  // Source data buffer to read image contents from.
+  // The buffer must remain valid for the duration of the write operation.
+  const void* source_data = nullptr;
+  size_t source_data_length = 0;
+};
+
 // A device (or multi-device) context.
 // This is the primary interface used to allocate resources and manage command
 // queues.
@@ -260,6 +332,232 @@ class Context : public RefObject<Context> {
   // the device may be left in an indeterminate state (usually the cause of a
   // device loss).
   virtual WaitResult WaitUntilQueuesIdle(OperationQueueMask queue_mask) = 0;
+
+  // Reads blocks of data from the buffer at the given offsets.
+  // This performs no synchronization with the underlying memory and callers
+  // must ensure that there are no commands in-flight that modify the data.
+  //
+  // This may block on the context queues and should be avoided. Prefer to use
+  // the asynchronous ReadBufferData or a command buffer with CopyBuffer into a
+  // staging buffer instead.
+  //
+  // Returns true if the number of requested bytes were written into the buffer.
+  //
+  // Usage:
+  //  std::vector<uint8_t> buffer(source_buffer_size);
+  //  ReadBufferData(source_buffer, {{0, buffer.data(), buffer.size()}});
+  virtual bool ReadBufferData(
+      ref_ptr<Buffer> source_buffer,
+      absl::Span<const ReadBufferRegion> data_regions) = 0;
+
+  // Reads blocks of data from the buffer at the given offsets.
+  // This synchronizes on the provided queue fences and then signals once the
+  // read has completed and data has been fully populated.
+  //
+  // The data pointer provided must remain valid until the read completes.
+  //
+  // This is roughly equivalent to submitting a command buffer with a
+  // CopyBuffer into a mapped staging buffer and memcpy'ing the data out,
+  // only it may be slightly more efficient than replicating this yourself on
+  // certain implementations. The internal staging buffer may require
+  // reallocation and can cause unpredictable memory growth if not careful. If
+  // deep pipelining of reads is required it's best to implement that yourself.
+  //
+  // Returns true if the asynchronous read request is issued. The source buffer
+  // is available for writes as soon as the signal_queue_fences are signaled and
+  // the read heap data is available on the CPU after the signal_handle has been
+  // signaled.
+  virtual bool ReadBufferData(
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      ref_ptr<Buffer> source_buffer,
+      absl::Span<const ReadBufferRegion> data_regions,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle) = 0;
+  bool ReadBufferData(ref_ptr<QueueFence> wait_queue_fence,
+                      ref_ptr<Buffer> source_buffer,
+                      absl::Span<const ReadBufferRegion> data_regions,
+                      ref_ptr<QueueFence> signal_queue_fence) {
+    return ReadBufferData({wait_queue_fence}, std::move(source_buffer),
+                          data_regions, {signal_queue_fence}, nullptr);
+  }
+  bool ReadBufferData(ref_ptr<QueueFence> wait_queue_fence,
+                      ref_ptr<Buffer> source_buffer,
+                      absl::Span<const ReadBufferRegion> data_regions,
+                      ref_ptr<Event> signal_handle) {
+    return ReadBufferData({wait_queue_fence}, std::move(source_buffer),
+                          data_regions, {}, std::move(signal_handle));
+  }
+
+  // Writes blocks of data into the buffer at the given offsets.
+  // This performs no synchronization with the underlying memory and callers
+  // must ensure that there are no commands in-flight that modify the data.
+  //
+  // This may block on the context queues and should be avoided. Prefer to use
+  // the asynchronous WriteBufferData or a command buffer with CopyBuffer from a
+  // staging buffer instead.
+  //
+  // Returns true if the number of requested bytes were read from the data
+  // pointer.
+  //
+  // Usage:
+  //  std::vector<uint8_t> buffer(source_buffer_size);
+  //  // ... fill buffer ...
+  //  WriteBufferData(target_buffer, {{0, buffer.data(), buffer.size()}});
+  virtual bool WriteBufferData(
+      ref_ptr<Buffer> target_buffer,
+      absl::Span<const WriteBufferRegion> data_regions) = 0;
+
+  // Writes blocks of data into the buffer at the given offsets.
+  // This synchronizes on the provided queue fences and then signals once the
+  // write has completed and buffer has been fully populated.
+  //
+  // The data pointer provided must remain valid until the write completes.
+  //
+  // This is roughly equivalent to submitting a command buffer with a
+  // CopyBuffer from a mapped staging buffer, only it may be slightly more
+  // efficient than replicating this yourself on certain implementations. The
+  // internal staging buffer may require reallocation and can cause
+  // unpredictable memory growth if not careful. If deep pipelining of writes is
+  // required it's best to implement that yourself.
+  //
+  // Returns true if the asynchronous write request is issued. The target buffer
+  // is available for reads as soon as the signal_queue_fences are signaled and
+  // the source heap data may be freed after the signal_handle has been
+  // signaled.
+  virtual bool WriteBufferData(
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      ref_ptr<Buffer> target_buffer,
+      absl::Span<const WriteBufferRegion> data_regions,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle) = 0;
+  bool WriteBufferData(ref_ptr<QueueFence> wait_queue_fence,
+                       ref_ptr<Buffer> target_buffer,
+                       absl::Span<const WriteBufferRegion> data_regions,
+                       ref_ptr<QueueFence> signal_queue_fence) {
+    return WriteBufferData({wait_queue_fence}, std::move(target_buffer),
+                           data_regions, {signal_queue_fence}, nullptr);
+  }
+  bool WriteBufferData(ref_ptr<QueueFence> wait_queue_fence,
+                       ref_ptr<Buffer> target_buffer,
+                       absl::Span<const WriteBufferRegion> data_regions,
+                       ref_ptr<Event> signal_handle) {
+    return WriteBufferData({wait_queue_fence}, std::move(target_buffer),
+                           data_regions, {}, std::move(signal_handle));
+  }
+
+  // Reads blocks of data from the image at the given source layer ranges.
+  // This performs no synchronization with the underlying memory and callers
+  // must ensure that there are no commands in-flight that modify the data.
+  //
+  // This may block on the context queues and should be avoided. Prefer to use
+  // the asynchronous ReadImageData or a command buffer with CopyImageToBuffer
+  // into a staging buffer instead.
+  //
+  // Returns true if the number of requested bytes were populated into the data
+  // pointer.
+  //
+  // Usage:
+  //  std::vector<uint8_t> buffer(source_image_size);
+  //  ReadImageData(source_image, {{source_image->entire_range(),
+  //                                buffer.data(), buffer.size()}});
+  virtual bool ReadImageData(
+      ref_ptr<Image> source_image,
+      absl::Span<const ReadImageRegion> data_regions) = 0;
+
+  // Reads blocks of data from the image at the given source layer ranges.
+  // This synchronizes on the provided queue fences and then signals once the
+  // read has completed and data has been fully populated.
+  //
+  // The data pointer provided must remain valid until the read completes.
+  //
+  // This is roughly equivalent to submitting a command buffer with a
+  // CopyImageToBuffer into a mapped staging buffer and memcpy'ing the data out,
+  // only it may be slightly more efficient than replicating this yourself on
+  // certain implementations. The internal staging buffer may require
+  // reallocation and can cause unpredictable memory growth if not careful. If
+  // deep pipelining of reads is required it's best to implement that yourself.
+  //
+  // Returns true if the asynchronous read request is issued. The source image
+  // is available for writes as soon as the signal_queue_fences are signaled and
+  // the read heap data is available on the CPU after the signal_handle has been
+  // signaled.
+  virtual bool ReadImageData(
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      ref_ptr<Image> source_image,
+      absl::Span<const ReadImageRegion> data_regions,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle) = 0;
+  bool ReadImageData(ref_ptr<QueueFence> wait_queue_fence,
+                     ref_ptr<Image> source_image,
+                     absl::Span<const ReadImageRegion> data_regions,
+                     ref_ptr<QueueFence> signal_queue_fence) {
+    return ReadImageData({wait_queue_fence}, std::move(source_image),
+                         data_regions, {signal_queue_fence}, nullptr);
+  }
+  bool ReadImageData(ref_ptr<QueueFence> wait_queue_fence,
+                     ref_ptr<Image> source_image,
+                     absl::Span<const ReadImageRegion> data_regions,
+                     ref_ptr<Event> signal_handle) {
+    return ReadImageData({wait_queue_fence}, std::move(source_image),
+                         data_regions, {}, std::move(signal_handle));
+  }
+
+  // Writes blocks of data into the image at the given target layer ranges.
+  // This performs no synchronization with the underlying memory and callers
+  // must ensure that there are no commands in-flight that modify the data.
+  //
+  // This may block on the context queues and should be avoided. Prefer to use
+  // the asynchronous WriteImageData or a command buffer with CopyBufferToImage
+  // from a staging buffer instead.
+  //
+  // Returns true if the number of requested bytes were written to the image.
+  //
+  // Usage:
+  //  std::vector<uint8_t> buffer(source_buffer_size);
+  //  // ... fill buffer ...
+  //  WriteImageData(target_image, {{target_image->entire_range(),
+  //                                 buffer.data(), buffer.size()}});
+  virtual bool WriteImageData(
+      ref_ptr<Image> target_image,
+      absl::Span<const WriteImageRegion> data_regions) = 0;
+
+  // Writes blocks of data into the image at the given target layer ranges.
+  // This synchronizes on the provided queue fences and then signals once the
+  // write has completed and buffer has been fully populated.
+  //
+  // The data pointer provided must remain valid until the write completes.
+  //
+  // This is roughly equivalent to submitting a command buffer with a
+  // CopyBufferToImage from a mapped staging buffer, only it may be slightly
+  // more efficient than replicating this yourself on certain implementations.
+  // The internal staging buffer may require reallocation and can cause
+  // unpredictable memory growth if not careful. If deep pipelining of writes is
+  // required it's best to implement that yourself.
+  //
+  // Returns true if the asynchronous write request is issued. The target image
+  // is available for reads as soon as the signal_queue_fences are signaled and
+  // the source heap data may be freed after the signal_handle has been
+  // signaled.
+  virtual bool WriteImageData(
+      absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      ref_ptr<Image> target_image,
+      absl::Span<const WriteImageRegion> data_regions,
+      absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+      ref_ptr<Event> signal_handle) = 0;
+  bool WriteImageData(ref_ptr<QueueFence> wait_queue_fence,
+                      ref_ptr<Image> target_image,
+                      absl::Span<const WriteImageRegion> data_regions,
+                      ref_ptr<QueueFence> signal_queue_fence) {
+    return WriteImageData({wait_queue_fence}, std::move(target_image),
+                          data_regions, {signal_queue_fence}, nullptr);
+  }
+  bool WriteImageData(ref_ptr<QueueFence> wait_queue_fence,
+                      ref_ptr<Image> target_image,
+                      absl::Span<const WriteImageRegion> data_regions,
+                      ref_ptr<Event> signal_handle) {
+    return WriteImageData({wait_queue_fence}, std::move(target_image),
+                          data_regions, {}, std::move(signal_handle));
+  }
 
  protected:
   Context(absl::Span<const ref_ptr<Device>> devices, Device::Features features)

@@ -15,9 +15,11 @@
 #include "xrtl/gfx/es3/es3_context.h"
 
 #include "xrtl/base/tracing.h"
+#include "xrtl/gfx/es3/es3_buffer.h"
 #include "xrtl/gfx/es3/es3_command_buffer.h"
 #include "xrtl/gfx/es3/es3_command_fence.h"
 #include "xrtl/gfx/es3/es3_framebuffer.h"
+#include "xrtl/gfx/es3/es3_image.h"
 #include "xrtl/gfx/es3/es3_image_view.h"
 #include "xrtl/gfx/es3/es3_memory_heap.h"
 #include "xrtl/gfx/es3/es3_pipeline.h"
@@ -80,6 +82,8 @@ ref_ptr<CommandFence> ES3Context::CreateCommandFence() {
 ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
     ShaderModule::DataFormat data_format, const void* data,
     size_t data_length) {
+  WTF_SCOPE0("ES3Context#CreateShaderModule");
+
   // If this gets slow we could move this to a dedicated translation/compilation
   // thread.
   auto shader = make_ref<ES3Shader>("main");
@@ -88,6 +92,7 @@ ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
     LOG(ERROR) << "Failed to translate SPIR-V binary";
     return nullptr;
   }
+
   auto shader_module = make_ref<ES3ShaderModule>(primary_queue_.get());
   shader_module->Register(shader);
   return shader_module;
@@ -212,6 +217,8 @@ ref_ptr<ResourceSet> ES3Context::CreateResourceSet(
 ref_ptr<SwapChain> ES3Context::CreateSwapChain(
     ref_ptr<ui::Control> control, SwapChain::PresentMode present_mode,
     int image_count, absl::Span<const PixelFormat> pixel_formats) {
+  WTF_SCOPE0("ES3Context#CreateSwapChain");
+
   // Shared memory pool for all frame buffer images.
   // TODO(benvanik): pool across swap chains.
   auto memory_heap =
@@ -226,6 +233,7 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
 
 ref_ptr<MemoryHeap> ES3Context::CreateMemoryHeap(MemoryType memory_type_mask,
                                                  size_t heap_size) {
+  WTF_SCOPE0("ES3Context#CreateMemoryHeap");
   return make_ref<ES3MemoryHeap>(primary_queue_.get(), memory_type_mask,
                                  heap_size);
 }
@@ -257,9 +265,10 @@ Context::SubmitResult ES3Context::Submit(
     absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
     absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
     ref_ptr<Event> signal_handle) {
-  primary_queue_->EnqueueCommandBuffers(wait_queue_fences, command_buffers,
-                                        signal_queue_fences,
-                                        std::move(signal_handle));
+  WTF_SCOPE0("ES3Context#Submit");
+  primary_queue_->EnqueueCommandBuffers(
+      wait_queue_fences, nullptr, command_buffers, nullptr, signal_queue_fences,
+      std::move(signal_handle));
   return SubmitResult::kSuccess;
 }
 
@@ -269,6 +278,7 @@ Context::WaitResult ES3Context::WaitUntilQueuesIdle() {
 
 Context::WaitResult ES3Context::WaitUntilQueuesIdle(
     OperationQueueMask queue_mask) {
+  WTF_SCOPE0("ES3Context#WaitUntilQueuesIdle");
   bool any_failed = false;
   if (any(queue_mask &
           (OperationQueueMask::kRender | OperationQueueMask::kCompute |
@@ -279,6 +289,136 @@ Context::WaitResult ES3Context::WaitUntilQueuesIdle(
     any_failed = !presentation_queue_->WaitUntilIdle() || any_failed;
   }
   return any_failed ? WaitResult::kDeviceLost : WaitResult::kSuccess;
+}
+
+bool ES3Context::ReadBufferData(
+    ref_ptr<Buffer> source_buffer,
+    absl::Span<const ReadBufferRegion> data_regions) {
+  WTF_SCOPE0("ES3Context#ReadBufferData:sync");
+  ref_ptr<Event> fence = Event::CreateFence();
+  if (!ReadBufferData({}, std::move(source_buffer), data_regions, {}, fence)) {
+    return false;
+  }
+  return Thread::Wait(fence) == Thread::WaitResult::kSuccess;
+}
+
+bool ES3Context::ReadBufferData(
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    ref_ptr<Buffer> source_buffer,
+    absl::Span<const ReadBufferRegion> data_regions,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+    ref_ptr<Event> signal_handle) {
+  WTF_SCOPE0("ES3Context#ReadBufferData");
+  // TODO(benvanik): staging buffer and copy command buffer.
+  std::vector<ReadBufferRegion> data_regions_copy{data_regions.begin(),
+                                                  data_regions.end()};
+  auto data_regions_baton = MoveToLambda(data_regions_copy);
+  primary_queue_->EnqueueCommandBuffers(
+      wait_queue_fences,
+      [source_buffer, data_regions_baton]() {
+        WTF_SCOPE0("ES3Context#ReadBufferData:queue");
+        source_buffer.As<ES3Buffer>()->ReadDataRegionsOnQueue(
+            data_regions_baton.value);
+      },
+      {}, nullptr, signal_queue_fences, std::move(signal_handle));
+  return true;
+}
+
+bool ES3Context::WriteBufferData(
+    ref_ptr<Buffer> target_buffer,
+    absl::Span<const WriteBufferRegion> data_regions) {
+  WTF_SCOPE0("ES3Context#WriteBufferData:sync");
+  ref_ptr<Event> fence = Event::CreateFence();
+  if (!WriteBufferData({}, std::move(target_buffer), data_regions, {}, fence)) {
+    return false;
+  }
+  return Thread::Wait(fence) == Thread::WaitResult::kSuccess;
+}
+
+bool ES3Context::WriteBufferData(
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    ref_ptr<Buffer> target_buffer,
+    absl::Span<const WriteBufferRegion> data_regions,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+    ref_ptr<Event> signal_handle) {
+  WTF_SCOPE0("ES3Context#WriteBufferData");
+  // TODO(benvanik): staging buffer and copy command buffer.
+  std::vector<WriteBufferRegion> data_regions_copy{data_regions.begin(),
+                                                   data_regions.end()};
+  auto data_regions_baton = MoveToLambda(data_regions_copy);
+  primary_queue_->EnqueueCommandBuffers(
+      wait_queue_fences,
+      [target_buffer, data_regions_baton]() {
+        WTF_SCOPE0("ES3Context#WriteBufferData:queue");
+        target_buffer.As<ES3Buffer>()->WriteDataRegionsOnQueue(
+            data_regions_baton.value);
+      },
+      {}, nullptr, signal_queue_fences, std::move(signal_handle));
+  return true;
+}
+
+bool ES3Context::ReadImageData(ref_ptr<Image> source_image,
+                               absl::Span<const ReadImageRegion> data_regions) {
+  WTF_SCOPE0("ES3Context#ReadImageData:sync");
+  ref_ptr<Event> fence = Event::CreateFence();
+  if (!ReadImageData({}, std::move(source_image), data_regions, {}, fence)) {
+    return false;
+  }
+  return Thread::Wait(fence) == Thread::WaitResult::kSuccess;
+}
+
+bool ES3Context::ReadImageData(
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    ref_ptr<Image> source_image, absl::Span<const ReadImageRegion> data_regions,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+    ref_ptr<Event> signal_handle) {
+  WTF_SCOPE0("ES3Context#ReadImageData");
+  // TODO(benvanik): staging buffer and copy command buffer.
+  std::vector<ReadImageRegion> data_regions_copy{data_regions.begin(),
+                                                 data_regions.end()};
+  auto data_regions_baton = MoveToLambda(data_regions_copy);
+  primary_queue_->EnqueueCommandBuffers(
+      wait_queue_fences,
+      [source_image, data_regions_baton]() {
+        WTF_SCOPE0("ES3Context#ReadImageData:queue");
+        source_image.As<ES3Image>()->ReadDataRegionsOnQueue(
+            data_regions_baton.value);
+      },
+      {}, nullptr, signal_queue_fences, std::move(signal_handle));
+  return true;
+}
+
+bool ES3Context::WriteImageData(
+    ref_ptr<Image> target_image,
+    absl::Span<const WriteImageRegion> data_regions) {
+  WTF_SCOPE0("ES3Context#WriteImageData:sync");
+  ref_ptr<Event> fence = Event::CreateFence();
+  if (!WriteImageData({}, std::move(target_image), data_regions, {}, fence)) {
+    return false;
+  }
+  return Thread::Wait(fence) == Thread::WaitResult::kSuccess;
+}
+
+bool ES3Context::WriteImageData(
+    absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+    ref_ptr<Image> target_image,
+    absl::Span<const WriteImageRegion> data_regions,
+    absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
+    ref_ptr<Event> signal_handle) {
+  WTF_SCOPE0("ES3Context#WriteImageData");
+  // TODO(benvanik): staging buffer and copy command buffer.
+  std::vector<WriteImageRegion> data_regions_copy{data_regions.begin(),
+                                                  data_regions.end()};
+  auto data_regions_baton = MoveToLambda(data_regions_copy);
+  primary_queue_->EnqueueCommandBuffers(
+      wait_queue_fences,
+      [target_image, data_regions_baton]() {
+        WTF_SCOPE0("ES3Context#WriteImageData:queue");
+        target_image.As<ES3Image>()->WriteDataRegionsOnQueue(
+            data_regions_baton.value);
+      },
+      {}, nullptr, signal_queue_fences, std::move(signal_handle));
+  return true;
 }
 
 }  // namespace es3

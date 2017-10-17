@@ -116,8 +116,8 @@ class TriangleExample : private Control::Listener {
 
     // Write data directly into the buffer.
     // A real app would want to use a staging buffer.
-    bool did_write =
-        triangle_buffer_->WriteData(0, kVertexData, sizeof(kVertexData));
+    bool did_write = context_->WriteBufferData(
+        triangle_buffer_, {{0, kVertexData, sizeof(kVertexData)}});
     CHECK(did_write);
   }
 

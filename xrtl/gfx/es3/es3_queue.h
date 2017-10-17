@@ -56,16 +56,18 @@ class ES3Queue : public ES3ObjectLifetimeQueue {
            ref_ptr<ES3PlatformContext> shared_platform_context);
   ~ES3Queue() override;
 
-  // Enqueues a set of command buffers to be executed from the queue.
+  // Enqueues a set of operations to be executed from the queue.
   void EnqueueCommandBuffers(
       absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
+      std::function<void()> pre_callback,
       absl::Span<const ref_ptr<CommandBuffer>> command_buffers,
+      std::function<void()> post_callback,
       absl::Span<const ref_ptr<QueueFence>> signal_queue_fences,
       ref_ptr<Event> signal_handle);
 
   // Enqueues a callback to be executed from the queue.
   // The provided context will be locked exclusively during the execution.
-  void EnqueueCallback(
+  void EnqueueContextCallback(
       ref_ptr<ES3PlatformContext> exclusive_context,
       absl::Span<const ref_ptr<QueueFence>> wait_queue_fences,
       std::function<void()> callback,
@@ -91,8 +93,13 @@ class ES3Queue : public ES3ObjectLifetimeQueue {
     absl::InlinedVector<ref_ptr<QueueFence>, 4> wait_queue_fences;
 
     // Command buffers, callback, or object operation to perform.
+    // If more than one of the following is provided they are executed as:
+    //   - pre_callback
+    //   - all command_buffers
+    //   - post_callback
+    std::function<void()> pre_callback;
     absl::InlinedVector<ref_ptr<CommandBuffer>, 4> command_buffers;
-    std::function<void()> callback;
+    std::function<void()> post_callback;
 
     // Fences that will be signaled after the entry has processed.
     absl::InlinedVector<ref_ptr<QueueFence>, 4> signal_queue_fences;

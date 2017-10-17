@@ -87,28 +87,30 @@ void ES3Buffer::DeallocateOnQueue() {
 
 ref_ptr<MemoryHeap> ES3Buffer::memory_heap() const { return memory_heap_; }
 
-bool ES3Buffer::ReadData(size_t source_offset, void* data, size_t data_length) {
-  WTF_SCOPE0("ES3Buffer#ReadData");
+void ES3Buffer::ReadDataRegionsOnQueue(
+    absl::Span<const ReadBufferRegion> data_regions) {
+  WTF_SCOPE0("ES3Buffer#ReadDataRegionsOnQueue");
   ES3PlatformContext::CheckHasContextLock();
-  DCHECK_LE(source_offset + data_length, allocation_size());
-  // TODO(benvanik): buffer.
-  DCHECK(false);
-  return false;
+  for (const ReadBufferRegion& data_region : data_regions) {
+    DCHECK_LE(data_region.source_offset + data_region.target_data_length,
+              allocation_size());
+    // TODO(benvanik): buffer readback.
+    DCHECK(false);
+  }
 }
 
-bool ES3Buffer::WriteData(size_t target_offset, const void* data,
-                          size_t data_length) {
-  WTF_SCOPE0("ES3Buffer#WriteData");
-  return queue_->EnqueueObjectCallbackAndWait(
-      this, [this, target_offset, data, data_length]() {
-        WTF_SCOPE0("ES3Buffer#WriteData:queue");
-        ES3PlatformContext::CheckHasContextLock();
-        DCHECK_LE(target_offset + data_length, allocation_size());
-        glBindBuffer(target_, buffer_id_);
-        glBufferSubData(target_, target_offset, data_length, data);
-        glBindBuffer(target_, 0);
-        return true;
-      });
+void ES3Buffer::WriteDataRegionsOnQueue(
+    absl::Span<const WriteBufferRegion> data_regions) {
+  WTF_SCOPE0("ES3Buffer#WriteDataRegionsOnQueue");
+  ES3PlatformContext::CheckHasContextLock();
+  glBindBuffer(target_, buffer_id_);
+  for (const WriteBufferRegion& data_region : data_regions) {
+    DCHECK_LE(data_region.target_offset + data_region.source_data_length,
+              allocation_size());
+    glBufferSubData(target_, data_region.target_offset,
+                    data_region.source_data_length, data_region.source_data);
+  }
+  glBindBuffer(target_, 0);
 }
 
 bool ES3Buffer::MapMemory(MemoryAccess memory_access, size_t* byte_offset,
