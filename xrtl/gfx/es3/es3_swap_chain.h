@@ -63,6 +63,8 @@ class ES3PlatformSwapChain : public ES3SwapChain {
                        absl::Span<const PixelFormat> pixel_formats);
   ~ES3PlatformSwapChain() override;
 
+  void PrepareAllocation() override;
+
   ResizeResult Resize(Size2D new_size) override;
 
   AcquireResult AcquireNextImage(std::chrono::milliseconds timeout_millis,

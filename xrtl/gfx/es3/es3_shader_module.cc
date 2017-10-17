@@ -22,10 +22,13 @@ namespace es3 {
 
 ES3ShaderModule::ES3ShaderModule(ES3ObjectLifetimeQueue* queue)
     : queue_(queue) {
-  queue_->EnqueueObjectAllocation(this);
 }
 
 ES3ShaderModule::~ES3ShaderModule() = default;
+
+void ES3ShaderModule::PrepareAllocation() {
+  queue_->EnqueueObjectAllocation(this);
+}
 
 void ES3ShaderModule::Release() { queue_->EnqueueObjectDeallocation(this); }
 

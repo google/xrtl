@@ -50,6 +50,8 @@ class ES3QueueFence : public QueueFence, public ES3QueueObject {
   explicit ES3QueueFence(ES3ObjectLifetimeQueue* queue);
   ~ES3QueueFence() override;
 
+  void PrepareAllocation() override;
+
   FenceState QueryState() override;
 
   // Issues a fence. If this is called from a thread that has a GL context it is

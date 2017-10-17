@@ -26,11 +26,13 @@ ES3ComputePipeline::ES3ComputePipeline(ES3ObjectLifetimeQueue* queue,
     : ComputePipeline(std::move(pipeline_layout), std::move(shader_module),
                       entry_point),
       queue_(queue),
-      program_(std::move(program)) {
-  queue_->EnqueueObjectAllocation(this);
-}
+      program_(std::move(program)) {}
 
 ES3ComputePipeline::~ES3ComputePipeline() = default;
+
+void ES3ComputePipeline::PrepareAllocation() {
+  queue_->EnqueueObjectAllocation(this);
+}
 
 void ES3ComputePipeline::Release() { queue_->EnqueueObjectDeallocation(this); }
 
@@ -49,11 +51,13 @@ ES3RenderPipeline::ES3RenderPipeline(ES3ObjectLifetimeQueue* queue,
                      render_subpass, std::move(render_state),
                      std::move(shader_stages)),
       queue_(queue),
-      program_(std::move(program)) {
-  queue_->EnqueueObjectAllocation(this);
-}
+      program_(std::move(program)) {}
 
 ES3RenderPipeline::~ES3RenderPipeline() = default;
+
+void ES3RenderPipeline::PrepareAllocation() {
+  queue_->EnqueueObjectAllocation(this);
+}
 
 void ES3RenderPipeline::Release() { queue_->EnqueueObjectDeallocation(this); }
 

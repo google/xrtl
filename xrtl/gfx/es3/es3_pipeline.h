@@ -38,6 +38,8 @@ class ES3ComputePipeline : public ComputePipeline, public ES3QueueObject {
                      ref_ptr<ES3Program> program);
   ~ES3ComputePipeline() override;
 
+  void PrepareAllocation() override;
+
   ref_ptr<ES3Program> program() const { return program_; }
 
  private:
@@ -58,6 +60,8 @@ class ES3RenderPipeline : public RenderPipeline, public ES3QueueObject {
                     RenderPipeline::ShaderStages shader_stages,
                     ref_ptr<ES3Program> program);
   ~ES3RenderPipeline() override;
+
+  void PrepareAllocation() override;
 
   ref_ptr<ES3Program> program() const { return program_; }
 

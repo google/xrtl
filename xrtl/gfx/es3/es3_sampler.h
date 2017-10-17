@@ -30,6 +30,8 @@ class ES3Sampler : public Sampler, public ES3QueueObject {
   ES3Sampler(ES3ObjectLifetimeQueue* queue, Params params);
   ~ES3Sampler() override;
 
+  void PrepareAllocation() override;
+
   GLuint sampler_id() const { return sampler_id_; }
 
  private:

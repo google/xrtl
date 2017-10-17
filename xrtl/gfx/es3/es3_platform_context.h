@@ -16,6 +16,7 @@
 #define XRTL_GFX_ES3_ES3_PLATFORM_CONTEXT_H_
 
 #include <mutex>
+#include <string>
 #include <utility>
 
 #include "absl/strings/string_view.h"

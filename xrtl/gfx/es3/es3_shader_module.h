@@ -33,6 +33,8 @@ class ES3ShaderModule : public ShaderModule, public ES3QueueObject {
   explicit ES3ShaderModule(ES3ObjectLifetimeQueue* queue);
   ~ES3ShaderModule() override;
 
+  void PrepareAllocation() override;
+
   // Registers a shader with the shader module.
   // The entry point of the shader must be unique within the module.
   // This is not thread safe and should only be used during initialization.

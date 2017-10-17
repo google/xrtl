@@ -32,6 +32,8 @@ class ES3Buffer : public Buffer, public ES3QueueObject {
             size_t allocation_size, Usage usage_mask);
   ~ES3Buffer() override;
 
+  void PrepareAllocation() override;
+
   ref_ptr<MemoryHeap> memory_heap() const override;
 
   GLenum target() const { return target_; }

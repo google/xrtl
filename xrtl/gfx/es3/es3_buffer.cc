@@ -30,10 +30,11 @@ ES3Buffer::ES3Buffer(ES3ObjectLifetimeQueue* queue,
     : Buffer(allocation_size, usage_mask),
       queue_(queue),
       memory_heap_(std::move(memory_heap)) {
-  queue_->EnqueueObjectAllocation(this);
 }
 
 ES3Buffer::~ES3Buffer() = default;
+
+void ES3Buffer::PrepareAllocation() { queue_->EnqueueObjectAllocation(this); }
 
 void ES3Buffer::Release() {
   memory_heap_->ReleaseBuffer(this);
