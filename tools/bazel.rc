@@ -24,6 +24,7 @@ test --test_output=errors
 
 # https://clang.llvm.org/docs/AddressSanitizer.html
 common:asan --config=clang
+common:asan --cc_output_directory_tag=asan
 common:asan --copt=-DASAN_OPTIONS=\"color=always:malloc_context_size=10:detect_odr_violation=0:detect_stack_use_after_return=1:strip_path_prefix=/proc/self/cwd/\"
 common:asan --copt=-DLSAN_OPTIONS=\"report_objects=1:print_suppressions=1:strip_path_prefix=/proc/self/cwd/\"
 common:asan --strip=never
@@ -37,6 +38,7 @@ common:asan --linkopt=-fsanitize=address
 
 # https://clang.llvm.org/docs/MemorySanitizer.html
 common:msan --config=clang
+common:msan --cc_output_directory_tag=msan
 common:msan --copt=-DMSAN_OPTIONS=\"color=always\"
 common:msan --strip=never
 common:msan --copt=-g
@@ -54,6 +56,7 @@ common:msan --crosstool_top=//tools/crosstool/msan
 
 # https://clang.llvm.org/docs/ThreadSanitizer.html
 common:tsan --config=clang
+common:tsan --cc_output_directory_tag=tsan
 common:tsan --copt=-DTSAN_OPTIONS=\"color=always:print_suppressions=1:strip_path_prefix=/proc/self/cwd/\"
 common:tsan --strip=never
 common:tsan --copt=-DNDEBUG=1  # DCHECKs make tsan sad

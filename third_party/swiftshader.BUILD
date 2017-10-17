@@ -61,6 +61,7 @@ COMMON_COPTS = [
         "/EHsc",
         "/nologo",
         "/Gd",  # Default calling convention
+        "-DNO_SANITIZE_FUNCTION=",
     ],
     "//conditions:default": [
         "-x",
@@ -76,6 +77,7 @@ COMMON_COPTS = [
         "-fno-operator-names",
         "-fno-exceptions",
         "-fvisibility=protected",
+        "-DNO_SANITIZE_FUNCTION=__attribute__((no_sanitize(\\\"function\\\")))",
     ],
 }) + select({
     "@//xrtl/tools/target_platform:android": [
@@ -914,7 +916,6 @@ cc_library(
         "src/OpenGL/compiler/PoolAlloc.cpp",
         "src/OpenGL/compiler/SymbolTable.cpp",
         "src/OpenGL/compiler/TranslatorASM.cpp",
-        "src/OpenGL/compiler/ValidateGlobalInitializer.cpp",
         "src/OpenGL/compiler/ValidateLimitations.cpp",
         "src/OpenGL/compiler/ValidateSwitch.cpp",
         "src/OpenGL/compiler/debug.cpp",
@@ -965,7 +966,6 @@ cc_library(
         "src/OpenGL/compiler/SymbolTable.h",
         "src/OpenGL/compiler/TranslatorASM.h",
         "src/OpenGL/compiler/Types.h",
-        "src/OpenGL/compiler/ValidateGlobalInitializer.h",
         "src/OpenGL/compiler/ValidateLimitations.h",
         "src/OpenGL/compiler/ValidateSwitch.h",
         "src/OpenGL/compiler/debug.h",
@@ -1007,7 +1007,7 @@ cc_library(
 
 genrule(
     name = "libglesv2_exports_lds",
-    srcs = ["src/OpenGL/libGLESv2/exports.map"],
+    srcs = ["src/OpenGL/libGLESv2/libGLESv2.lds"],
     outs = ["libglesv2_exports.lds"],
     cmd = "\n".join([
         "cp $< $@",
@@ -1130,7 +1130,7 @@ cc_binary(
 
 genrule(
     name = "libegl_exports_lds",
-    srcs = ["src/OpenGL/libEGL/exports.map"],
+    srcs = ["src/OpenGL/libEGL/libEGL.lds"],
     outs = ["libegl_exports.lds"],
     cmd = "\n".join([
         "cp $< $@",
