@@ -91,11 +91,14 @@ std::vector<uint8_t> ES3Context::SerializePipelineCache() {
 }
 
 ref_ptr<QueueFence> ES3Context::CreateQueueFence() {
-  return make_ref<ES3QueueFence>(primary_queue_.get());
+  auto queue_fence = make_ref<ES3QueueFence>(primary_queue_.get());
+  queue_fence->PrepareAllocation();
+  return queue_fence;
 }
 
 ref_ptr<CommandFence> ES3Context::CreateCommandFence() {
-  return make_ref<ES3CommandFence>();
+  auto command_fence = make_ref<ES3CommandFence>();
+  return command_fence;
 }
 
 ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
@@ -113,6 +116,7 @@ ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
   }
 
   auto shader_module = make_ref<ES3ShaderModule>(primary_queue_.get());
+  shader_module->PrepareAllocation();
   shader_module->Register(shader);
   return shader_module;
 }
@@ -120,8 +124,9 @@ ref_ptr<ShaderModule> ES3Context::CreateShaderModule(
 ref_ptr<PipelineLayout> ES3Context::CreatePipelineLayout(
     absl::Span<const ref_ptr<ResourceSetLayout>> resource_set_layouts,
     absl::Span<const PipelineLayout::PushConstantRange> push_constant_ranges) {
-  return make_ref<ES3PipelineLayout>(resource_set_layouts,
-                                     push_constant_ranges);
+  auto pipeline_layout =
+      make_ref<ES3PipelineLayout>(resource_set_layouts, push_constant_ranges);
+  return pipeline_layout;
 }
 
 ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
@@ -143,8 +148,11 @@ ref_ptr<ComputePipeline> ES3Context::CreateComputePipeline(
     return nullptr;
   }
 
-  return make_ref<ES3ComputePipeline>(primary_queue_.get(), pipeline_layout,
-                                      shader_module, entry_point, program);
+  auto pipeline =
+      make_ref<ES3ComputePipeline>(primary_queue_.get(), pipeline_layout,
+                                   shader_module, entry_point, program);
+  pipeline->PrepareAllocation();
+  return pipeline;
 }
 
 ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
@@ -217,20 +225,25 @@ ref_ptr<RenderPipeline> ES3Context::CreateRenderPipeline(
   // until first use.
   auto program =
       make_ref<ES3Program>(absl::Span<const ref_ptr<ES3Shader>>(shaders));
-  return make_ref<ES3RenderPipeline>(primary_queue_.get(), pipeline_layout,
-                                     render_pass, render_subpass, render_state,
-                                     shader_stages, program);
+  auto pipeline = make_ref<ES3RenderPipeline>(
+      primary_queue_.get(), pipeline_layout, render_pass, render_subpass,
+      render_state, shader_stages, program);
+  pipeline->PrepareAllocation();
+  return pipeline;
 }
 
 ref_ptr<ResourceSetLayout> ES3Context::CreateResourceSetLayout(
     absl::Span<const BindingSlot> binding_slots) {
-  return make_ref<ES3ResourceSetLayout>(binding_slots);
+  auto resource_set_layout = make_ref<ES3ResourceSetLayout>(binding_slots);
+  return resource_set_layout;
 }
 
 ref_ptr<ResourceSet> ES3Context::CreateResourceSet(
     ref_ptr<ResourceSetLayout> resource_set_layout,
     absl::Span<const BindingValue> binding_values) {
-  return make_ref<ES3ResourceSet>(resource_set_layout, binding_values);
+  auto resource_set =
+      make_ref<ES3ResourceSet>(resource_set_layout, binding_values);
+  return resource_set;
 }
 
 ref_ptr<SwapChain> ES3Context::CreateSwapChain(
@@ -246,34 +259,43 @@ ref_ptr<SwapChain> ES3Context::CreateSwapChain(
 
   ES3Queue* target_presentation_queue =
       presentation_queue_ ? presentation_queue_.get() : primary_queue_.get();
-  return ES3SwapChain::Create(platform_context_, primary_queue_.get(),
-                              target_presentation_queue, std::move(memory_heap),
-                              std::move(control), present_mode, image_count,
-                              pixel_formats);
+  auto swap_chain = ES3SwapChain::Create(
+      platform_context_, primary_queue_.get(), target_presentation_queue,
+      std::move(memory_heap), std::move(control), present_mode, image_count,
+      pixel_formats);
+  swap_chain->PrepareAllocation();
+  return swap_chain;
 }
 
 ref_ptr<MemoryHeap> ES3Context::CreateMemoryHeap(MemoryType memory_type_mask,
                                                  size_t heap_size) {
   WTF_SCOPE0("ES3Context#CreateMemoryHeap");
-  return make_ref<ES3MemoryHeap>(primary_queue_.get(), memory_type_mask,
-                                 heap_size);
+  auto memory_heap = make_ref<ES3MemoryHeap>(primary_queue_.get(),
+                                             memory_type_mask, heap_size);
+  memory_heap->PrepareAllocation();
+  return memory_heap;
 }
 
 ref_ptr<Sampler> ES3Context::CreateSampler(Sampler::Params params) {
-  return make_ref<ES3Sampler>(primary_queue_.get(), params);
+  auto sampler = make_ref<ES3Sampler>(primary_queue_.get(), params);
+  sampler->PrepareAllocation();
+  return sampler;
 }
 
 ref_ptr<RenderPass> ES3Context::CreateRenderPass(
     absl::Span<const RenderPass::AttachmentDescription> attachments,
     absl::Span<const RenderPass::SubpassDescription> subpasses,
     absl::Span<const RenderPass::SubpassDependency> subpass_dependencies) {
-  return make_ref<ES3RenderPass>(attachments, subpasses, subpass_dependencies);
+  auto render_pass =
+      make_ref<ES3RenderPass>(attachments, subpasses, subpass_dependencies);
+  return render_pass;
 }
 
 ref_ptr<Framebuffer> ES3Context::CreateFramebuffer(
     ref_ptr<RenderPass> render_pass, Size3D size,
     absl::Span<const ref_ptr<ImageView>> attachments) {
-  return make_ref<ES3Framebuffer>(render_pass, size, attachments);
+  auto framebuffer = make_ref<ES3Framebuffer>(render_pass, size, attachments);
+  return framebuffer;
 }
 
 ref_ptr<CommandBuffer> ES3Context::CreateCommandBuffer() {

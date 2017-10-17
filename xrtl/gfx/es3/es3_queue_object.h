@@ -61,9 +61,23 @@ namespace es3 {
 //       return value;
 //     }
 //   };
+//
+// Code creating queue objects must call PrepareAllocation after they have
+// created the instance:
+//   auto my_object = make_ref<MyObject>(...);
+//   my_object->PrepareAllocation();
+//   return my_object;
 class ES3QueueObject {
  public:
   virtual ~ES3QueueObject() = default;
+
+  // Prepares the object for use by queueing allocation work on the main thread.
+  // This must be called outside of the constructor for the object.
+  // Implementation contents are usually something like:
+  //   void MyObject::PrepareAllocation() {
+  //     queue_->EnqueueObjectAllocation(this);
+  //   }
+  virtual void PrepareAllocation() = 0;
 
  protected:
   friend class ES3ObjectLifetimeQueue;

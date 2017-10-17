@@ -27,6 +27,8 @@ ES3Sampler::ES3Sampler(ES3ObjectLifetimeQueue* queue, Params params)
 
 ES3Sampler::~ES3Sampler() = default;
 
+void ES3Sampler::PrepareAllocation() { queue_->EnqueueObjectAllocation(this); }
+
 void ES3Sampler::Release() { queue_->EnqueueObjectDeallocation(this); }
 
 bool ES3Sampler::AllocateOnQueue() {

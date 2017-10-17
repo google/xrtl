@@ -31,6 +31,8 @@ class ES3MemoryHeap : public MemoryHeap, public ES3QueueObject {
                 size_t heap_size);
   ~ES3MemoryHeap() override;
 
+  void PrepareAllocation() override;
+
   size_t allocation_alignment() const override { return allocation_alignment_; }
   size_t used_size() override;
 

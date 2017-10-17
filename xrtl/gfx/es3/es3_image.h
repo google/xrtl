@@ -36,6 +36,8 @@ class ES3Image : public Image, public ES3QueueObject {
            CreateParams create_params);
   ~ES3Image() override;
 
+  void PrepareAllocation() override;
+
   ref_ptr<MemoryHeap> memory_heap() const override;
 
   GLenum target() const { return target_; }

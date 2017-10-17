@@ -27,10 +27,13 @@ namespace es3 {
 
 ES3QueueFence::ES3QueueFence(ES3ObjectLifetimeQueue* queue) : queue_(queue) {
   issued_fence_ = Event::CreateFence();
-  queue_->EnqueueObjectAllocation(this);
 }
 
 ES3QueueFence::~ES3QueueFence() = default;
+
+void ES3QueueFence::PrepareAllocation() {
+  queue_->EnqueueObjectAllocation(this);
+}
 
 void ES3QueueFence::Release() { queue_->EnqueueObjectDeallocation(this); }
 

@@ -62,11 +62,14 @@ ES3PlatformSwapChain::ES3PlatformSwapChain(
       memory_heap_(std::move(memory_heap)),
       control_(std::move(control)),
       platform_context_(std::move(platform_context)) {
-  static_cast<ES3ObjectLifetimeQueue*>(primary_queue_)
-      ->EnqueueObjectAllocation(this, platform_context_);
 }
 
 ES3PlatformSwapChain::~ES3PlatformSwapChain() = default;
+
+void ES3PlatformSwapChain::PrepareAllocation() {
+  static_cast<ES3ObjectLifetimeQueue*>(primary_queue_)
+      ->EnqueueObjectAllocation(this, platform_context_);
+}
 
 void ES3PlatformSwapChain::Release() {
   static_cast<ES3ObjectLifetimeQueue*>(primary_queue_)

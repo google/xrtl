@@ -57,10 +57,11 @@ ES3Image::ES3Image(ES3ObjectLifetimeQueue* queue,
       queue_(queue),
       memory_heap_(std::move(memory_heap)),
       texture_params_(texture_params) {
-  queue_->EnqueueObjectAllocation(this);
 }
 
 ES3Image::~ES3Image() = default;
+
+void ES3Image::PrepareAllocation() { queue_->EnqueueObjectAllocation(this); }
 
 void ES3Image::Release() {
   memory_heap_->ReleaseImage(this);

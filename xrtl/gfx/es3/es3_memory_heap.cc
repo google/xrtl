@@ -32,12 +32,15 @@ ES3MemoryHeap::ES3MemoryHeap(ES3ObjectLifetimeQueue* queue,
     : MemoryHeap(memory_type_mask, heap_size), queue_(queue) {
   // TODO(benvanik): query? or always leave like this? (common in vk).
   allocation_alignment_ = 128;
-  queue_->EnqueueObjectAllocation(this);
 }
 
 ES3MemoryHeap::~ES3MemoryHeap() {
   std::lock_guard<std::mutex> lock_guard(mutex_);
   DCHECK_EQ(used_size_, 0);
+}
+
+void ES3MemoryHeap::PrepareAllocation() {
+  queue_->EnqueueObjectAllocation(this);
 }
 
 void ES3MemoryHeap::Release() { queue_->EnqueueObjectDeallocation(this); }
@@ -66,9 +69,11 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateBuffer(
   }
 
   // Create the buffer and allocate underlying storage.
-  *out_buffer = make_ref<ES3Buffer>(queue_, ref_ptr<MemoryHeap>(this),
+  auto buffer = make_ref<ES3Buffer>(queue_, ref_ptr<MemoryHeap>(this),
                                     allocation_size, usage_mask);
+  buffer->PrepareAllocation();
 
+  *out_buffer = buffer;
   return AllocationResult::kSuccess;
 }
 
@@ -108,10 +113,12 @@ MemoryHeap::AllocationResult ES3MemoryHeap::AllocateImage(
   }
 
   // Create the image and allocate underlying texture.
-  *out_image =
+  auto image =
       make_ref<ES3Image>(queue_, ref_ptr<MemoryHeap>(this), texture_params,
                          allocation_size, create_params);
+  image->PrepareAllocation();
 
+  *out_image = image;
   return AllocationResult::kSuccess;
 }
 
