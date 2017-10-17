@@ -419,6 +419,12 @@ bool EGLPlatformContext::InitializeContext(
               << "GL extensions: " << glGetString(GL_EXTENSIONS) << std::endl;
   });
 
+  // Query limits and other information from the context.
+  if (!InitializeLimits()) {
+    LOG(ERROR) << "Failed to initialize platform context limits";
+    return false;
+  }
+
   // Query available extensions and setup the enable state tracking.
   if (!InitializeExtensions()) {
     LOG(ERROR) << "Failed to initialize platform context extension support";

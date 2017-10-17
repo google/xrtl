@@ -18,6 +18,7 @@
 
 #include "xrtl/base/flags.h"
 #include "xrtl/base/threading/thread.h"
+#include "xrtl/base/tracing.h"
 
 DEFINE_bool(gl_debug_log, true, "Dump KHR_debug output to the log.");
 DEFINE_bool(gl_debug_log_synchronous, true,
@@ -190,11 +191,27 @@ void ES3PlatformContext::Unlock(std::unique_lock<std::recursive_mutex> lock) {
   lock.unlock();
 }
 
+bool ES3PlatformContext::InitializeLimits() {
+  WTF_SCOPE0("ES3PlatformContext#InitializeLimits");
+
+  const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+  gl_vendor_ = std::string(vendor ? vendor : "");
+  const char* renderer =
+      reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+  gl_renderer_ = std::string(renderer ? renderer : "");
+  const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+  gl_version_ = std::string(version ? version : "");
+
+  return true;
+}
+
 void ES3PlatformContext::InitializeDebugging() {
   if (glDebugMessageCallback == nullptr) {
     // Not supported; ignore.
     return;
   }
+
+  WTF_SCOPE0("ES3PlatformContext#InitializeDebugging");
 
   glEnable(GL_DEBUG_OUTPUT);
 
@@ -225,6 +242,8 @@ void ES3PlatformContext::InitializeDebugging() {
 }
 
 bool ES3PlatformContext::InitializeExtensions() {
+  WTF_SCOPE0("ES3PlatformContext#InitializeExtensions");
+
   // Initialize debugging API, if we want it.
   // We should do this ASAP to start getting enhanced logging.
   if (FLAGS_gl_debug_log) {
@@ -251,6 +270,7 @@ bool ES3PlatformContext::EnableExtension(const char* extension_name) {
   } else if (IsExtensionEnabled(extension_name)) {
     return true;
   }
+  WTF_SCOPE("ES3PlatformContext#EnableExtension", const char*)(extension_name);
   if (TryEnableExtension(extension_name)) {
     // TODO(benvanik): set extension enabled.
     return true;
