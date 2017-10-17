@@ -78,7 +78,8 @@ class GraphicsTest : public ::testing::Test {
   // Compares the data in the buffer to the given expected data.
   // Returns true if the expected data and the resulting buffer match exactly.
   bool CompareBuffer(const std::vector<uint8_t>& expected_data,
-                     ref_ptr<Buffer> buffer,
+                     ref_ptr<Buffer> buffer, size_t buffer_offset,
+                     size_t buffer_length,
                      xrtl::testing::diffing::DiffPublishMode publish_mode =
                          xrtl::testing::diffing::DiffPublishMode::kFailure,
                      xrtl::testing::diffing::DataDiffer::Options options = {});
@@ -89,6 +90,7 @@ class GraphicsTest : public ::testing::Test {
   bool SubmitAndCompareBuffer(
       const std::vector<uint8_t>& expected_data,
       ref_ptr<CommandBuffer> command_buffer, ref_ptr<Buffer> buffer,
+      size_t buffer_offset, size_t buffer_length,
       xrtl::testing::diffing::DiffPublishMode publish_mode =
           xrtl::testing::diffing::DiffPublishMode::kFailure,
       xrtl::testing::diffing::DataDiffer::Options options = {});
@@ -96,6 +98,7 @@ class GraphicsTest : public ::testing::Test {
   // Compares the data in the buffer to the golden specified by test_key.
   // Returns true if the golden data and the resulting buffer match exactly.
   bool CompareBuffer(absl::string_view test_key, ref_ptr<Buffer> buffer,
+                     size_t buffer_offset, size_t buffer_length,
                      xrtl::testing::diffing::DiffPublishMode publish_mode =
                          xrtl::testing::diffing::DiffPublishMode::kFailure,
                      xrtl::testing::diffing::DataDiffer::Options options = {});
@@ -105,7 +108,7 @@ class GraphicsTest : public ::testing::Test {
   // Returns true if the golden data and the resulting buffer match exactly.
   bool SubmitAndCompareBuffer(
       absl::string_view test_key, ref_ptr<CommandBuffer> command_buffer,
-      ref_ptr<Buffer> buffer,
+      ref_ptr<Buffer> buffer, size_t buffer_offset, size_t buffer_length,
       xrtl::testing::diffing::DiffPublishMode publish_mode =
           xrtl::testing::diffing::DiffPublishMode::kFailure,
       xrtl::testing::diffing::DataDiffer::Options options = {});
