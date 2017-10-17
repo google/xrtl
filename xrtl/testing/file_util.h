@@ -43,7 +43,8 @@ class TempFile {
 
  private:
   std::string path_;
-  int fd_ = 0;
+  int fd_ = -1;
+  int close_fd_ = -1;
 };
 
 // Mapping from test data relative paths to absolute paths.
@@ -114,6 +115,10 @@ class FileUtil {
 
  private:
   struct FileManifest {
+    // Workspace name (TEST_WORKSPACE under bazel).
+    std::string workspace_name;
+    // Runfiles root path (TEST_SRCDIR under bazel).
+    std::string runfiles_path;
     // True if the MANIFEST file is present and the path mappings are valid.
     bool is_present = false;
     std::vector<std::pair<std::string, std::string>> path_mappings;

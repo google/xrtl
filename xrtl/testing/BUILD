@@ -45,6 +45,7 @@ cc_library(
     srcs = ["file_util.cc"],
     hdrs = ["file_util.h"],
     deps = [
+        "//xrtl/base:env",
         "//xrtl/base:logging",
         "//xrtl/base:tracing",
         "@com_google_absl//absl/strings",
@@ -61,6 +62,7 @@ cc_test(
     ],
     deps = [
         ":file_util",
+        "//xrtl/base:env",
         "//xrtl/testing:gtest_main",
     ],
 )
