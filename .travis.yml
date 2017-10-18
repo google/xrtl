@@ -68,14 +68,15 @@ jobs:
 
     # Test MacOS for default config.
     # We also build here to avoid double cost of MacOS VM startup.
-    - &test-macos
-      stage: test
-      os: osx
-      osx_image: xcode8.3
-      script:
-        - ./tools/ci/travis/build.sh
-        - ./tools/ci/travis/test.sh
-      env: CONFIG=
+    # TODO(benvanik): renable when travis is not underwater.
+    #- &test-macos
+    #  stage: test
+    #  os: osx
+    #  osx_image: xcode8.3
+    #  script:
+    #    - ./tools/ci/travis/build.sh
+    #    - ./tools/ci/travis/test.sh
+    #  env: CONFIG=
 
     # Run clang-tidy analysis.
     # We do this during the test phase to parallelize a bit more.
