@@ -165,10 +165,11 @@ common:linux_x86_64 --config=linux
 common:macos --config=clang
 common:macos --config=objc
 common:macos --dynamic_mode=off
+common:macos --apple_platform_type=macos
+common:macos --run_under=//tools/utils:macos_test_runner
 
 common:macos_x86_64 --config=macos
-common:macos_x86_64 --cpu=darwin
-common:macos_x86_64 --host_cpu=darwin
+common:macos_x86_64 --cpu=darwin_x86_64
 
 #===============================================================================
 # Windows

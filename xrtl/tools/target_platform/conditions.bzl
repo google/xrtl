@@ -75,11 +75,11 @@ CONDITION_LINUX_X86_64 = {
 }
 
 CONDITION_MACOS = {
-    "cpu": "darwin",
+    "cpu": "darwin_x86_64",
 }
 
 CONDITION_MACOS_X86_64 = {
-    "cpu": "darwin",
+    "cpu": "darwin_x86_64",
 }
 
 CONDITION_WINDOWS = {

@@ -26,6 +26,7 @@
 #include "xrtl/base/tracing.h"
 #include "xrtl/port/common/gfx/es3/egl_strings.h"
 #include "xrtl/tools/target_config/target_config.h"
+#include "xrtl/tools/target_platform/target_platform.h"
 
 namespace xrtl {
 namespace gfx {
@@ -199,6 +200,9 @@ void* LookupGlesFunction(const char* name) {
     libglesv2 = dlopen("libGLESv2.so", RTLD_LOCAL | RTLD_LAZY);
   }
   if (!libglesv2) {
+    libglesv2 = dlopen("libGLESv2.dylib", RTLD_LOCAL | RTLD_LAZY);
+  }
+  if (!libglesv2) {
     LOG(ERROR) << "Unable to load libGLESv2.so";
     return static_cast<void*>(nullptr);
   }
@@ -242,12 +246,22 @@ ref_ptr<ES3PlatformContext> ES3PlatformContext::Create(
 
   auto platform_context = make_ref<EGLPlatformContext>();
 
-  if (!platform_context->Initialize(
-          reinterpret_cast<EGLNativeDisplayType>(
-              reinterpret_cast<uintptr_t>(native_display)),
-          reinterpret_cast<EGLNativeWindowType>(
-              reinterpret_cast<uintptr_t>(native_window)),
-          std::move(share_group))) {
+  EGLNativeDisplayType native_display_value;
+  EGLNativeWindowType native_window_value;
+#if defined(XRTL_PLATFORM_APPLE)
+  native_display_value = reinterpret_cast<EGLNativeDisplayType>(
+      static_cast<int>(reinterpret_cast<uintptr_t>(native_display)));
+  native_window_value = reinterpret_cast<EGLNativeWindowType>(
+      reinterpret_cast<uintptr_t>(native_window));
+#else
+  native_display_value = reinterpret_cast<EGLNativeDisplayType>(
+      reinterpret_cast<uintptr_t>(native_display));
+  native_window_value = reinterpret_cast<EGLNativeWindowType>(
+      reinterpret_cast<uintptr_t>(native_window));
+#endif  // XRTL_PLATFORM_APPLE
+
+  if (!platform_context->Initialize(native_display_value, native_window_value,
+                                    std::move(share_group))) {
     LOG(ERROR) << "Unable to initialize the EGL platform context";
     return nullptr;
   }
