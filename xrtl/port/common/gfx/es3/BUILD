@@ -72,6 +72,7 @@ cc_library(
         "//xrtl/base:tracing",
         "//xrtl/gfx/es3:es3_platform_context_hdrs",
         "//xrtl/tools/target_config",
+        "//xrtl/tools/target_platform",
         "@com_google_absl//absl/base",
     ] + select({
         "//xrtl/tools/target_config:swiftshader": [

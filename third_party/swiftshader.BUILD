@@ -70,13 +70,13 @@ COMMON_COPTS = [
         "-Wno-sign-compare",
         "-Wno-undefined-var-template",
         "-Wno-unneeded-internal-declaration",
-        "-Wno-unused-lambda-capture",
+        "-Wno-macro-redefined",
         "-ffunction-sections",
         "-fdata-sections",
         "-fomit-frame-pointer",
         "-fno-operator-names",
         "-fno-exceptions",
-        "-fvisibility=protected",
+        "-fvisibility=hidden",
         "-DNO_SANITIZE_FUNCTION=__attribute__((no_sanitize(\\\"function\\\")))",
     ],
 }) + select({
@@ -85,6 +85,7 @@ COMMON_COPTS = [
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
     ],
     "@//xrtl/tools/target_platform:linux": [
+        "-Wno-unused-lambda-capture",
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/build/Linux/include/",
         "-Iexternal/com_github_google_swiftshader/third_party/llvm-subzero/lib/Support/Unix/",
     ],
@@ -193,6 +194,32 @@ cc_library(
     ],
 )
 
+objc_library(
+    name = "main_objc",
+    hdrs = ["src/Main/FramebufferOSX.hpp"],
+    copts = COMMON_COPTS + [
+        "-xobjective-c++",
+        "-Iexternal/com_github_google_swiftshader/src/",
+        "-Iexternal/com_github_google_swiftshader/src/Common/",
+    ],
+    non_arc_srcs = [
+        "src/Main/FramebufferOSX.mm",
+    ],
+    sdk_frameworks = [
+        "Cocoa",
+        "Quartz",
+    ],
+    textual_hdrs = [
+        "src/Main/Config.hpp",
+        "src/Main/FrameBuffer.hpp",
+        "src/Main/SwiftConfig.hpp",
+    ],
+    deps = [
+        ":gl_headers",
+        ":renderer_hdrs",
+    ],
+)
+
 cc_library(
     name = "main",
     srcs = [
@@ -209,7 +236,7 @@ cc_library(
             "src/Main/libX11.cpp",
         ],
         "@//xrtl/tools/target_platform:macos": [
-            "src/Main/FrameBufferOSX.mm",
+            # :main_objc
         ],
         "@//xrtl/tools/target_platform:windows": [
             "src/Main/FrameBufferDD.cpp",
@@ -230,7 +257,7 @@ cc_library(
             "src/Main/libX11.hpp",
         ],
         "@//xrtl/tools/target_platform:macos": [
-            "src/Main/FrameBufferOSX.hpp",
+            # :main_objc
         ],
         "@//xrtl/tools/target_platform:windows": [
             "src/Main/FrameBufferDD.hpp",
@@ -244,11 +271,8 @@ cc_library(
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS + select({
-        "@//xrtl/tools/target_platform:linux": [
-        ],
-        "@//xrtl/tools/target_platform:macos": [
-            # Quartz.framework, Cocoa.framework
-        ],
+        "@//xrtl/tools/target_platform:linux": [],
+        "@//xrtl/tools/target_platform:macos": [],
         "@//xrtl/tools/target_platform:windows": [
             "-DEFAULTLIB:dxguid.lib",  # For FrameBufferDD
             "-DEFAULTLIB:gdi32.lib",
@@ -259,7 +283,12 @@ cc_library(
         ":common",
         ":main_config",
         ":reactor",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:macos": [
+            ":main_objc",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
@@ -1069,17 +1098,20 @@ LIBGLESV2_SRCS = [
     "src/OpenGL/libEGL/main.h",
 ]
 
+LIBGLESV2_COPTS = COMMON_COPTS + [
+    "-DLOG_TAG=\"swiftshader_libGLESv2\"",
+    "-DGL_APIENTRYP=",
+    "-DGL_GLEXT_PROTOTYPES",
+    "-DLIBGLESV2_EXPORTS",
+    "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
+]
+
 cc_binary(
     name = "libGLESv2.dll",
     srcs = LIBGLESV2_SRCS,
-    copts = COMMON_COPTS + [
-        "-DLOG_TAG=\"swiftshader_libGLESv2\"",
+    copts = LIBGLESV2_COPTS + [
         "-DGL_API=__declspec(dllexport)",
-        "-DGL_APIENTRYP=",
-        "-DGL_GLEXT_PROTOTYPES",
         "-DGL_APICALL=__declspec(dllexport)",
-        "-DLIBGLESV2_EXPORTS",
-        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS + [
@@ -1101,12 +1133,9 @@ cc_binary(
 cc_binary(
     name = "libGLESv2.so",
     srcs = LIBGLESV2_SRCS,
-    copts = COMMON_COPTS + [
-        "-DLOG_TAG=\"swiftshader_libGLESv2\"",
+    copts = LIBGLESV2_COPTS + [
         "-DGL_API=",
-        "-DGL_GLEXT_PROTOTYPES",
         "-DGL_APICALL='__attribute__((visibility(\"default\")))'",
-        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
     ],
     defines = COMMON_DEFINES,
     linkopts = COMMON_LINKOPTS + [
@@ -1115,6 +1144,29 @@ cc_binary(
         "-Wl,--version-script",
         ":libglesv2_exports.lds",
     ],
+    linkshared = 1,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":gl_common",
+        ":gl_compiler",
+        ":gl_headers",
+        ":libglesv2_exports.lds",
+        ":reactor",
+        ":renderer",
+        "@//xrtl/base:debugging_settings",
+    ],
+)
+
+# libGLESv2 for MacOS:
+cc_binary(
+    name = "libGLESv2.dylib",
+    srcs = LIBGLESV2_SRCS,
+    copts = LIBGLESV2_COPTS + [
+        "-DGL_API=",
+        "-DGL_APICALL='__attribute__((visibility(\"default\")))'",
+    ],
+    defines = COMMON_DEFINES,
+    linkopts = COMMON_LINKOPTS,
     linkshared = 1,
     visibility = ["//visibility:public"],
     deps = [
@@ -1183,29 +1235,50 @@ cc_binary(
     ],
 )
 
-# libEGL for Linux:
+objc_library(
+    name = "libEGL_objc",
+    copts = COMMON_COPTS + [
+        "-xobjective-c++",
+        "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
+    ],
+    non_arc_srcs = ["src/OpenGL/libEGL/OSXUtils.mm"],
+    sdk_frameworks = [
+        "Cocoa",
+        "Quartz",
+    ],
+    textual_hdrs = ["src/OpenGL/libEGL/OSXUtils.hpp"],
+    deps = [
+        ":gl_common",
+        ":gl_headers",
+    ],
+)
+
+# libEGL for Linux and MacOS:
 cc_binary(
     name = "libEGL.so",
-    srcs = LIBEGL_SRCS + [
-        # osx:
-        # OSXUtils.hpp
-        # OSXUtils.mm
-    ],
+    srcs = LIBEGL_SRCS + select({
+        "@//xrtl/tools/target_platform:macos": [
+            "src/OpenGL/libEGL/OSXUtils.hpp",
+        ],
+        "//conditions:default": [],
+    }),
     copts = COMMON_COPTS + [
         "-DLOG_TAG=\"swiftshader_libEGL\"",
         "-DEGL_EGLEXT_PROTOTYPES",
         "-DEGLAPI='__attribute__((visibility(\"default\")))'",
         "-Iexternal/com_github_google_swiftshader/src/OpenGL/",
+        "-Iexternal/com_github_google_swiftshader/src/OpenGL/libEGL/",
     ],
     defines = COMMON_DEFINES,
-    linkopts = COMMON_LINKOPTS + [
-        # osx:
-        # Quartz.framework, Cocoa.framework
-        "-fvisibility=hidden",
-        "-Wl,--gc-sections",
-        "-Wl,--version-script",
-        ":libegl_exports.lds",
-    ],
+    linkopts = COMMON_LINKOPTS + select({
+        "@//xrtl/tools/target_platform:macos": [],
+        "//conditions:default": [
+            "-fvisibility=hidden",
+            "-Wl,--gc-sections",
+            "-Wl,--version-script",
+            ":libegl_exports.lds",
+        ],
+    }),
     linkshared = 1,
     visibility = ["//visibility:public"],
     deps = [
@@ -1213,7 +1286,12 @@ cc_binary(
         ":gl_headers",
         ":libegl_exports.lds",
         "@//xrtl/base:debugging_settings",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:macos": [
+            ":libEGL_objc",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
@@ -1223,7 +1301,9 @@ cc_library(
             ":libGLESv2.so",
             ":libEGL.so",
         ],
-        "@//xrtl/tools/target_platform:macos": [],
+        "@//xrtl/tools/target_platform:macos": [
+            ":libEGL.so",
+        ],
         "@//xrtl/tools/target_platform:windows": [
             ":libGLESv2.dll",
             ":libEGL.dll",
@@ -1235,7 +1315,10 @@ cc_library(
             ":libGLESv2.so",
             ":libEGL.so",
         ],
-        "@//xrtl/tools/target_platform:macos": [],
+        "@//xrtl/tools/target_platform:macos": [
+            ":libGLESv2.dylib",
+            ":libEGL.so",
+        ],
         "@//xrtl/tools/target_platform:windows": [
             ":libGLESv2.dll",
             ":libEGL.dll",
