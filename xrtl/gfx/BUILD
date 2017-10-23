@@ -111,7 +111,7 @@ alias(
             # "//xrtl/tools/target_platform:emscripten": "",
             # "//xrtl/tools/target_platform:ios": "",
             "//xrtl/tools/target_platform:linux": "//xrtl/gfx/es3:es3_context_factory",
-            # "//xrtl/tools/target_platform:macos": "",
+            "//xrtl/tools/target_platform:macos": "//xrtl/gfx/es3:es3_context_factory",
             "//xrtl/tools/target_platform:windows": "//xrtl/gfx/es3:es3_context_factory",
         },
         no_match_error = "No graphics context support on this platform",

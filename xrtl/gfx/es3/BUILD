@@ -224,7 +224,9 @@ cc_library(
         "//xrtl/tools/target_platform:linux": [
             "//xrtl/port/common/gfx/es3:egl_platform_context",
         ],
-        "//xrtl/tools/target_platform:macos": [],
+        "//xrtl/tools/target_platform:macos": [
+            "//xrtl/port/macos/gfx/es3:cgl_platform_context",
+        ],
         "//xrtl/tools/target_platform:windows": [
             "//xrtl/port/windows/gfx/es3:wgl_platform_context",
         ],

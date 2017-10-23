@@ -429,8 +429,13 @@ bool EGLPlatformContext::InitializeContext(
     LOG(INFO) << "GL initialized successfully:" << std::endl
               << "GL vendor: " << glGetString(GL_VENDOR) << std::endl
               << "GL renderer: " << glGetString(GL_RENDERER) << std::endl
-              << "GL version: " << glGetString(GL_VERSION) << std::endl
-              << "GL extensions: " << glGetString(GL_EXTENSIONS) << std::endl;
+              << "GL version: " << glGetString(GL_VERSION) << std::endl;
+    VLOG(1) << "GL extensions:";
+    GLint extension_count = 0;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &extension_count);
+    for (GLint i = 0; i < extension_count; ++i) {
+      VLOG(1) << "  " << glGetStringi(GL_EXTENSIONS, i);
+    }
   });
 
   // Query limits and other information from the context.

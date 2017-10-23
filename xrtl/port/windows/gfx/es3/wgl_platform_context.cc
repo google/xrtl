@@ -364,6 +364,12 @@ bool WGLPlatformContext::Initialize(HDC native_display, HWND native_window,
               << "GL vendor: " << glGetString(GL_VENDOR) << std::endl
               << "GL renderer: " << glGetString(GL_RENDERER) << std::endl
               << "GL version: " << glGetString(GL_VERSION) << std::endl;
+    VLOG(1) << "GL extensions:";
+    GLint extension_count = 0;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &extension_count);
+    for (GLint i = 0; i < extension_count; ++i) {
+      VLOG(1) << "  " << glGetStringi(GL_EXTENSIONS, i);
+    }
   });
 
   // Query limits and other information from the context.
