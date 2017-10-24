@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/port/apple/base/mach_system_clock.h"
-
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 
 #include "xrtl/base/macros.h"
+#include "xrtl/base/system_clock.h"
 
 namespace xrtl {
 
@@ -65,7 +64,7 @@ class MachSystemClock : public SystemClock {
   uint64_t timebase_mach_time_ = 0;
 };
 
-std::unique_ptr<SystemClock> CreateMachSystemClock() {
+std::unique_ptr<SystemClock> SystemClock::Create() {
   return absl::make_unique<MachSystemClock>();
 }
 

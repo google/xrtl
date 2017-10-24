@@ -16,24 +16,9 @@
 
 #include "xrtl/base/macros.h"
 
-#if defined(XRTL_PLATFORM_APPLE)
-#include "xrtl/port/apple/base/mach_system_clock.h"
-#define CreatePlatformSystemClock xrtl::CreateMachSystemClock
-#elif defined(XRTL_PLATFORM_WINDOWS)
-#include "xrtl/port/windows/base/win32_system_clock.h"
-#define CreatePlatformSystemClock xrtl::CreateWin32SystemClock
-#else
-#include "xrtl/port/common/base/posix_system_clock.h"
-#define CreatePlatformSystemClock xrtl::CreatePosixSystemClock
-#endif  // XRTL_PLATFORM_*
-
 namespace xrtl {
 
 SystemClock* SystemClock::default_clock_ = nullptr;
-
-std::unique_ptr<SystemClock> SystemClock::Create() {
-  return CreatePlatformSystemClock();
-}
 
 SystemClock* SystemClock::default_clock() {
   return default_clock_ ? default_clock_ : logging_clock();
