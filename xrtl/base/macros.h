@@ -39,7 +39,9 @@
 
 #if defined(XRTL_COMPILER_GCC_COMPAT)
 
-#define XRTL_EMPTY_FILE() static int dummy __attribute__((unused, used)) = 0;
+#define XRTL_EMPTY_FILE()                                 \
+  __attribute__((visibility("default"))) static int dummy \
+      __attribute__((unused, used)) = 0;
 #define XRTL_UNREACHABLE_DEFAULT()
 
 #elif defined(XRTL_COMPILER_MSVC)
