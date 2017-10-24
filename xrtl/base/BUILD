@@ -5,6 +5,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "arena",
     srcs = ["arena.cc"],
@@ -16,7 +18,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "arena_test",
     size = "small",
     srcs = ["arena_test.cc"],
@@ -174,7 +176,7 @@ cc_library(
     }),
 )
 
-cc_test(
+portable_cc_test(
     name = "flags_test",
     size = "small",
     srcs = ["flags_test.cc"],
@@ -189,7 +191,7 @@ cc_library(
     hdrs = ["geometry.h"],
 )
 
-cc_test(
+portable_cc_test(
     name = "geometry_test",
     size = "small",
     srcs = ["geometry_test.cc"],
@@ -209,7 +211,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "intrusive_list_test",
     size = "small",
     srcs = ["intrusive_list_test.cc"],
@@ -229,7 +231,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "intrusive_pool_test",
     size = "small",
     srcs = ["intrusive_pool_test.cc"],
@@ -276,7 +278,7 @@ cc_library(
     }),
 )
 
-cc_test(
+portable_cc_test(
     name = "logging_test",
     size = "small",
     srcs = ["logging_test.cc"],
@@ -300,7 +302,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "macros_test",
     size = "small",
     srcs = ["macros_test.cc"],
@@ -319,7 +321,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "math_test",
     size = "small",
     srcs = ["math_test.cc"],
@@ -338,7 +340,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "ref_ptr_test",
     size = "small",
     srcs = ["ref_ptr_test.cc"],
@@ -354,7 +356,7 @@ cc_library(
     deps = [":system_clock"],
 )
 
-cc_test(
+portable_cc_test(
     name = "stopwatch_test",
     size = "small",
     srcs = ["stopwatch_test.cc"],
@@ -392,7 +394,7 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
 )
 
-cc_test(
+portable_cc_test(
     name = "system_clock_test",
     size = "small",
     srcs = ["system_clock_test.cc"],
@@ -422,7 +424,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "uri_test",
     size = "small",
     srcs = ["uri_test.cc"],
@@ -431,3 +433,7 @@ cc_test(
         "//xrtl/testing:gtest_main",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

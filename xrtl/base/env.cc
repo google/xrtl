@@ -16,10 +16,23 @@
 
 namespace xrtl {
 
+std::string Env::temp_path_;
+
 std::string Env::GetValueOrDefault(absl::string_view key,
                                    absl::string_view default_value) {
   absl::optional<std::string> value_opt = GetValue(key);
   return value_opt ? value_opt.value() : std::string(default_value);
+}
+
+std::string Env::temp_path() {
+  if (temp_path_.empty()) {
+    temp_path_ = Env::QueryTempPath();
+  }
+  return temp_path_;
+}
+
+void Env::set_temp_path(std::string temp_path) {
+  temp_path_ = std::move(temp_path);
 }
 
 }  // namespace xrtl

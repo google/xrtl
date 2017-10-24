@@ -5,6 +5,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "threading",
     hdrs = [
@@ -62,7 +64,7 @@ cc_library(
     }),
 )
 
-cc_test(
+portable_cc_test(
     name = "event_test",
     size = "small",
     srcs = ["event_test.cc"],
@@ -101,7 +103,7 @@ cc_library(
     }),
 )
 
-cc_test(
+portable_cc_test(
     name = "message_loop_test",
     size = "small",
     srcs = ["message_loop_test.cc"],
@@ -128,7 +130,7 @@ cc_library(
     }),
 )
 
-cc_test(
+portable_cc_test(
     name = "semaphore_test",
     size = "small",
     srcs = ["semaphore_test.cc"],
@@ -171,7 +173,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "thread_test",
     size = "small",
     srcs = ["thread_test.cc"],
@@ -201,7 +203,7 @@ cc_library(
     }),
 )
 
-cc_test(
+portable_cc_test(
     name = "timer_test",
     size = "small",
     srcs = ["timer_test.cc"],
@@ -219,3 +221,7 @@ cc_library(
         "//xrtl/base:ref_ptr",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

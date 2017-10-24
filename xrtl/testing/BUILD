@@ -5,6 +5,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 # demo main() entry point.
 # This is linked in to demo cc_binaries.
 cc_library(
@@ -39,6 +41,11 @@ cc_library(
     }),
 )
 
+sh_test(
+    name = "empty_test",
+    srcs = ["empty_test.sh"],
+)
+
 cc_library(
     name = "file_util",
     testonly = 1,
@@ -53,7 +60,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "file_util_test",
     size = "small",
     srcs = ["file_util_test.cc"],
@@ -134,7 +141,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "image_buffer_test",
     size = "small",
     srcs = ["image_buffer_test.cc"],
@@ -148,3 +155,7 @@ cc_test(
         "//xrtl/testing/diffing:image_differ",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

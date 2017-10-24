@@ -7,6 +7,12 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "package_platforms")
+
+package_platforms(default_platforms = ["//xrtl/tools/target_platform:linux"])
+
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "x11_control",
     srcs = ["x11_control.cc"],
@@ -36,7 +42,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "x11_display_test",
     size = "small",
     srcs = ["x11_display_test.cc"],
@@ -77,3 +83,7 @@ cc_library(
         "//xrtl/ui:window_hdrs",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

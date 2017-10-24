@@ -5,6 +5,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "buffer",
     hdrs = ["buffer.h"],
@@ -23,7 +25,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "color_test",
     size = "small",
     srcs = ["color_test.cc"],
@@ -153,7 +155,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "context_factory_test",
     size = "small",
     srcs = ["context_factory_test.cc"],
@@ -260,7 +262,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "pixel_format_test",
     size = "small",
     srcs = ["pixel_format_test.cc"],
@@ -378,7 +380,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "vertex_format_test",
     size = "small",
     srcs = ["vertex_format_test.cc"],
@@ -387,3 +389,7 @@ cc_test(
         "//xrtl/testing:gtest_main",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

@@ -52,6 +52,10 @@ obj/
 /bazel-testlogs
 /bazel-xrtl
 
+# Tulsi
+tulsi-workspace
+tulsigen-xrtl
+*.tulsiconf-user
 
 # Android
 tools/android-sdk/

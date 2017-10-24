@@ -34,7 +34,7 @@ absl::optional<std::string> Env::GetValue(absl::string_view key) {
   return std::string(value);
 }
 
-std::string Env::temp_path() {
+std::string Env::QueryTempPath() {
   return Env::GetValueOrDefault("TMPDIR", "/tmp");
 }
 

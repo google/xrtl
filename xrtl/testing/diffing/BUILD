@@ -5,6 +5,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "data_differ",
     testonly = 1,
@@ -15,7 +17,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "data_differ_test",
     size = "small",
     srcs = ["data_differ_test.cc"],
@@ -40,7 +42,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "diff_provider_test",
     size = "small",
     srcs = ["diff_provider_test.cc"],
@@ -88,7 +90,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "image_differ_test",
     size = "small",
     srcs = ["image_differ_test.cc"],
@@ -112,7 +114,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "text_differ_test",
     size = "small",
     srcs = ["text_differ_test.cc"],
@@ -121,3 +123,7 @@ cc_test(
         "//xrtl/testing:gtest_main",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

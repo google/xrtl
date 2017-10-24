@@ -1,0 +1,32 @@
+{
+  "configDefaults" : {
+    "optionSet" : {
+      "CommandlineArguments" : {
+        "p" : "--undefok=NSDocumentRevisionsDebugMode"
+      },
+      "BazelBuildOptionsDebug" : {
+        "p" : "--ios_signing_cert_name=-"
+      },
+      "BazelBuildOptionsRelease" : {
+        "p" : "--ios_signing_cert_name=-"
+      }
+    }
+  },
+  "projectName" : "xrtl",
+  "packages" : [
+    "xrtl",
+    "xrtl\/base",
+    "xrtl\/examples",
+    "xrtl\/gfx",
+    "xrtl\/gfx\/spirv",
+    "xrtl\/gfx\/testing",
+    "xrtl\/port\/apple",
+    "xrtl\/port\/ios",
+    "xrtl\/port\/macos",
+    "xrtl\/port\/macos\/gfx\/es3",
+    "xrtl\/testing",
+    "xrtl\/testing\/diffing",
+    "xrtl\/ui"
+  ],
+  "workspaceRoot" : "..\/..\/.."
+}
