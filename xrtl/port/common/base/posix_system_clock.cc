@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/port/common/base/posix_system_clock.h"
-
 #include <ctime>
 
 #include "xrtl/base/macros.h"
+#include "xrtl/base/system_clock.h"
 
 namespace xrtl {
 
@@ -53,7 +52,7 @@ class PosixSystemClock : public SystemClock {
   uint64_t timebase_micros_ = 0;
 };
 
-std::unique_ptr<SystemClock> CreatePosixSystemClock() {
+std::unique_ptr<SystemClock> SystemClock::Create() {
   return absl::make_unique<PosixSystemClock>();
 }
 

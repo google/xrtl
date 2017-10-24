@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "xrtl/port/windows/base/win32_system_clock.h"
-
 #include <chrono>
 
 #include "xrtl/base/macros.h"
+#include "xrtl/base/system_clock.h"
 #include "xrtl/port/windows/base/windows.h"
 
 namespace xrtl {
@@ -82,7 +81,7 @@ class Win32SystemClock : public SystemClock {
   LARGE_INTEGER qpc_timebase_;
 };
 
-std::unique_ptr<SystemClock> CreateWin32SystemClock() {
+std::unique_ptr<SystemClock> SystemClock::Create() {
   return absl::make_unique<Win32SystemClock>();
 }
 

@@ -104,7 +104,6 @@ cc_library(
 cc_library(
     name = "posix_system_clock",
     srcs = ["posix_system_clock.cc"],
-    hdrs = ["posix_system_clock.h"],
     deps = [
         "//xrtl/base:macros",
         "//xrtl/base:system_clock_hdrs",
