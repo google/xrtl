@@ -103,6 +103,13 @@ def xrtl_workspace(path_prefix=""):
       build_file = path_prefix + "third_party/swiftshader.BUILD",
   )
 
+  # Apple build rules.
+  native.git_repository(
+      name = "build_bazel_rules_apple",
+      remote = "https://github.com/bazelbuild/rules_apple.git",
+      tag = "0.1.0",
+  )
+
   # //third_party/abseil-cpp/
   native.local_repository(
       name = "com_google_absl",

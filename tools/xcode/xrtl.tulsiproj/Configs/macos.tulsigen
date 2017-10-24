@@ -1,0 +1,69 @@
+{
+  "sourceFilters" : [
+    "@build_bazel_rules_apple\/...",
+    "@com_google_absl\/...",
+    "bazel-genfiles\/...",
+    "external\/...",
+    "third_party\/...",
+    "xrtl\/..."
+  ],
+  "buildTargets" : [
+    "\/\/xrtl\/base:arena_test_macos",
+    "\/\/xrtl\/gfx\/testing:graphics_test_test_macos",
+    "\/\/xrtl\/testing:image_buffer_test_macos"
+  ],
+  "projectName" : "xrtl",
+  "optionSet" : {
+    "LaunchActionPostActionScript" : {
+      "p" : "$(inherited)"
+    },
+    "BazelBuildStartupOptionsRelease" : {
+      "p" : "$(inherited)"
+    },
+    "BazelBuildOptionsRelease" : {
+      "p" : "$(inherited) --config=macos_x86_64"
+    },
+    "BazelBuildOptionsDebug" : {
+      "p" : "$(inherited) --config=macos_x86_64"
+    },
+    "EnvironmentVariables" : {
+      "p" : "$(inherited)"
+    },
+    "BuildActionPreActionScript" : {
+      "p" : "$(inherited)"
+    },
+    "CommandlineArguments" : {
+      "p" : "$(inherited)"
+    },
+    "TestActionPreActionScript" : {
+      "p" : "$(inherited)"
+    },
+    "BazelBuildStartupOptionsDebug" : {
+      "p" : "$(inherited)"
+    },
+    "TestActionPostActionScript" : {
+      "p" : "$(inherited)"
+    },
+    "BuildActionPostActionScript" : {
+      "p" : "$(inherited)"
+    },
+    "LaunchActionPreActionScript" : {
+      "p" : "$(inherited)"
+    }
+  },
+  "additionalFilePaths" : [
+    "xrtl\/BUILD",
+    "xrtl\/base\/BUILD",
+    "xrtl\/examples\/BUILD",
+    "xrtl\/gfx\/BUILD",
+    "xrtl\/gfx\/spirv\/BUILD",
+    "xrtl\/gfx\/testing\/BUILD",
+    "xrtl\/port\/apple\/BUILD",
+    "xrtl\/port\/ios\/BUILD",
+    "xrtl\/port\/macos\/BUILD",
+    "xrtl\/port\/macos\/gfx\/es3\/BUILD",
+    "xrtl\/testing\/BUILD",
+    "xrtl\/testing\/diffing\/BUILD",
+    "xrtl\/ui\/BUILD"
+  ]
+}

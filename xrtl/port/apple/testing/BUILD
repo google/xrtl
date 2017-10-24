@@ -1,5 +1,5 @@
 # Description:
-#  Apple port variants of //xrtl/base/ features.
+#  Testing utilities for iOS and MacOS.
 
 package(default_visibility = ["//xrtl:internal"])
 
@@ -12,20 +12,21 @@ package_platforms(default_platforms = [
     "//xrtl/tools/target_platform:macos",
 ])
 
-cc_library(
-    name = "darwin_debugging",
-    srcs = ["darwin_debugging.cc"],
-    deps = [
-        "//xrtl/base:debugging_hdrs",
-    ],
-)
+exports_files(["apple_test.plist"])
 
-cc_library(
-    name = "mach_system_clock",
-    srcs = ["mach_system_clock.cc"],
+objc_library(
+    name = "apple_test_main",
+    testonly = 1,
+    srcs = ["apple_test_main.mm"],
+    sdk_frameworks = [
+        "XCTest",
+    ],
     deps = [
-        "//xrtl/base:macros",
-        "//xrtl/base:system_clock_hdrs",
+        "//xrtl/base:env",
+        "//xrtl/base:flags",
+        "//xrtl/testing:file_util",
+        "//xrtl/testing:gtest",
+        "//xrtl/tools/target_platform",
     ],
 )
 

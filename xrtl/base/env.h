@@ -41,6 +41,16 @@ class Env {
   // It is guaranteed to exist and be writable, though the amount of storage
   // space available is undefined.
   static std::string temp_path();
+
+  // Overrides the platform default temp path with the given value.
+  // The path must exist and be writable.
+  static void set_temp_path(std::string temp_path);
+
+ protected:
+  // Implemented in port-specific implementations:
+  static std::string QueryTempPath();
+
+  static std::string temp_path_;
 };
 
 }  // namespace xrtl

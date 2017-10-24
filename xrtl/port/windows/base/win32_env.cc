@@ -53,7 +53,11 @@ absl::optional<std::string> Env::GetValue(absl::string_view key) {
   return value;
 }
 
-std::string Env::temp_path() {
+std::string Env::QueryTempPath() {
+  auto tmpdir_opt = Env::GetValue("TMPDIR");
+  if (tmpdir_opt) {
+    return tmpdir_opt.value();
+  }
   DWORD chars_required = ::GetTempPathA(0, nullptr);
   if (chars_required == 0) {
     DCHECK(false) << "Unable to query temp path size";

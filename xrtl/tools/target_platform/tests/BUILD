@@ -7,7 +7,9 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache 2.0
 
-cc_test(
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
+portable_cc_test(
     name = "platform_test",
     size = "small",
     srcs = select(
@@ -38,3 +40,7 @@ cc_test(
         "//xrtl/tools/target_platform",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

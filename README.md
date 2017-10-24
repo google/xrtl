@@ -86,7 +86,7 @@ If clang is not your default CC you should start CLion with CC=clang.
 ```
 $ ./xtool build --all
 $ ./xtool test --all
-$ ./xtool run //xrtl/base:math_test -- --some_arg
+$ ./xtool run //xrtl/base:math_test_linux -- --some_arg
 # Note that you can use `bazel` instead of `xtool` in most cases, but you must
 # specify a config.
 $ bazel build --config=macos_x86_64 //xrtl/base/...

@@ -5,6 +5,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "memory_command_buffer",
     srcs = ["memory_command_buffer.cc"],
@@ -18,7 +20,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "memory_command_buffer_test",
     size = "small",
     srcs = ["memory_command_buffer_test.cc"],
@@ -57,7 +59,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "memory_command_buffer_reader_writer_test",
     size = "small",
     srcs = ["memory_command_buffer_reader_writer_test.cc"],
@@ -101,3 +103,7 @@ cc_library(
         "//xrtl/gfx:framebuffer",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()

@@ -65,6 +65,11 @@ cc_library(
             "//xrtl/tools/target_platform:linux": [],
             "//xrtl/tools/target_platform:macos": [],
             "//xrtl/tools/target_platform:windows": [],
+
+            # Special case for tulsi, which processes files without a config.
+            # TODO(benvanik): figure out a way to avoid this so we get good
+            #                 errors on Unrecognized platforms.
+            "//conditions:default": [],
         },
         no_match_error = "Unrecognized platform",
     ),

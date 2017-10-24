@@ -44,7 +44,7 @@ if (sys.platform == 'cygwin' or
 elif sys.platform == 'darwin':
   default_config = 'macos_x86_64'
 else:
-  default_config = ''
+  default_config = 'linux_x86_64'
 
 
 top_level_packages = [

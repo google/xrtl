@@ -8,6 +8,8 @@ package(default_visibility = ["//xrtl:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
+load("//xrtl/testing:portable_testing.bzl", "portable_cc_test")
+
 cc_library(
     name = "control",
     srcs = ["control.cc"],
@@ -46,9 +48,13 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "control_test",
     srcs = ["control_test.cc"],
+    platforms = [
+        "//xrtl/tools/target_platform:linux",
+        "//xrtl/tools/target_platform:windows",
+    ],
     tags = [
         "exclusive",
         "requires_gui",
@@ -144,7 +150,7 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "system_theme_test",
     size = "small",
     srcs = ["system_theme_test.cc"],
@@ -187,9 +193,13 @@ cc_library(
     ],
 )
 
-cc_test(
+portable_cc_test(
     name = "window_test",
     srcs = ["window_test.cc"],
+    platforms = [
+        "//xrtl/tools/target_platform:linux",
+        "//xrtl/tools/target_platform:windows",
+    ],
     tags = [
         "exclusive",
         "requires_gui",
@@ -229,3 +239,7 @@ cc_binary(
         "//xrtl/testing:demo_main",
     ],
 )
+
+load("//xrtl/testing:portable_testing.bzl", "portable_test_suite")
+
+portable_test_suite()
