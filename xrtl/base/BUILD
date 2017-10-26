@@ -332,6 +332,26 @@ portable_cc_test(
 )
 
 cc_library(
+    name = "proto_util",
+    srcs = ["proto_util.cc"],
+    hdrs = ["proto_util.h"],
+    deps = [
+        ":macros",
+    ],
+)
+
+portable_cc_test(
+    name = "proto_util_test",
+    size = "small",
+    srcs = ["proto_util_test.cc"],
+    deps = [
+        ":proto_util",
+        "//xrtl/base/testdata:proto_util_test_cc_proto",
+        "//xrtl/testing:gtest_main",
+    ],
+)
+
+cc_library(
     name = "ref_ptr",
     hdrs = ["ref_ptr.h"],
     deps = [
