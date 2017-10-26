@@ -110,6 +110,20 @@ def xrtl_workspace(path_prefix=""):
       tag = "0.1.0",
   )
 
+  # Protobuf deps. Unfortunately the builtin rules look for these with different
+  # names, so we need to alias them.
+  PROTOBUF_NAMES = [
+      "com_google_protobuf",       # proto_library
+      "com_google_protobuf_cc",    # cc_proto_library
+      "com_google_protobuf_java",  # java_proto_library
+  ]
+  for protobuf_name in PROTOBUF_NAMES:
+    native.http_archive(
+        name = protobuf_name,
+        urls = ["https://github.com/google/protobuf/archive/v3.4.1.zip"],
+        strip_prefix = "protobuf-3.4.1",
+    )
+
   # //third_party/abseil-cpp/
   native.local_repository(
       name = "com_google_absl",
