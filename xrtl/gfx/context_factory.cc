@@ -20,6 +20,9 @@
 #if defined(XRTL_HAS_GFX_OPENGL_ES3)
 #include "xrtl/gfx/es3/es3_context_factory.h"
 #endif  // XRTL_HAS_GFX_OPENGL_ES3
+#if defined(XRTL_HAS_GFX_VULKAN)
+#include "xrtl/gfx/vk/vk_context_factory.h"
+#endif  // XRTL_HAS_GFX_VULKAN
 
 DEFINE_string(gfx, "",
               "Graphics backend used for rendering and compute: "
@@ -51,7 +54,14 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
   }
 
   // Build a list of available context types sorted by platform priority.
+  // The highest priority implementations should be near the top.
+  // TODO(benvanik): a more dynamic system for doing this.
   std::vector<std::string> available_types;
+#if defined(XRTL_HAS_GFX_VULKAN)
+  if (vk::VKContextFactory::IsSupported()) {
+    available_types.push_back("vk");
+  }
+#endif  // XRTL_HAS_GFX_VULKAN
 #if defined(XRTL_HAS_GFX_OPENGL_ES3)
   if (es3::ES3ContextFactory::IsSupported()) {
     available_types.push_back("es3");
@@ -79,12 +89,17 @@ ref_ptr<ContextFactory> ContextFactory::Create(std::string name) {
     return nullptr;
   }
 
-  // Create the type.
+    // Create the type.
 #if defined(XRTL_HAS_GFX_OPENGL_ES3)
   if (desired_type == "es3") {
     return make_ref<es3::ES3ContextFactory>();
   }
 #endif  // XRTL_HAS_GFX_OPENGL_ES3
+#if defined(XRTL_HAS_GFX_VULKAN)
+  if (desired_type == "vk") {
+    return make_ref<vk::VKContextFactory>();
+  }
+#endif  // XRTL_HAS_GFX_VULKAN
 
   return nullptr;
 }

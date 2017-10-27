@@ -16,6 +16,7 @@
 #define XRTL_GFX_ES3_ES3_COMMON_H_
 
 #if defined(XRTL_PLATFORM_WINDOWS)
+// Ensure our windows.h is included instead of the one included by glad.
 #include "xrtl/port/windows/base/windows.h"
 #endif  // XRTL_PLATFORM_WINDOWS
 

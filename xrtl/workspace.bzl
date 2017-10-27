@@ -103,6 +103,13 @@ def xrtl_workspace(path_prefix=""):
       build_file = path_prefix + "third_party/swiftshader.BUILD",
   )
 
+  # //third_party/vulkan/
+  native.new_local_repository(
+      name = "com_github_khronosgroup_vulkan",
+      path = path_prefix + "third_party/vulkan/",
+      build_file = path_prefix + "third_party/vulkan.BUILD",
+  )
+
   # Apple build rules.
   native.git_repository(
       name = "build_bazel_rules_apple",

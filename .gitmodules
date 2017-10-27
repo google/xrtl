@@ -31,3 +31,6 @@
 [submodule "third_party/abseil-cpp"]
 	path = third_party/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
+[submodule "third_party/vulkan"]
+	path = third_party/vulkan
+	url = https://github.com/KhronosGroup/Vulkan-LoaderAndValidationLayers.git

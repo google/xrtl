@@ -93,7 +93,6 @@ common:ubsan --linkopt=-fno-sanitize-recover=undefined
 
 common:android --config=clang
 common:android --dynamic_mode=off
-common:android --build_tag_filters=test-for=android
 common:android --test_tag_filters=test-for=android
 
 common:android_emulator --config=android
@@ -121,7 +120,6 @@ common:android_x86_64 --android_cpu=x86_64
 #===============================================================================
 
 common:emscripten --config=clang
-common:emscripten --build_tag_filters=test-for=emscripten
 common:emscripten --test_tag_filters=test-for=emscripten
 
 common:emscripten_asmjs --config=emscripten
@@ -138,7 +136,6 @@ common:ios --dynamic_mode=off
 common:ios --platform_suffix=ios
 common:ios --experimental_enable_objc_cc_deps
 common:ios --host_cpu=darwin
-common:ios --build_tag_filters=test-for=ios
 common:ios --test_tag_filters=test-for=ios
 
 common:ios_simulator --config=ios
@@ -166,7 +163,6 @@ common:ios_x86_64 --ios_cpu=x86_64
 #===============================================================================
 
 common:linux --config=clang
-common:linux --build_tag_filters=test-for=linux
 common:linux --test_tag_filters=test-for=linux
 
 common:linux_x86_64 --config=linux
@@ -181,7 +177,6 @@ common:macos --dynamic_mode=off
 common:macos --platform_suffix=_macos
 common:macos --apple_platform_type=macos
 common:macos --run_under=//tools/utils:macos_test_runner
-common:macos --build_tag_filters=test-for=macos
 common:macos --test_tag_filters=test-for=macos
 
 common:macos_x86_64 --config=macos
@@ -195,7 +190,6 @@ common:windows --config=msvc
 common:windows --dynamic_mode=off
 # https://github.com/bazelcommon/bazel/issues/1590
 common:windows --test_env TMP=/tmp
-common:windows --build_tag_filters=test-for=windows
 common:windows --test_tag_filters=test-for=windows
 
 common:windows_x86_64 --config=windows
