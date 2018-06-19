@@ -7,19 +7,20 @@
 #      xrtl_workspace(path_to_xrtl_root)
 
 # Parses the bazel version string from `native.bazel_version`.
+# e.g. "1.2.3rc1 abcd" -> (1, 2, 3)
 def _parse_bazel_version(bazel_version):
-  # Remove commit from version.
+  # Remove commit (or anything trailing a space) from version.
   version = bazel_version.split(" ", 1)[0]
 
-  # Split into (release, date) parts and only return the release
-  # as a tuple of integers.
-  parts = version.split('-', 1)
+  # Strip any trailing characters like 'rc1' from the version number.
+  for i in range(len(version)):
+    c = version[i]
+    if not (c.isdigit() or c == '.'):
+      version = version[:i]
+      break
 
-  # Turn "release" into a tuple of strings
-  version_tuple = ()
-  for number in parts[0].split('.'):
-    version_tuple += (str(number),)
-  return version_tuple
+  # Return the version as a tuple of integers.
+  return tuple([int(n) for n in version.split('.')])
 
 # Checks that a specific bazel version is being used.
 def check_version(bazel_version):
