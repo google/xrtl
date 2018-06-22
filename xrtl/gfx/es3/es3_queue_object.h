@@ -15,6 +15,7 @@
 #ifndef XRTL_GFX_ES3_ES3_QUEUE_OBJECT_H_
 #define XRTL_GFX_ES3_ES3_QUEUE_OBJECT_H_
 
+#include <functional>
 #include <utility>
 
 #include "xrtl/base/ref_ptr.h"
