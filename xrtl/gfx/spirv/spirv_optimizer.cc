@@ -44,7 +44,7 @@ SpirVOptimizer::SpirVOptimizer(Options options) : options_(options) {
   }
 
   if (options_.aggressive) {
-    optimizer_->RegisterPass(spvtools::CreateInlinePass());
+    optimizer_->RegisterPass(spvtools::CreateInlineExhaustivePass());
     optimizer_->RegisterPass(spvtools::CreateLocalAccessChainConvertPass());
     optimizer_->RegisterPass(spvtools::CreateInsertExtractElimPass());
     optimizer_->RegisterPass(
