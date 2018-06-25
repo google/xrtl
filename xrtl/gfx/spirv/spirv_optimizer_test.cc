@@ -180,7 +180,7 @@ TEST(SpirVOptimizerTest, Reuse) {
   std::vector<uint32_t> fragment_target_spirv;
   EXPECT_TRUE(
       optimizer.Optimize(fragment_source_spirv, &fragment_target_spirv));
-  EXPECT_EQ(78, fragment_target_spirv.size());
+  EXPECT_EQ(94, fragment_target_spirv.size());
 }
 
 }  // namespace

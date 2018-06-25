@@ -124,7 +124,9 @@ bool ES3Shader::TranslateSpirVBinary(const uint32_t* data, size_t data_length) {
   options.vertex.fixup_clipspace = true;
   options.fragment.default_float_precision = Options::Highp;
   options.fragment.default_int_precision = Options::Highp;
-  compiler.set_options(options);
+  compiler.set_common_options(options);
+  // TODO(scotttodd): Switch to set_entry_point(entry, execution_model)
+  //     overload, which requires knowing the shader type ahead of time.
   compiler.set_entry_point(entry_point_);
 
   // Determine shader type from execution mode.
