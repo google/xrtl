@@ -318,7 +318,6 @@ cc_library(
         "source/util/small_vector.h",
         "source/util/string_utils.cpp",
         "source/util/string_utils.h",
-        "source/util/timer.cpp",
         "source/util/timer.h",
         "source/val/basic_block.cpp",
         "source/val/basic_block.h",
@@ -357,7 +356,15 @@ cc_library(
         "source/validate_non_uniform.cpp",
         "source/validate_primitives.cpp",
         "source/validate_type_unique.cpp",
-    ],
+    ] + select({
+        "@//xrtl/tools/target_platform:windows": [],
+        "//conditions:default": [
+            # Timer classes use POSIX-only sys/ includes. The timer is only
+            # enabled if SPIRV_TIMER_ENABLED is defined though.
+            # SPIRV-Tools conditionally includes this source file via CMake.
+            "source/util/timer.cpp",
+        ],
+    }),
     hdrs = [
         "include/spirv-tools/libspirv.h",
         "include/spirv-tools/libspirv.hpp",
