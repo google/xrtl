@@ -55,6 +55,7 @@ cc_library(
         "//xrtl/base:env",
         "//xrtl/base:logging",
         "//xrtl/base:tracing",
+        "//xrtl/tools/target_platform",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:optional",
     ],

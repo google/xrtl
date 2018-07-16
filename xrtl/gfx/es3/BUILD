@@ -396,6 +396,7 @@ cc_library(
         ":es3_queue_object",
         ":es3_shader",
         "//xrtl/gfx:shader_module",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -409,6 +410,7 @@ cc_library(
         ":es3_platform_context",
         ":es3_queue",
         ":es3_queue_fence",
+        ":es3_queue_object",
         "//xrtl/base:system_clock",
         "//xrtl/base:tracing",
         "//xrtl/base/threading:event",

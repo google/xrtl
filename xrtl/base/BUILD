@@ -249,7 +249,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":macros",
-        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
     ] + select({
         "//xrtl/tools/target_config:google_internal": [
             "//xrtl/port/google/base:logging_forward",
@@ -298,6 +298,7 @@ cc_library(
         "//xrtl/tools/target_config",
         "//xrtl/tools/target_platform",
         "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/memory",
     ],
 )
