@@ -58,11 +58,11 @@ TEST(LoggingTest, Checks) {
 
 TEST(LoggingTest, FailedChecks) {
   const char* p_const = "hello there";
-  CHECK_NOTNULL(p_const);
+  CHECK(p_const != nullptr);
 
   char mybuf[10];
   char* p_non_const = mybuf;
-  CHECK_NOTNULL(p_non_const);
+  CHECK(p_non_const != nullptr);
 
 // Disabled due to some weird gtest issues.
 // TODO(benvanik): figure out why the assert value does not match.
