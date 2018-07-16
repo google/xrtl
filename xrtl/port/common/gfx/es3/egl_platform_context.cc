@@ -249,15 +249,11 @@ ref_ptr<ES3PlatformContext> ES3PlatformContext::Create(
   EGLNativeDisplayType native_display_value;
   EGLNativeWindowType native_window_value;
 #if defined(XRTL_PLATFORM_APPLE)
-  native_display_value = reinterpret_cast<EGLNativeDisplayType>(
-      static_cast<int>(reinterpret_cast<uintptr_t>(native_display)));
-  native_window_value = reinterpret_cast<EGLNativeWindowType>(
-      reinterpret_cast<uintptr_t>(native_window));
+  native_display_value = reinterpret_cast<EGLNativeDisplayType>(native_display);
+  native_window_value = reinterpret_cast<EGLNativeWindowType>(native_window);
 #else
-  native_display_value = reinterpret_cast<EGLNativeDisplayType>(
-      reinterpret_cast<uintptr_t>(native_display));
-  native_window_value = reinterpret_cast<EGLNativeWindowType>(
-      reinterpret_cast<uintptr_t>(native_window));
+  native_display_value = reinterpret_cast<EGLNativeDisplayType>(native_display);
+  native_window_value = reinterpret_cast<EGLNativeWindowType>(native_window);
 #endif  // XRTL_PLATFORM_APPLE
 
   if (!platform_context->Initialize(native_display_value, native_window_value,
@@ -372,7 +368,9 @@ bool EGLPlatformContext::InitializeContext(
   for (int minor_version = 2; minor_version >= 0; --minor_version) {
     EGLint context_attribs[] = {
         // OpenGL ES version 3.
-        EGL_CONTEXT_MAJOR_VERSION_KHR, 3, EGL_CONTEXT_MINOR_VERSION_KHR,
+        EGL_CONTEXT_MAJOR_VERSION_KHR,
+        3,
+        EGL_CONTEXT_MINOR_VERSION_KHR,
         minor_version,
         // End of list.
         EGL_NONE,
