@@ -37,6 +37,7 @@ cc_library(
         ":image_differ",
         ":text_differ",
         "//xrtl/base:logging",
+        "//xrtl/testing:file_util",
         "//xrtl/testing:image_buffer",
         "@com_google_absl//absl/strings",
     ],

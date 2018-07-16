@@ -267,7 +267,7 @@ cc_library(
     visibility = ["//xrtl/port:ports_only"],
     deps = [
         ":macros",
-        "@com_google_absl//absl/base",
+        "@com_google_absl//absl/base:core_headers",
     ] + select({
         "//xrtl/tools/target_config:google_internal": [
             "//xrtl/port/google/base:logging_forward",
