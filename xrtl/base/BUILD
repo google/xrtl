@@ -347,9 +347,25 @@ portable_cc_test(
     srcs = ["proto_util_test.cc"],
     deps = [
         ":proto_util",
+        ":protobuf",
         "//xrtl/base/testdata:proto_util_test_cc_proto",
         "//xrtl/testing:gtest_main",
     ],
+)
+
+cc_library(
+    name = "protobuf",
+    hdrs = ["protobuf.h"],
+    deps = [
+        ":macros",
+    ] + select({
+        "//xrtl/tools/target_config:google_internal": [
+            "//xrtl/port/google/base:protobuf",
+        ],
+        "//conditions:default": [
+            "//xrtl/port/common/base:protobuf",
+        ],
+    }),
 )
 
 cc_library(

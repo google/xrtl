@@ -109,3 +109,9 @@ cc_library(
         "//xrtl/base:system_clock_hdrs",
     ],
 )
+
+cc_library(
+    name = "protobuf",
+    hdrs = ["protobuf.h"],
+    deps = [],
+)
