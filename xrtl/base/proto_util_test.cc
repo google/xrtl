@@ -14,8 +14,7 @@
 
 #include "xrtl/base/proto_util.h"
 
-#include <google/protobuf/text_format.h>
-
+#include "xrtl/base/protobuf.h"
 #include "xrtl/base/testdata/proto_util_test.pb.h"
 #include "xrtl/testing/gtest.h"
 
@@ -27,7 +26,7 @@ TEST(ProtoUtilTest, TextPb) {
 
   // Deserialize from string.
   xrtl::testdata::SimpleMessage message;
-  EXPECT_TRUE(google::protobuf::TextFormat::ParseFromString(kTextPb, &message));
+  EXPECT_TRUE(xrtl::protobuf::TextFormat::ParseFromString(kTextPb, &message));
   EXPECT_EQ(5, message.int32_value());
   EXPECT_EQ("foo", message.string_value());
 
