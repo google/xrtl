@@ -72,6 +72,7 @@ portable_cc_test(
         ":file_util",
         "//xrtl/base:env",
         "//xrtl/testing:gtest_main",
+        "//xrtl/tools/target_platform",
     ],
 )
 
