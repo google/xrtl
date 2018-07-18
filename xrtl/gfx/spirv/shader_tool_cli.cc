@@ -157,8 +157,8 @@ int ShaderToolMain(int argc, char** argv) {
   ShaderCompiler shader_compiler(source_language, shader_stage);
 
   // Add source version, as it must be the first line.
-  shader_compiler.AddSource(std::string("#version ") + FLAGS_source_version +
-                            "\n");
+  std::string source_version = FLAGS_source_version;
+  shader_compiler.AddSource("#version " + source_version + "\n");
 
   // Split up input defines.
   std::vector<std::string> defines;
